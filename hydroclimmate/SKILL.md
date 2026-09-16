@@ -1,6 +1,6 @@
 ---
 name: hydroclimmate
-description: Understand, plan, run and analyze hydrological, land-surface and ice-sheet modeling work. Supports targeted offline questions about HRLDAS/Noah-MP, WRF-Urban, CTSM, RBM and ISSM without requiring a project. Covers experiment choices, spin-up/restart, HPC runs, forcing, runoff, water and ice mass budgets, grid/mesh weighting and model-output analysis. Also supports project workflows for VIC and mizuRoute without bundled model knowledge. Not for generic editing, textbook questions unrelated to a documented model, manuscript writing, or broad literature surveys.
+description: Understand, plan, run and analyze hydrological, land-surface and ice-sheet modeling work. Supports targeted offline questions about HRLDAS/Noah-MP, WRF-Urban, CTSM, RBM and ISSM without requiring a project. Covers experiment design, spin-up and restart, calibration choices, forcing data, HPC job submission and failure diagnosis, and model-output analysis — runoff and streamflow, basin and catchment means, water balance closure and ice mass budgets, netCDF variable and unit semantics, grid, mesh and area weighting, time, interval and calendar semantics, and missing-data handling. Also supports project workflows for VIC and mizuRoute without bundled model knowledge. Not for generic editing, textbook questions unrelated to a documented model, manuscript writing, or broad literature surveys.
 ---
 
 # HydroClimMate

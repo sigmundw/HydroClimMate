@@ -9,6 +9,36 @@
 - Added separate knowledge cases and offline evaluation protocol; static checks are not agent pass rates.
 - Existing project records remain valid; choose one entry path and retain project-specific settings.
 
+### 0.6 follow-up fixes
+
+- **Restored trigger vocabulary lost in the description rewrite.** Adding RBM and ISSM had
+  shortened the description from 791 to 565 characters and squeezed out eight domain terms,
+  including `basin`, `catchment`, `netCDF`, `calibration`, `streamflow`, `water balance`,
+  `area weighting` and `time semantics`. Two of those — basin means and calibration — are
+  contrasting prompts in the routing table itself. Now 798 characters against a 1,536 cap.
+- **Rewrote four ISSM eval prompts that named their own answer.** "Discuss an ISSM mesh
+  refinement experiment; do not run it" telegraphs Plan; "Compute an area mean..." telegraphs
+  Analyze. They are now in researcher register, without the routing verb. A prompt that
+  states its expected feature inflates routing accuracy the same way a prompt copied from
+  the routing table does.
+- **Added the gray zone v0.6 created.** Supporting offline model questions made the operative
+  rule "textbook question about a documented model fires; otherwise it does not". Four cases
+  now sit on that line — a grounding-line concept question and BEP vs BEM (fire), generic
+  spin-up and Penman-Monteith with no model named (do not fire).
+- **Restored negative coverage.** Negatives had fallen to 9 while scope broadened, leaving
+  15:9. Five near-misses inside the new scope were added — installing ISSM, a CTSM literature
+  search, MATLAB-to-Python translation, an HPC admin email, generic type hints — giving 33
+  cases at 17:16.
+- **`check_knowledge.py` now detects link rot and staleness.** It reports each pack's
+  `Checked:` age against a 180-day limit, and `--network` verifies all 36 cited URLs.
+  The network mode prefers `curl` and probes a control URL first, because a bare macOS
+  Python has no CA bundle: without that guard the first run reported *36 of 36 cited URLs
+  did not resolve*, which was a broken TLS transport, not rot. A uniform total failure is
+  now reported as UNMEASURED.
+- **Fixed `.gitignore`.** It had been deleted from the index and recreated untracked as
+  `.DS_store`, which matches only because macOS sets `core.ignorecase=true`; on a Linux HPC
+  node it would not match `.DS_Store`, and being untracked no colleague received it.
+
 ## 0.5
 
 Installable for the first time, and usable from both Claude Code and Codex.

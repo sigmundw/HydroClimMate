@@ -21,6 +21,12 @@ Coverage is conceptual and task-oriented, not a complete parameter/API catalog. 
 lab versions and settings are unknown. VIC and mizuRoute retain workflow support without
 dedicated packs; do not imply that a linked coupling description documents their full use.
 
+Each pack records a `Checked:` date and cites floating branch URLs, which move without
+notice. Re-check a pack when its date is over 180 days old, when a cited upstream release
+changes, or before relying on it for a consequential result; `evals/check_knowledge.py`
+reports packs past that limit, and `--network` confirms the cited URLs still resolve.
+A re-check is a deliberate source-checked update, not an automatic rewrite during a task.
+
 Scientific summaries are original paraphrases with local source IDs. Links to upstream
 material do not relicense it under this repository's MIT license. Source records distinguish
 retrieved material from navigation-only links and floating documentation from fixed releases.

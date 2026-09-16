@@ -94,3 +94,23 @@ cannot measure triggering. Use it for routing only; use `run_eval.py` for trigge
 
 See [knowledge-eval.md](knowledge-eval.md). Triggering, selective reading and answer quality
 are separate outcomes. Historical probe records do not constitute v0.6 measurements.
+
+## Link rot and staleness
+
+`check_knowledge.py` runs offline by default and now also reports the age of each model
+pack's `Checked:` date, warning past 180 days. Pass `--network` to confirm every cited
+external URL still resolves:
+
+```bash
+python3 evals/check_knowledge.py --network
+```
+
+The network mode probes a control URL first and refuses to draw a conclusion if that
+fails. This matters more than it sounds: a bare macOS Python has no CA bundle, so
+`urllib` reports every HTTPS URL as unreachable while `curl` succeeds. Without the
+control probe the run reported *36 of 36 cited URLs did not resolve* — total link rot
+that did not exist. The checker therefore prefers `curl`, and treats both a failed
+control and a uniform 100% failure as **UNMEASURED** rather than as a finding.
+
+That is the same failure this directory already documents for the `claude -p` harness.
+A result where every case fails identically is a broken instrument until proven otherwise.

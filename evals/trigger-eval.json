@@ -122,31 +122,93 @@
     "note": "near-miss: names VIC and calibration, but the task is manuscript writing"
   },
   {
-    "query": "In ISSM, why can a velocity solve finish without producing a thickness time series?",
+    "query": "in ISSM why does a velocity solve finish fine but not give me any thickness time series?",
     "should_trigger": true,
     "expected_feature": "understand",
     "difficulty": "hard",
-    "routing_note": "v0.6 ice-sheet coverage"
+    "routing_note": "v0.6 ice-sheet coverage",
+    "register_note": "rewritten in researcher register; routing verb removed so the prompt does not name its own feature"
   },
   {
-    "query": "Discuss an ISSM mesh refinement experiment; do not run it.",
+    "query": "we're thinking about refining the mesh around the grounding line for the next ISSM experiment but im worried about the cost. worth it, or put the resolution somewhere else?",
     "should_trigger": true,
     "expected_feature": "plan",
     "difficulty": "hard",
-    "routing_note": "v0.6 ice-sheet coverage"
+    "routing_note": "v0.6 ice-sheet coverage",
+    "register_note": "rewritten in researcher register; routing verb removed so the prompt does not name its own feature"
   },
   {
-    "query": "Our ISSM run ended with a solver error; inspect the existing logs before suggesting a restart.",
+    "query": "issm job on the cluster bailed out overnight with a solver error, log is in run/logs/issm_4471.err. what now?",
     "should_trigger": true,
     "expected_feature": "run",
     "difficulty": "hard",
-    "routing_note": "v0.6 ice-sheet coverage"
+    "routing_note": "v0.6 ice-sheet coverage",
+    "register_note": "rewritten in researcher register; routing verb removed so the prompt does not name its own feature"
   },
   {
-    "query": "Compute an area mean from ISSM vertex values on a nonuniform triangular mesh.",
+    "query": "ive got ISSM vertex velocities on a triangular mesh thats way denser near the terminus, and i need a single domain average for a figure. whats the right way to do that?",
     "should_trigger": true,
     "expected_feature": "analyze",
     "difficulty": "hard",
-    "routing_note": "v0.6 ice-sheet coverage"
+    "routing_note": "v0.6 ice-sheet coverage",
+    "register_note": "rewritten in researcher register; routing verb removed so the prompt does not name its own feature"
+  },
+  {
+    "query": "what actually is a grounding line? i keep running into it in the ISSM setup docs",
+    "should_trigger": true,
+    "difficulty": "hard",
+    "boundary_note": "concept question, but about a documented model's core topic -> in scope per 'targeted offline questions'",
+    "added": "v0.6 scope gray zone"
+  },
+  {
+    "query": "whats the actual difference between BEP and BEM in the urban scheme?",
+    "should_trigger": true,
+    "difficulty": "hard",
+    "boundary_note": "documented model aliases (WRF-Urban / BEP / BEP+BEM); concept question in scope",
+    "added": "v0.6 scope gray zone"
+  },
+  {
+    "query": "can you explain what spin-up means in land surface modelling generally? not about any particular model",
+    "should_trigger": false,
+    "difficulty": "hard",
+    "boundary_note": "explicitly names no documented model -> 'textbook questions unrelated to a documented model'",
+    "added": "v0.6 scope gray zone"
+  },
+  {
+    "query": "how does the Penman-Monteith formulation actually work?",
+    "should_trigger": false,
+    "difficulty": "hard",
+    "boundary_note": "textbook process physics, not tied to a documented model or project",
+    "added": "v0.6 scope gray zone"
+  },
+  {
+    "query": "can you install ISSM on my laptop? tarball is already in ~/Downloads",
+    "should_trigger": false,
+    "note": "names a documented model but the task is software installation",
+    "added": "v0.6 negative coverage"
+  },
+  {
+    "query": "find me recent papers using CTSM for permafrost modelling",
+    "should_trigger": false,
+    "note": "names a documented model but is a literature survey - tests that exclusion directly",
+    "added": "v0.6 negative coverage"
+  },
+  {
+    "query": "convert this MATLAB ISSM driver script to Python, same logic",
+    "should_trigger": false,
+    "note": "names a documented model but the task is generic code translation",
+    "added": "v0.6 negative coverage"
+  },
+  {
+    "query": "our slurm allocation ran out, draft an email to the HPC admins asking for more node-hours",
+    "should_trigger": false,
+    "note": "HPC-adjacent but administrative correspondence",
+    "added": "v0.6 negative coverage"
+  },
+  {
+    "query": "add type hints to the plotting utilities in src/viz/",
+    "should_trigger": false,
+    "note": "generic coding in a research repo",
+    "added": "v0.6 negative coverage"
   }
 ]
