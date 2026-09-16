@@ -1,0 +1,122 @@
+[
+  {
+    "query": "can you explain how runoff generation works in our VIC setup? specifically im looking at the baseflow parameterization in models/vic/src and i cant tell which variable is the drainage term",
+    "should_trigger": true,
+    "expected_feature": "understand",
+    "difficulty": "easy",
+    "routing_note": "close: 'Explain this runoff function'"
+  },
+  {
+    "query": "what does the spin-up actually do in this CTSM config? trying to understand it before I change anything",
+    "should_trigger": true,
+    "expected_feature": "understand",
+    "difficulty": "easy",
+    "routing_note": "near-verbatim: 'what is spin-up in this config?'"
+  },
+  {
+    "query": "we need to decide between a 20-year and a 50-year spin-up for the CTSM runs before we submit. compute budget is tight this quarter. what are the tradeoffs and which would you recommend?",
+    "should_trigger": true,
+    "expected_feature": "plan",
+    "difficulty": "easy",
+    "routing_note": "near-verbatim: 'Compare spin-up strategies'"
+  },
+  {
+    "query": "compare doing the routing offline in mizuRoute vs coupling it online, for the Colorado headwaters domain. which is more likely to give us better low-flow skill?",
+    "should_trigger": true,
+    "expected_feature": "plan",
+    "difficulty": "hard",
+    "routing_note": "wording does not appear in the routing table; tests routing rather than recall"
+  },
+  {
+    "query": "my mizuRoute job died overnight on the cluster, job id 4471823. can you work out what happened and restart it from the last restart file?",
+    "should_trigger": true,
+    "expected_feature": "run",
+    "difficulty": "easy",
+    "routing_note": "near-verbatim: 'Resume this failed job'"
+  },
+  {
+    "query": "set up and submit the WRF-urban run for the Phoenix domain using the config we agreed on last week",
+    "should_trigger": true,
+    "expected_feature": "run",
+    "difficulty": "easy",
+    "routing_note": "close: 'run the agreed config'"
+  },
+  {
+    "query": "simulated runoff is like 40% too high vs the USGS gauge at 09380000 for water year 2019. can you dig into why?",
+    "should_trigger": true,
+    "expected_feature": "analyze",
+    "difficulty": "easy",
+    "routing_note": "near-verbatim: 'why is runoff biased high?'"
+  },
+  {
+    "query": "compute basin-mean monthly precip from the ERA5 forcing netcdfs in data/forcing/ for all the HUC8s in our domain, area weighted properly please",
+    "should_trigger": true,
+    "expected_feature": "analyze",
+    "difficulty": "easy",
+    "routing_note": "near-verbatim: 'Compute basin means'"
+  },
+  {
+    "query": "need to check water balance closure on the HRLDAS output. does P - ET - Q - dS actually close, and within what tolerance?",
+    "should_trigger": true,
+    "expected_feature": "analyze",
+    "difficulty": "hard",
+    "routing_note": "wording does not appear in the routing table; tests routing rather than recall"
+  },
+  {
+    "query": "the Noah-MP soil moisture in the top layer looks off after we changed the forcing. not sure if its a bug or real",
+    "should_trigger": true,
+    "expected_feature": "analyze",
+    "difficulty": "hard",
+    "routing_note": "wording does not appear in the routing table; tests routing rather than recall"
+  },
+  {
+    "query": "can you write me a python function that converts mm/day to m3/s given a drainage area in km2",
+    "should_trigger": false,
+    "note": "near-miss: hydrology units, but a one-off utility with no project context"
+  },
+  {
+    "query": "whats the difference between Noah-MP and CLM in general? just curious about the land surface model landscape",
+    "should_trigger": false,
+    "note": "near-miss: names a lab model but asks for general background, not project code"
+  },
+  {
+    "query": "fix the typo in the readme, it says 'recieve' instead of 'receive'",
+    "should_trigger": false,
+    "note": "generic editing, explicitly excluded"
+  },
+  {
+    "query": "summarize the key findings from this paper on snow albedo feedback I just downloaded to ~/Downloads",
+    "should_trigger": false,
+    "note": "literature survey, explicitly excluded"
+  },
+  {
+    "query": "our git history is a mess, can you help me squash the last 6 commits on the feature branch",
+    "should_trigger": false,
+    "note": "unrelated software work"
+  },
+  {
+    "query": "whats a good colormap for plotting precipitation anomalies in matplotlib? diverging ideally",
+    "should_trigger": false,
+    "note": "near-miss: hydro-adjacent plotting, but generic advice with no project data"
+  },
+  {
+    "query": "set up a conda env with xarray netcdf4 and cartopy for me",
+    "should_trigger": false,
+    "note": "near-miss: the toolchain of the domain, but generic environment setup"
+  },
+  {
+    "query": "explain what a Muskingum routing scheme is",
+    "should_trigger": false,
+    "note": "near-miss: routing concept, but textbook knowledge rather than project code"
+  },
+  {
+    "query": "rename all the files in this folder from .nc4 to .nc",
+    "should_trigger": false,
+    "note": "near-miss: touches netCDF, but pure file operations"
+  },
+  {
+    "query": "help me write the methods section describing our VIC calibration for the paper",
+    "should_trigger": false,
+    "note": "near-miss: names VIC and calibration, but the task is manuscript writing"
+  }
+]
