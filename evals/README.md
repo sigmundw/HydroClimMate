@@ -1,7 +1,8 @@
 # Routing and triggering evals
 
-`trigger-eval.json` holds 20 prompts — 10 that should invoke the `hydroclimmate` skill,
-covering all four features, and 10 near-misses that should not. The negatives are
+`trigger-eval.json` contains positive cases across four features and near-miss negatives.
+v0.6 adds documented-model questions without a project and ISSM cases; historical counts
+below refer to the original v0.5 suite. The negatives are
 deliberately close to the domain (hydrology units, a lab model name, the netCDF toolchain,
 manuscript writing about a VIC calibration); an obviously irrelevant negative tests nothing.
 
@@ -29,8 +30,7 @@ run, that subprocess returned:
 
 Every one of the 60 runs died before reaching a tool call, so all 20 queries recorded a
 0/3 trigger rate. That produced an apparently clean "10/20 passed" — all ten negatives
-counted as passes purely because nothing ran. **A zero-variance result across every query
-is the signature of a dead harness, not a finding.** The numbers were discarded rather
+counted as passes purely because nothing ran. **Authentication failures invalidate the runs; zero variance alone does not diagnose the cause.** The numbers were discarded rather
 than recorded.
 
 To get a real measurement, run it where a nested `claude -p` can authenticate: a plain
@@ -42,7 +42,8 @@ env -u CLAUDECODE claude -p "compute basin-mean monthly precip from the ERA5 for
   --output-format stream-json --verbose | grep -c tool_use
 ```
 
-A count of zero means the harness is broken again; do not interpret the eval output.
+A count of zero requires inspection of the transcript and exit status; it may be a missed
+trigger or an environment failure, not automatically the latter.
 
 Note also that `timeout` is not present on macOS by default — use `gtimeout` from coreutils
 if you want to bound these runs.
@@ -82,9 +83,14 @@ subagents, which inherit the session's credentials. Give a subagent an empty wor
 directory and the raw researcher request, tell it to consult whatever guidance is available
 and to stop once oriented, then have it report the files it read and the feature it selected.
 The files-read list is the actual measurement: the expected trace is
-`SKILL.md → references/core.md → references/<one feature>.md`, and reading more than one
-feature file is itself a routing failure.
+`SKILL.md → references/core.md → references/<one feature>.md`, with additional feature reads allowed when justified by a concrete dependency. Judge
+the primary feature and relevance of reads, not an exact file-count ceiling.
 
 This is weaker than the `claude -p` harness in one respect: asking the subagent to report
 which guidance it used primes it to look for guidance, so it inflates the trigger rate and
 cannot measure triggering. Use it for routing only; use `run_eval.py` for triggering.
+
+## v0.6 knowledge evaluation
+
+See [knowledge-eval.md](knowledge-eval.md). Triggering, selective reading and answer quality
+are separate outcomes. Historical probe records do not constitute v0.6 measurements.

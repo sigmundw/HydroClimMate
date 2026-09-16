@@ -1,0 +1,145 @@
+[
+  {
+    "id": "issm-diagnostic",
+    "prompt": "Why can an ISSM velocity solve finish without giving a thickness time series? I have no project open.",
+    "expected_feature": "understand",
+    "relevant_topics": [
+      "issm/overview.md"
+    ],
+    "rubric": [
+      "Distinguish diagnostic stress balance from selected transient components",
+      "No project setup required"
+    ]
+  },
+  {
+    "id": "issm-mesh",
+    "prompt": "Two fully included planar triangles have areas 1 and 3 m2. Their linear scalar nodal values are (0,0,3) and (3,3,3). Calculate the area mean and state the assumptions.",
+    "expected_feature": "analyze",
+    "relevant_topics": [
+      "issm/outputs.md"
+    ],
+    "rubric": [
+      "2.5, not an unweighted nodal mean",
+      "Linear interpolation, valid full elements and area convention"
+    ]
+  },
+  {
+    "id": "issm-mass",
+    "prompt": "A fixed 2 m2 ice domain thins uniformly by 3 m. Assume constant density 900 kg/m3. What is its mass change? Is this automatically sea-level equivalent?",
+    "expected_feature": "analyze",
+    "relevant_topics": [
+      "issm/outputs.md"
+    ],
+    "rubric": [
+      "-5400 kg",
+      "No automatic sea-level conversion; domain and density assumptions"
+    ]
+  },
+  {
+    "id": "issm-api",
+    "prompt": "Offline, give the exact restart command for our modified ISSM branch. I do not have its version or example here.",
+    "expected_feature": "run",
+    "relevant_topics": [
+      "issm/execution.md"
+    ],
+    "rubric": [
+      "No invented API or command",
+      "Identify local revision/interface evidence needed"
+    ]
+  },
+  {
+    "id": "issm-plan",
+    "prompt": "Discuss an ISSM mesh-refinement experiment for mass-change sensitivity; do not run anything.",
+    "expected_feature": "plan",
+    "relevant_topics": [
+      "issm/overview.md",
+      "issm/execution.md",
+      "issm/outputs.md"
+    ],
+    "rubric": [
+      "Discuss tradeoff/checks without execution",
+      "Any additional reads have a concrete purpose"
+    ]
+  },
+  {
+    "id": "hrldas-identity",
+    "prompt": "Does downloading Noah-MP alone give me the same complete offline system as HRLDAS?",
+    "expected_feature": "understand",
+    "relevant_topics": [
+      "hrldas-noahmp/overview.md"
+    ],
+    "rubric": [
+      "Host versus physics distinction",
+      "No automatic download"
+    ]
+  },
+  {
+    "id": "ctsm-columns",
+    "prompt": "My CTSM file has several columns for each grid cell. Can I average all column values equally to obtain a basin mean?",
+    "expected_feature": "analyze",
+    "relevant_topics": [
+      "ctsm/outputs.md"
+    ],
+    "rubric": [
+      "Parent hierarchy and fractional area",
+      "Avoid double weighting existing aggregates"
+    ]
+  },
+  {
+    "id": "wrf-city",
+    "prompt": "Explain why switching between single-layer UCM and BEP+BEM is more than changing a city label.",
+    "expected_feature": "understand",
+    "relevant_topics": [
+      "wrf-urban/overview.md"
+    ],
+    "rubric": [
+      "Scheme physics and configuration dependencies",
+      "Do not adopt a version-independent option combination"
+    ]
+  },
+  {
+    "id": "rbm-unknown",
+    "prompt": "Use our RBM outputs, but I only know the acronym. Can you assume the Salmon River tutorial column order?",
+    "expected_feature": "analyze",
+    "relevant_topics": [
+      "rbm/outputs.md"
+    ],
+    "rubric": [
+      "Candidate implementation unconfirmed",
+      "Do not invent parser or assume historical schema"
+    ]
+  },
+  {
+    "id": "mixed-diagnosis",
+    "prompt": "Our HRLDAS water balance shifted after a forcing change. Explain what you would inspect, including where code understanding might be needed.",
+    "expected_feature": "analyze",
+    "relevant_topics": [
+      "hrldas-noahmp/outputs.md"
+    ],
+    "rubric": [
+      "Primary analysis; justified Understand supplement allowed",
+      "No automatic retuning/rerun"
+    ]
+  },
+  {
+    "id": "uncovered",
+    "prompt": "What is the exact syntax of a new ISSM option released after the local documentation was checked? Network is unavailable.",
+    "expected_feature": "understand",
+    "relevant_topics": [
+      "issm/sources.md"
+    ],
+    "rubric": [
+      "Cannot claim current API",
+      "Local source inspection or explicit gap"
+    ]
+  },
+  {
+    "id": "negative-edit",
+    "prompt": "Fix a spelling typo in an unrelated README.",
+    "expected_feature": "none",
+    "relevant_topics": [],
+    "rubric": [
+      "No model knowledge reads"
+    ]
+  }
+]

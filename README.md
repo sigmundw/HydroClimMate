@@ -1,12 +1,12 @@
 # HydroClimMate
 
-Version 0.5 — for lab trials. Developed by ACT Hydro Lab.
+Version 0.6 — for lab trials. Developed by ACT Hydro Lab.
 
-An agent workflow for hydrological and land-surface modeling work: one workflow, four
+An agent workflow for hydrological, land-surface and ice-sheet modeling work: one workflow, four
 features, and lightweight project records. Normally one agent handles the task and loads
 only the detail the current step needs.
 
-Works with **Claude Code** (as a skill) and **Codex** or other tools that read `AGENTS.md`.
+Works as a native skill in **Claude Code and Codex**, or through explicit `AGENTS.md` integration.
 
 ## Features
 
@@ -33,6 +33,7 @@ The package is `hydroclimmate/`. Everything else in this repository is documenta
 **Claude Code** — symlink it so a `git pull` updates every project at once:
 
 ```bash
+mkdir -p ~/.claude/skills
 ln -s "$PWD/hydroclimmate" ~/.claude/skills/hydroclimmate
 ```
 
@@ -40,14 +41,23 @@ For a shared project checkout instead of your personal skills, link it into that
 `.claude/skills/` directory. Confirm it worked by starting a new session: `hydroclimmate`
 should appear in the available skills, and `/hydroclimmate` should be invocable.
 
-**Codex and other AGENTS.md tools** — copy or add `hydroclimmate/` as a submodule inside the
-project, then add one line to the project's own root `AGENTS.md`:
+**Codex native skill** — from this repository root, with no existing destination:
 
-```
-Workflow rules and feature routing: hydroclimmate/AGENTS.md
+```bash
+mkdir -p ~/.agents/skills
+ln -s "$PWD/hydroclimmate" ~/.agents/skills/hydroclimmate
 ```
 
-That pointer is what carries the workflow into Codex, which cannot see Claude Code skills.
+For project scope, use that project's `.agents/skills/` instead. Verify discovery in the
+skill selector; restart if the change is not visible. See the [official skill guide](https://learn.chatgpt.com/docs/build-skills).
+
+**Explicit AGENTS.md integration** — an alternative for a project-wide workflow. Copy the
+package directory into the project and instruct its root AGENTS.md to read
+`hydroclimmate/AGENTS.md` for applicable work. A Git submodule contains the **whole repository**:
+if checked out at `vendor/HydroClimMate`, the package entry is
+`vendor/HydroClimMate/hydroclimmate/AGENTS.md`, not `vendor/HydroClimMate/AGENTS.md`.
+Resolve paths relative to the target project. Choose one primary integration path to avoid
+reading both entrypoints. Do not overwrite an existing skill destination.
 
 ## Adopt in a research project
 
@@ -64,6 +74,26 @@ Do not copy this README into the research project. Replace template placeholders
 evidence or `Unknown`, and omit irrelevant fields. Use version control for code, and
 filesystem or tool permissions to protect raw and reference data — these documents describe
 intent and cannot enforce it.
+
+## Offline model knowledge
+
+[The model index](hydroclimmate/references/models/index.md) routes directly to a topic.
+Targeted model questions need no project. Content is locally readable; source links support
+verification and updates rather than being a prerequisite for every answer.
+
+| Knowledge pack | Coverage |
+|---|---|
+| HRLDAS/Noah-MP | Offline driver, physics structure, forcing, initialization and output semantics |
+| WRF-Urban | Urban schemes, setup dependencies, grid and urban-output interpretation |
+| CTSM | Cases/configuration, initialization, subgrid structure and history output |
+| RBM | UW-Hydro candidate implementation; lab identity remains unconfirmed |
+| ISSM | Ice flow, mesh, stress balance, transient evolution and mass-change analysis |
+
+VIC and mizuRoute retain general workflow support but have no dedicated knowledge pack.
+These are concise, source-attributed explanations, not complete parameter catalogs or
+validated lab configurations. Unknown versions/interfaces require local evidence or an
+explicit gap. Lab settings remain in project records. No models or skills are installed by
+adding these documents. See [knowledge evaluation](evals/knowledge-eval.md) for coverage and limits.
 
 ## What the researcher does
 

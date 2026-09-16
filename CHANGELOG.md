@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6
+
+- Added five offline model knowledge packs, topic routing, source records and coverage limits.
+- Included ISSM ice flow/mass change and targeted model learning without a project.
+- Documented native Codex skills and corrected submodule/package paths.
+- Allowed justified cross-feature reads; annotated historical probe claims without rerunning them.
+- Added separate knowledge cases and offline evaluation protocol; static checks are not agent pass rates.
+- Existing project records remain valid; choose one entry path and retain project-specific settings.
+
 ## 0.5
 
 Installable for the first time, and usable from both Claude Code and Codex.

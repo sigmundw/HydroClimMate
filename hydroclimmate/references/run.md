@@ -3,6 +3,9 @@
 Use for model preparation, small trials, execution, restart and operational failure diagnosis.
 Scientific interpretation of completed outputs belongs to [Analyze](analyze.md).
 
+For model-specific context, select execution from the [local model index](models/index.md).
+Read only the relevant topic under the [knowledge policy](core.md#local-model-knowledge).
+
 ## Consume the shared checklist
 
 Use the five fields in [the core rules](core.md#shared-plan-to-execution-checklist) as the

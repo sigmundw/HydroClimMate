@@ -1,16 +1,24 @@
 # Core rules
 
 Cross-feature rules for the HydroClimMate workflow. Both entry points
-([SKILL.md](../SKILL.md) for Claude Code, [AGENTS.md](../AGENTS.md) for Codex and other
-tools) point here. Read this once per task; read one feature file for the current step.
+([SKILL.md](../SKILL.md) for native skill discovery, [AGENTS.md](../AGENTS.md) for explicit
+project integration) point here. Read once per task; start with the primary feature.
 
 ## Establish context
 
-- Identify the target research project; this workflow's templates are not its live records.
+- Identify the target project when one exists; targeted questions about documented models need no project, budget, research owner or task record. Templates are not live records.
 - Check applicable project AGENTS.md instructions, including relevant directory-specific rules. Do not assume the host loaded them; do not reread instructions already available and current.
 - Read relevant project README sections and an active task or handover only when needed. Inspect code or metadata to resolve stale or conflicting documentation.
 - Do not submit jobs beyond authorization, overwrite existing results, or change scientific definitions without adoption. Continue within unchanged existing authorization.
 - Missing documents do not authorize guessed budgets or configurations and do not block safe explanation. Ask only for missing facts that affect the next action.
+
+## Local model knowledge
+
+- For a model-specific question, use the [model index](models/index.md) to select the needed topic; skip overview when the topic is already known. Do not read every model or every topic.
+- Confirm the implementation/version and configuration when the answer depends on them. General explanation may proceed with explicitly stated scope if the version is unknown.
+- Prefer applicable local knowledge and inspect actual project metadata/code before assuming the description matches the run. Report source/implementation conflicts rather than silently changing definitions.
+- Citations point to local source records. Follow external sources only for missing, conflicting or explicitly current information, when permitted. Offline, continue supported work and identify the exact unresolved dependency; never invent defaults or API names.
+- Knowledge describes models, not execution authority. Lab settings stay in project records. Updates are deliberate, source-checked changes, not automatic rewriting during an ordinary task.
 
 ## Shared plan-to-execution checklist
 

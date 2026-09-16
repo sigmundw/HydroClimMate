@@ -6,7 +6,10 @@ report the files they read and the feature they selected. See README.md for why 
 `claude -p` harness could not be used and what this method can and cannot measure.
 
 Expected trace: `SKILL.md → references/core.md → references/<one feature>.md`.
-Reading more than one feature file would itself be a routing failure.
+Historical v0.5 criterion: a second feature read was counted as failure.
+**v0.6 correction:** judge the primary feature and the purpose of additional reads;
+Plan and Analyze explicitly allow needed cross-feature context. The observations below
+are retained, not rerun or re-scored.
 
 | # | Request | Difficulty | Expected | Selected | Trace | Result |
 |---|---|---|---|---|---|---|
@@ -21,23 +24,23 @@ Reading more than one feature file would itself be a routing failure.
 VIC and calibration — both in the skill's own description — yet the agent did not invoke
 HydroClimMate. It routed to the manuscript skill `yifan-help-me-revise` instead, and stated
 why it had ruled HydroClimMate out: the skill "is scoped to project-specific records and
-there is no project in the permitted directory." The description's scoping clause is doing
-real work under competition, which is the case a description most often fails.
+there is no project in the permitted directory." This is one observed exclusion under
+competition, not proof of which clause caused it.
+In v0.6, absence of a project is no longer itself an exclusion for documented-model questions.
 
-**Progressive disclosure works as designed.** All three read `SKILL.md`, then `core.md`,
-then exactly one feature file. None loaded a second feature file, which was the specific
-failure the four-file split was meant to prevent.
+**Observed selective loading.** All three read `SKILL.md`, then `core.md`,
+then exactly one feature file. None loaded a second feature file in these probes. This does
+not establish that additional feature reads would be wrong on other requests.
 
-**The routing table's exclusions are load-bearing, not decorative.** Probe A rejected Run by
+**The probes cited routing exclusions.** Probe A rejected Run by
 citing the "do not use for" column ("scientific interpretation of completed results"). Probe B
 rejected all three alternatives explicitly. The agents used the table's negative space, not
 just its positive matches.
 
-**The references are being used, not merely opened.** Probe C's approach named control volume,
+**The answer was consistent with the reference.** Probe C's approach named control volume,
 time window, included terms and tolerance; distinguished interval-mean fluxes from cumulative
-counters; and applied effective-area weighting — all specific instructions from `analyze.md`
-rather than general hydrological knowledge. This is the strongest evidence in the set that the
-content earns its place.
+counters; and applied effective-area weighting — consistent with `analyze.md`. Without a
+no-reference control, this does not establish that the skill caused the behavior rather than the agent using prior hydrological knowledge.
 
 **Probe B behaved correctly under missing information.** With no project records available it
 produced the five-field checklist with configuration-dependent items labeled proposed, and

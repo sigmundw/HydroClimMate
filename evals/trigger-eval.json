@@ -76,8 +76,10 @@
   },
   {
     "query": "whats the difference between Noah-MP and CLM in general? just curious about the land surface model landscape",
-    "should_trigger": false,
-    "note": "near-miss: names a lab model but asks for general background, not project code"
+    "should_trigger": true,
+    "expected_feature": "understand",
+    "difficulty": "hard",
+    "routing_note": "v0.6 supports targeted documented-model learning without a project"
   },
   {
     "query": "fix the typo in the readme, it says 'recieve' instead of 'receive'",
@@ -118,5 +120,33 @@
     "query": "help me write the methods section describing our VIC calibration for the paper",
     "should_trigger": false,
     "note": "near-miss: names VIC and calibration, but the task is manuscript writing"
+  },
+  {
+    "query": "In ISSM, why can a velocity solve finish without producing a thickness time series?",
+    "should_trigger": true,
+    "expected_feature": "understand",
+    "difficulty": "hard",
+    "routing_note": "v0.6 ice-sheet coverage"
+  },
+  {
+    "query": "Discuss an ISSM mesh refinement experiment; do not run it.",
+    "should_trigger": true,
+    "expected_feature": "plan",
+    "difficulty": "hard",
+    "routing_note": "v0.6 ice-sheet coverage"
+  },
+  {
+    "query": "Our ISSM run ended with a solver error; inspect the existing logs before suggesting a restart.",
+    "should_trigger": true,
+    "expected_feature": "run",
+    "difficulty": "hard",
+    "routing_note": "v0.6 ice-sheet coverage"
+  },
+  {
+    "query": "Compute an area mean from ISSM vertex values on a nonuniform triangular mesh.",
+    "should_trigger": true,
+    "expected_feature": "analyze",
+    "difficulty": "hard",
+    "routing_note": "v0.6 ice-sheet coverage"
   }
 ]

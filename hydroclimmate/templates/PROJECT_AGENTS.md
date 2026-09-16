@@ -1,7 +1,7 @@
 # <Project name> — Working Rules
 
 This project follows the HydroClimMate workflow.
-Workflow rules and feature routing: <path>/hydroclimmate/AGENTS.md
+Integration: <native hydroclimmate skill OR explicit path to hydroclimmate/AGENTS.md; choose one>
 
 That file and the references beside it carry the general rules — evidence and reporting
 standards, escalation, data semantics, grid and area weighting, validation. Do not copy

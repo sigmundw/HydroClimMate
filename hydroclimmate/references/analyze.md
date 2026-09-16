@@ -1,8 +1,11 @@
-# Analyze hydrological data
+# Analyze hydrological, land-surface and ice-sheet data
 
 Use for processing, evaluating, plotting and diagnosing observations or model outputs.
 Read [the shared checklist](core.md#shared-plan-to-execution-checklist) as the input
 contract; a clear request can supply it directly without a separate planning stage.
+
+For model-specific context, select outputs from the [local model index](models/index.md).
+Read only the relevant topic under the [knowledge policy](core.md#local-model-knowledge).
 
 ## Establish the quantity and evidence
 
@@ -22,7 +25,7 @@ For area means of cell-based fields:
 - Regular degree-spaced latitude–longitude grids: use supplied cell areas or areas from bounds. cos(latitude) is an approximation only for a suitable regular equal-angle grid, not a general weighting rule.
 - Confirmed equal-area cells: use equal area weights; do not add latitude/longitude or cosine-latitude weighting. Basin overlap and valid coverage can still differ.
 - Other curvilinear grids or meshes: use supplied areas or areas derived from validated cell geometry; do not assume equal area or apply latitude-only weights.
-- Node-based values need a documented integration rule; do not treat nodes as equal-area cells.
+- Node-based values need a documented integration rule; do not treat nodes as equal-area cells. For finite elements, establish connectivity, interpolation order, domain measure (area/volume) and partial-element masks before integration.
 
 Check area units, positivity and alignment with the data. Use effective area (cell area ×
 included fraction), excluding missing values consistently from numerator and denominator.

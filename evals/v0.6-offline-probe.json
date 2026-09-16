@@ -1,0 +1,131 @@
+{
+  "date": "2026-09-16",
+  "scope": "One paired explicit-invocation probe; not triggering or a suite pass rate",
+  "prompt": "Use workflow/SKILL.md to answer this targeted question. All available task materials are inside this working directory. Do not read outside it, use the network, invoke another agent, modify files or run a model. If a needed detail is unavailable, say so. At the end list the local files actually read and sources used.\n\nIn ISSM, why can a completed velocity solve produce no thickness time series? Also, for two fully included planar triangles with areas 1 and 3 square metres and linear nodal scalar values (0,0,3) and (3,3,3), what is the area mean and when would that integration rule not apply? I have no project or model installation here. Keep the answer under 350 words.",
+  "settings": {
+    "command": "codex exec --ignore-user-config --ephemeral --skip-git-repo-check --sandbox read-only -c web_search=disabled --json -C <condition> -",
+    "model": "CLI default; model identifier not emitted in captured JSONL",
+    "timeout_seconds_per_condition": 180,
+    "knowledge_network": "web search disabled; read-only sandbox; no network commands observed; no packet-level audit"
+  },
+  "conditions": {
+    "A": {
+      "exit_code": 0,
+      "seconds": 34.6,
+      "usage": {
+        "input_tokens": 93355,
+        "cached_input_tokens": 66944,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 1196,
+        "reasoning_output_tokens": 308
+      },
+      "file_reads": [
+        "workflow/SKILL.md",
+        "workflow/references/understand.md",
+        "workflow/references/core.md",
+        "workflow/references/analyze.md"
+      ],
+      "read_file_bytes": 14724,
+      "read_file_words": 2048,
+      "command_output_bytes": 16389,
+      "command_output_words": 2209,
+      "commands": [
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,240p' workflow/SKILL.md\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,260p' 'workflow/references/understand.md'\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,260p' 'workflow/references/core.md'\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'rg --files'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc 'rg -n -i \"ISSM|thickness|velocity|triangle|area mean|integration|transient|stressbalance|masstransport\" workflow'",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,220p' workflow/references/analyze.md\"",
+          "exit_code": 0
+        }
+      ],
+      "read_file_sha256": {
+        "workflow/SKILL.md": "ea83c82e04a337ee94b9627683fac037c88982f946c6bdbc2c3563fb4dd1ef88",
+        "workflow/references/understand.md": "bad70ba5cbf488d3a928b0963648d267102ec7388345c32b803aa5ae7e42eed0",
+        "workflow/references/core.md": "e259521fa4d4250bf405ed835a5d85be2960b3862c877702dd7735ea6843b5ab",
+        "workflow/references/analyze.md": "f85e485ff03194edd50399f698f2dae310c86840a282637a771223f75a6da714"
+      },
+      "final_answer": "A completed ISSM velocity solve can produce no thickness time series because a stress-balance solve is diagnostic: it computes velocity for the supplied geometry but does not evolve thickness. A thickness history requires a transient solve with mass transport enabled, valid time stepping, and thickness included in the requested outputs. If those were used, also check the transient result records rather than only the stress-balance solution. No local ISSM installation or authoritative ISSM documentation was available here, so exact field/switch names cannot be locally verified.\n\nFor a linear scalar field on a planar triangle, the exact element mean is the arithmetic mean of its three nodal values:\n\n- Area 1 triangle: mean = \\((0+0+3)/3=1\\); integral = \\(1\\times1=1\\).\n- Area 3 triangle: mean = \\((3+3+3)/3=3\\); integral = \\(3\\times3=9\\).\n\nThus the combined area mean is\n\n\\[\n\\frac{1+9}{1+3}=2.5.\n\\]\n\nThis rule does not directly apply when triangles are only partially included, values use nonlinear or higher-order interpolation, the quantity is cell-based rather than nodal, geometry/Jacobians require nonconstant weighting, or masks/missing values alter the effective area. Those cases require an appropriate quadrature or overlap integration rule.\n\nLocal files actually read and sources used:\n\n- `workflow/SKILL.md`\n- `workflow/references/core.md`\n- `workflow/references/understand.md`\n- `workflow/references/analyze.md`\n\nNo network or external sources were used."
+    },
+    "B": {
+      "exit_code": 0,
+      "seconds": 40.0,
+      "usage": {
+        "input_tokens": 96890,
+        "cached_input_tokens": 85504,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 1163,
+        "reasoning_output_tokens": 211
+      },
+      "file_reads": [
+        "workflow/SKILL.md",
+        "workflow/references/core.md",
+        "workflow/references/understand.md",
+        "workflow/references/models/index.md",
+        "workflow/references/models/issm/outputs.md",
+        "workflow/references/models/issm/overview.md",
+        "workflow/references/models/issm/sources.md"
+      ],
+      "read_file_bytes": 21591,
+      "read_file_words": 2802,
+      "command_output_bytes": 21597,
+      "command_output_words": 2802,
+      "commands": [
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,240p' workflow/SKILL.md\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,260p' workflow/references/core.md\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,300p' workflow/references/understand.md\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,260p' workflow/references/models/index.md\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,320p' workflow/references/models/issm/outputs.md\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,300p' workflow/references/models/issm/overview.md\"",
+          "exit_code": 0
+        },
+        {
+          "command": "/bin/zsh -lc \"sed -n '1,300p' workflow/references/models/issm/sources.md\"",
+          "exit_code": 0
+        }
+      ],
+      "read_file_sha256": {
+        "workflow/SKILL.md": "ea83c82e04a337ee94b9627683fac037c88982f946c6bdbc2c3563fb4dd1ef88",
+        "workflow/references/core.md": "0525423485b52ce3982377175da75cb52128c1b9037d88e2141770b596ba0ed8",
+        "workflow/references/understand.md": "7ef7fba2d9685df8d702267d9712c5e820f09064effc1fe83348a60cafb74ea0",
+        "workflow/references/models/index.md": "08a74791298af2568786a2f9c6ac9d9580a9e68c2dcab5048da23956b95c6725",
+        "workflow/references/models/issm/outputs.md": "6d343ca624f018b9dcecbca277cb467e80eb7dedfd0b3fea283b62b53aaa4f36",
+        "workflow/references/models/issm/overview.md": "833f33ffdaad20677ed639e6051d8af8ba72b08c1f5ca08dd4dca756c768d531",
+        "workflow/references/models/issm/sources.md": "d8ce640bc1fe828fea38fefea5dfdaca7c734719a72756e05cc5cef933f3b29b"
+      },
+      "final_answer": "A completed ISSM velocity solve can produce no thickness time series because a stress-balance solve is diagnostic: it computes velocity from the supplied geometry, material properties, and boundary conditions. Thickness evolves only when a transient calculation includes and saves the mass-transport/thickness component. “Transient” alone is insufficient—component activation must be checked. With no project or installation, the exact configuration and output fields cannot be verified.\n\nFor each linear triangular element,\n\n\\[\n\\int_T v\\,dA=A\\frac{v_1+v_2+v_3}{3}.\n\\]\n\n- Area 1, values `(0,0,3)`: integral = \\(1\\times1=1\\)\n- Area 3, values `(3,3,3)`: integral = \\(3\\times3=9\\)\n\nTherefore, the area mean is\n\n\\[\n\\frac{1+9}{1+3}=\\boxed{2.5}.\n\\]\n\nThis exact rule applies to fully included planar triangles with linear nodal interpolation. It does not directly apply to partial elements, higher-order or non-nodal fields, curved geometry, or volume integrals; those require appropriate clipping, basis functions, and quadrature. The physical-area/projection convention must also be established.\n\nLocal files read:\n\n- `workflow/SKILL.md`\n- `workflow/references/core.md`\n- `workflow/references/understand.md`\n- `workflow/references/models/index.md`\n- `workflow/references/models/issm/overview.md`\n- `workflow/references/models/issm/outputs.md`\n- `workflow/references/models/issm/sources.md`\n\nSources used: local ISSM records I1 (stress balance), I2 (transient component activation), and I4 (vertex/element distinction), plus the linear-triangle derivation in `outputs.md`. No network or model installation was used."
+    }
+  }
+}

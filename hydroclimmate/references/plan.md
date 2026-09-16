@@ -3,6 +3,9 @@
 Use for explicit design/comparison requests or a consequential unresolved choice discovered
 in Run or Analyze. A factual question or a clear execution request does not need this feature.
 
+For model-specific context, select overview or execution from the [local model index](models/index.md).
+Read only the relevant topic under the [knowledge policy](core.md#local-model-knowledge).
+
 ## Establish the actual decision
 
 - Read existing project facts, configuration, adopted decisions and available evidence first.

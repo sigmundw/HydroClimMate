@@ -1,10 +1,14 @@
 # Understand the project
 
-Use for project-specific explanation and learning. The routing and document policy in
+Use for project-specific explanation and targeted questions about documented models. The routing and document policy in
 [the core rules](core.md) apply; no execution stage is implied.
+
+For model-specific context, select overview from the [local model index](models/index.md).
+Read only the relevant topic under the [knowledge policy](core.md#local-model-knowledge).
 
 ## Start from the question
 
+- Without a project, answer the model question directly; do not request project setup or an execution checklist.
 - Identify what must be explained: a method, variable, function, configuration or data path.
 - Read the relevant project overview, entry point and definitions, not the entire repository.
 - Follow only the calls and transformations needed to answer the question.
