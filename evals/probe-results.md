@@ -13,8 +13,16 @@ Reading more than one feature file would itself be a routing failure.
 | A | runoff 40% high vs USGS gauge | easy (restates table) | Analyze | Analyze | core → analyze | pass |
 | B | mizuRoute offline vs online coupling for low-flow skill | **hard** | Plan | Plan | core → plan | pass |
 | C | water balance closure on HRLDAS output | **hard** | Analyze | Analyze | core → analyze | pass |
+| D | write the methods section on our VIC calibration | negative near-miss | *no fire* | *did not fire* | went to `yifan-help-me-revise` | pass |
 
 ## Observations
+
+**The hardest negative discriminated correctly, against a real competitor.** Probe D names
+VIC and calibration — both in the skill's own description — yet the agent did not invoke
+HydroClimMate. It routed to the manuscript skill `yifan-help-me-revise` instead, and stated
+why it had ruled HydroClimMate out: the skill "is scoped to project-specific records and
+there is no project in the permitted directory." The description's scoping clause is doing
+real work under competition, which is the case a description most often fails.
 
 **Progressive disclosure works as designed.** All three read `SKILL.md`, then `core.md`,
 then exactly one feature file. None loaded a second feature file, which was the specific
@@ -36,12 +44,27 @@ produced the five-field checklist with configuration-dependent items labeled pro
 flagged the low-flow metric definition as a blocking choice for the research owner, instead of
 asserting an answer. That is the intended behavior for Plan.
 
+## Incidental finding, unrelated to this skill
+
+Probe D reported two defects in `yifan-help-me-revise` while reading it. Both were checked
+and both hold:
+
+- `SKILL.md:126-127` cites `evidence/rules.yaml` and `evidence/move-statistics.json` for its
+  rule counts and machine-checked examples. There is no `evidence/` directory in the
+  installed skill.
+- `M-03` is defined inconsistently: `references/methods.md:52` gives it as "Report the
+  robustness check, not just the choice", while `references/paper-types.md:20` cites it as
+  "keep calibration, optimization, validation, and application separate".
+
+Worth fixing there; nothing to do here.
+
 ## Limits of this result
 
-Three probes, one run each, is a smoke test — not a pass rate. It shows the routing table can
-work, not how often it does.
+Four probes, one run each, is a smoke test — not a pass rate. It shows the routing table can
+work, not how often it does. Three of the four are worth weight: A restates the table almost
+verbatim and mainly confirms the plumbing.
 
-Only two of the three were hard cases, and the third hard case (Noah-MP top-layer soil moisture
-after a forcing change) was not run. Triggering was not measured at all: asking a subagent to
-report which guidance it used primes it to go looking, so these probes cannot tell you whether
-the skill fires on its own in a normal session.
+Triggering was not measured. Asking a subagent to report which guidance it used primes it to
+go looking, so these probes cannot tell you whether the skill fires unprompted in a normal
+session. Probe D is partial evidence on the negative side — it declined to fire even while
+primed — but the positive side is still unmeasured.
