@@ -28,7 +28,7 @@ irreversible action; do not infer approval from a recommended plan.
 
 ## Produce the shared checklist
 
-Use the five fields defined in [the entrypoint](../SKILL.md#shared-plan-to-execution-checklist):
+Use the five fields defined in [the core rules](core.md#shared-plan-to-execution-checklist):
 Goal and scope; Inputs and selected method/configuration; Steps and output locations;
 Resource budget and authorization; Acceptance checks and pending choices.
 

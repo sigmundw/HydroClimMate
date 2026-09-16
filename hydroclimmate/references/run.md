@@ -5,7 +5,7 @@ Scientific interpretation of completed outputs belongs to [Analyze](analyze.md).
 
 ## Consume the shared checklist
 
-Use the five fields in [the entrypoint](../SKILL.md#shared-plan-to-execution-checklist) as the
+Use the five fields in [the core rules](core.md#shared-plan-to-execution-checklist) as the
 input contract, whether supplied by a plan, a task record or the user's existing request.
 Resolve only gaps affecting the next step; do not require Plan for an already defined run.
 

@@ -1,6 +1,6 @@
 # <Project name>
 
-ACT Hydro Lab
+<Research group or lab>. Follows the HydroClimMate workflow.
 
 Keep this concise (aim for 60–100 lines; shorter is fine). Link existing documentation,
 configuration and logs; omit irrelevant fields. Maintain run commands here only.

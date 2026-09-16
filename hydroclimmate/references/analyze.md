@@ -1,7 +1,7 @@
 # Analyze hydrological data
 
 Use for processing, evaluating, plotting and diagnosing observations or model outputs.
-Read [the shared checklist](../SKILL.md#shared-plan-to-execution-checklist) as the input
+Read [the shared checklist](core.md#shared-plan-to-execution-checklist) as the input
 contract; a clear request can supply it directly without a separate planning stage.
 
 ## Establish the quantity and evidence

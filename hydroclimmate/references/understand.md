@@ -1,7 +1,7 @@
 # Understand the project
 
 Use for project-specific explanation and learning. The routing and document policy in
-[the skill entrypoint](../SKILL.md) apply; no execution stage is implied.
+[the core rules](core.md) apply; no execution stage is implied.
 
 ## Start from the question
 

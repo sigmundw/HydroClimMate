@@ -1,5 +1,52 @@
 # Changelog
 
+## 0.5
+
+Installable for the first time, and usable from both Claude Code and Codex.
+
+**Added**
+
+- **Two entry points over shared references.** `SKILL.md` (Claude Code) and `AGENTS.md`
+  (Codex and other AGENTS.md tools) carry the same routing table and point at the same
+  `references/`. The routing table is duplicated between them by design and marked as such;
+  everything else lives once.
+- **`references/core.md`** — the cross-feature rules lifted out of `SKILL.md`: context checks,
+  the shared five-field checklist, project-record policy and stopping rules. Both entry points
+  are now ~30 lines.
+- **Install instructions**, which the project had never had. 0.1 through 0.4 were revised four
+  times without ever being installed or run.
+- **"What the researcher does"** in `README.md`, restored from 0.2 and lost in the 0.4 rewrite.
+  It lives in the repo README rather than the workflow files because it addresses the human and
+  should not consume agent context.
+- **Trial log** in `README.md`, restored from 0.1.
+- **LICENSE** (MIT) and a version marker in the body of both entry points. `SKILL.md`
+  frontmatter has no `version` field, so it cannot go there.
+
+**Changed**
+
+- Renamed throughout to **HydroClimMate**, matching the repository. The skill is
+  `hydroclimmate`; ACT Hydro Lab is named as author rather than stamped on every template.
+- Package directory `act-hydro-lab-starter/` → `hydroclimmate/`; `README.md` and
+  `CHANGELOG.md` moved to the repository root so the package can be symlinked into
+  `~/.claude/skills/` without them.
+- `templates/AGENTS.md` → `templates/PROJECT_AGENTS.md`, parallel to the existing
+  `PROJECT_README.md`, so it is not confused with the workflow-level `AGENTS.md`.
+- **`PROJECT_AGENTS.md` cut from 52 lines to project-specific boundaries only.** It had
+  restated eight rules the workflow already carried — Ran/Verified/Supported, equal-area
+  weighting, clean-kernel notebooks, escalation, evidence capture, sample-is-not-full-run,
+  decision ownership, do-not-rerun-costly-work. It now holds entry points, paths, budgets,
+  authorization scope, owner, and project-specific scientific constraints, plus the pointer
+  line that carries the workflow into Codex.
+- **`description` rewritten** from 329 to 791 characters (cap is 1,536). It contained no
+  domain noun a hydrologist would type; it now names runoff, streamflow, basin and catchment
+  means, water balance, netCDF and forcing data, spin-up, restart, calibration, grid and area
+  weighting, HPC jobs, and the models VIC, mizuRoute, WRF-urban, HRLDAS/Noah-MP and CTSM.
+- Feature files point at `references/core.md` rather than `SKILL.md`, so they read correctly
+  under both tools.
+
+- Migration: existing projects keep their records. Update the template path if you referenced
+  `templates/AGENTS.md`, and move any universal rules out of your project `AGENTS.md`.
+
 ## 0.4
 
 - Packaged one skill with four on-demand features: Understand, Plan, Run and Analyze.
@@ -21,6 +68,10 @@
 - Migration: retain existing records; update active rules and link existing commands. No file renames required.
 
 ## 0.2
+
+*Section numbers below refer to the pre-0.4 README, which was a single numbered
+document. That structure no longer exists; the content moved into SKILL.md and
+references/ in 0.4, and into the two entry points in 0.5.*
 
 Documentation only. No change to the four-document structure, and nothing in 0.1 was
 removed — a project already running 0.1 can adopt this by merging.
