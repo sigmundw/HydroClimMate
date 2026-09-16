@@ -46,7 +46,7 @@ def _fetch(url, timeout=30):
         code = done.stdout.strip()
         if done.returncode != 0 or not code.isdigit():
             return False, (done.stderr.strip().splitlines() or ["curl failed"])[-1][:80]
-        return int(code) < 400, code
+        return 200 <= int(code) < 400, code
     import urllib.error
     import urllib.request
     request = urllib.request.Request(url, headers={"User-Agent": "hydroclimmate-linkcheck"})
@@ -93,17 +93,20 @@ def check_urls():
 def check_freshness():
     """Report how old each pack's source review is. Floating URLs decay quietly."""
     stale = []
-    for source in sorted(PACKAGE.glob("references/models/*/sources.md")):
+    sources = sorted(PACKAGE.glob("references/models/*/sources.md"))
+    assert sources, "No model source packs found"
+    for source in sources:
         match = re.search(r"^Checked:\s*(\d{4})-(\d{2})-(\d{2})", source.read_text(), re.M)
         assert match, f"{source} has no 'Checked: YYYY-MM-DD' line"
         age = (date.today() - date(*map(int, match.groups()))).days
+        assert age >= 0, f"{source} has a future Checked date"
         if age > STALE_DAYS:
             stale.append((source.parent.name, age))
     if stale:
         for model, age in stale:
             print(f"WARN: {model} sources last checked {age} days ago (limit {STALE_DAYS})")
     else:
-        print(f"PASS: all five source packs re-checked within {STALE_DAYS} days")
+        print(f"PASS: all {len(sources)} source-pack review dates within {STALE_DAYS} days")
 
 
 def main():
@@ -122,15 +125,16 @@ def main():
                 assert anchor in anchors(destination.read_text()), (path, link)
             count += 1
 
-    start, end = "<!-- ROUTING TABLE:", "<!-- END ROUTING TABLE -->"
-    routes = []
-    for name in ("SKILL.md", "AGENTS.md"):
-        text = (PACKAGE / name).read_text()
-        routes.append(text[text.index(start):text.index(end)])
-        assert "v0.6" in text
-    assert routes[0] == routes[1], "Entrypoint route drift"
+    entry = (PACKAGE / "SKILL.md").read_text()
+    match = re.search(r"HydroClimMate v(\d+\.\d+)", entry)
+    assert match, "Missing skill version"
+    assert f"Version {match.group(1)} " in (ROOT / "README.md").read_text(), "README version drift"
+    pointer = (PACKAGE / "AGENTS.md").read_text()
+    assert "[SKILL.md](SKILL.md)" in pointer, "Broken legacy integration pointer"
+    assert "| Feature |" not in pointer, "Routing rules duplicated in compatibility pointer"
 
-    models = ("hrldas-noahmp", "wrf-urban", "ctsm", "rbm", "issm")
+    models = sorted(p.name for p in (PACKAGE / "references/models").iterdir() if p.is_dir())
+    assert models, "No model packs found"
     for model in models:
         folder = PACKAGE / "references/models" / model
         assert {p.name for p in folder.glob("*.md")} == {
@@ -164,7 +168,7 @@ def main():
     old_mass = 2 * 10 * 900
     new_mass = 2 * 7 * 900
     assert new_mass - old_mass == -5400
-    print(f"PASS: {count} package links/anchors, five source-linked packs, routes, fixtures")
+    print(f"PASS: {count} package links/anchors, {len(models)} source-linked packs, shared entrypoint, fixtures")
     print("PASS: linear-triangle quadrature mean=2.5; fixed-domain mass change=-5400 kg")
     print("These are static/arithmetic checks, not model or agent-behavior validation.")
     check_freshness()

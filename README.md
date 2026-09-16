@@ -1,8 +1,8 @@
 # HydroClimMate
 
-Version 0.6 — for lab trials. Developed by ACT Hydro Lab.
+Version 0.7 — for lab trials. Developed by ACT Hydro Lab.
 
-An agent workflow for hydrological, land-surface and ice-sheet modeling work: one workflow, four
+An agent workflow for hydrological, groundwater, land-surface and ice-sheet modeling work: one workflow, four
 features, and lightweight project records. Normally one agent handles the task and loads
 only the detail the current step needs.
 
@@ -51,13 +51,17 @@ ln -s "$PWD/hydroclimmate" ~/.agents/skills/hydroclimmate
 For project scope, use that project's `.agents/skills/` instead. Verify discovery in the
 skill selector; restart if the change is not visible. See the [official skill guide](https://learn.chatgpt.com/docs/build-skills).
 
-**Explicit AGENTS.md integration** — an alternative for a project-wide workflow. Copy the
-package directory into the project and instruct its root AGENTS.md to read
-`hydroclimmate/AGENTS.md` for applicable work. A Git submodule contains the **whole repository**:
-if checked out at `vendor/HydroClimMate`, the package entry is
-`vendor/HydroClimMate/hydroclimmate/AGENTS.md`, not `vendor/HydroClimMate/AGENTS.md`.
-Resolve paths relative to the target project. Choose one primary integration path to avoid
-reading both entrypoints. Do not overwrite an existing skill destination.
+**One shared entrypoint:** both tools read the same `hydroclimmate/SKILL.md`; there is no
+Claude-specific versus Codex-specific workflow. See the [Claude Code skill guide](https://code.claude.com/docs/en/skills)
+and the [Codex skill guide](https://learn.chatgpt.com/docs/build-skills).
+
+For explicit project integration, the project's instructions can point directly to
+`hydroclimmate/SKILL.md`. The package's six-line `AGENTS.md` is a compatibility pointer
+for existing links, not another rule set. A submodule contains the whole repository:
+if checked out at `vendor/HydroClimMate`, use
+`vendor/HydroClimMate/hydroclimmate/SKILL.md`. Choose one primary integration method;
+do not overwrite an existing skill destination. The research project's own AGENTS.md
+still holds its local paths, budgets and constraints.
 
 ## Adopt in a research project
 
@@ -88,12 +92,19 @@ verification and updates rather than being a prerequisite for every answer.
 | CTSM | Cases/configuration, initialization, subgrid structure and history output |
 | RBM | UW-Hydro candidate implementation; lab identity remains unconfirmed |
 | ISSM | Ice flow, mesh, stress balance, transient evolution and mass-change analysis |
+| VIC | Classic/Image drivers, land runoff, subgrid output and routing handoff |
+| mizuRoute | Network HRUs, runoff remapping, hillslope/channel routing and discharge |
+| MODFLOW | MODFLOW 6 groundwater flow, discretization, boundaries, heads and budgets; legacy versions distinguished |
 
-VIC and mizuRoute retain general workflow support but have no dedicated knowledge pack.
 These are concise, source-attributed explanations, not complete parameter catalogs or
 validated lab configurations. Unknown versions/interfaces require local evidence or an
 explicit gap. Lab settings remain in project records. No models or skills are installed by
 adding these documents. See [knowledge evaluation](evals/knowledge-eval.md) for coverage and limits.
+
+Source reviews older than 180 days trigger a reminder, not automatic invalidation. Offline
+work continues where evidence is sufficient; only unsupported version-sensitive steps pause.
+See the [freshness policy](hydroclimmate/references/core.md#source-freshness). A successful link
+check does not establish accuracy or justify changing the source-review date.
 
 ## What the researcher does
 

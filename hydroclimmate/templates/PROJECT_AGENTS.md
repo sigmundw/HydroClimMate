@@ -1,7 +1,7 @@
 # <Project name> — Working Rules
 
 This project follows the HydroClimMate workflow.
-Integration: <native hydroclimmate skill OR explicit path to hydroclimmate/AGENTS.md; choose one>
+Integration: <native hydroclimmate skill OR explicit path to hydroclimmate/SKILL.md; choose one>
 
 That file and the references beside it carry the general rules — evidence and reporting
 standards, escalation, data semantics, grid and area weighting, validation. Do not copy

@@ -210,5 +210,77 @@
     "should_trigger": false,
     "note": "generic coding in a research repo",
     "added": "v0.6 negative coverage"
+  },
+  {
+    "query": "my VIC folder has a classic driver and an image driver; are these different physical models or different ways of running it?",
+    "should_trigger": true,
+    "added": "v0.7",
+    "expected_feature": "understand",
+    "difficulty": "hard",
+    "routing_note": "New model pack; no mandatory full-model read"
+  },
+  {
+    "query": "our mizuRoute file has the right number of HRUs but the outlets look wrong after reordering the runoff file",
+    "should_trigger": true,
+    "added": "v0.7",
+    "expected_feature": "analyze",
+    "difficulty": "hard",
+    "routing_note": "New model pack; no mandatory full-model read"
+  },
+  {
+    "query": "we already delayed the runoff before mizuRoute; should we keep its hillslope response switched on?",
+    "should_trigger": true,
+    "added": "v0.7",
+    "expected_feature": "plan",
+    "difficulty": "hard",
+    "routing_note": "New model pack; no mandatory full-model read"
+  },
+  {
+    "query": "VIC finished half the period before the node failed; the state file and logs are in run/",
+    "should_trigger": true,
+    "added": "v0.7",
+    "expected_feature": "run",
+    "difficulty": "hard",
+    "routing_note": "New model pack; no mandatory full-model read"
+  },
+  {
+    "query": "write an introduction paragraph about VIC applications for my manuscript",
+    "should_trigger": false,
+    "added": "v0.7",
+    "note": "Model name alone does not trigger scientific workflow"
+  },
+  {
+    "query": "rename the mizuroute experiment folder to lowercase",
+    "should_trigger": false,
+    "added": "v0.7",
+    "note": "Model name alone does not trigger scientific workflow"
+  },
+  {
+    "query": "my MODFLOW 6 heads look reasonable but the water budget does not close after changing pumping",
+    "should_trigger": true,
+    "added": "v0.7 small additions",
+    "expected_feature": "analyze",
+    "difficulty": "hard",
+    "routing_note": "Groundwater-model scope"
+  },
+  {
+    "query": "is MODFLOW 6 the same as MODFLOW-NWT, just with newer input names?",
+    "should_trigger": true,
+    "added": "v0.7 small additions",
+    "expected_feature": "understand",
+    "difficulty": "hard",
+    "routing_note": "Groundwater-model scope"
+  },
+  {
+    "query": "rename the folder modflow_outputs to groundwater_results",
+    "should_trigger": false,
+    "added": "v0.7 small additions",
+    "note": "Model mention in generic file or communication task"
+  },
+  {
+    "query": "write an email asking a colleague for their MODFLOW files",
+    "should_trigger": false,
+    "added": "v0.7 small additions",
+    "note": "Model mention in generic file or communication task"
   }
 ]

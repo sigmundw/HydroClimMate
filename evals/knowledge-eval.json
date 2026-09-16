@@ -141,5 +141,149 @@
     "rubric": [
       "No model knowledge reads"
     ]
+  },
+  {
+    "id": "vic-drivers",
+    "prompt": "Can I turn VIC Classic input into Image input just by renaming files to .nc?",
+    "expected_feature": "understand",
+    "relevant_topics": [
+      "vic/overview.md"
+    ],
+    "rubric": [
+      "Different driver I/O and execution order",
+      "No rename-based conversion"
+    ]
+  },
+  {
+    "id": "vic-gauge",
+    "prompt": "VIC produced surface runoff in mm. Can I compare it directly with a gauge time series in m3/s?",
+    "expected_feature": "analyze",
+    "relevant_topics": [
+      "vic/outputs.md"
+    ],
+    "rubric": [
+      "Units, interval, area, included runoff components",
+      "Routing and outlet support differ"
+    ]
+  },
+  {
+    "id": "mizu-ids",
+    "prompt": "mizuRoute receives the correct number of HRUs, but their order changed. Is matching the array length enough?",
+    "expected_feature": "analyze",
+    "relevant_topics": [
+      "mizuroute/execution.md"
+    ],
+    "rubric": [
+      "Explicit ID and receiving reach alignment",
+      "No positional assumption"
+    ]
+  },
+  {
+    "id": "mizu-double",
+    "prompt": "Our preprocessing converted VIC runoff to discharge and delayed it with a hillslope kernel. Can we use a depth-based mizuRoute setup unchanged?",
+    "expected_feature": "plan",
+    "relevant_topics": [
+      "vic/outputs.md",
+      "mizuroute/execution.md"
+    ],
+    "rubric": [
+      "Avoid duplicate area conversion and hillslope delay",
+      "Inspect actual receiving interface"
+    ]
+  },
+  {
+    "id": "mizu-outlet",
+    "prompt": "Can I sum discharge across all reaches in mizuRoute to get basin outflow?",
+    "expected_feature": "analyze",
+    "relevant_topics": [
+      "mizuroute/outputs.md"
+    ],
+    "rubric": [
+      "Downstream double counting",
+      "Outlet or non-overlapping boundary"
+    ]
+  },
+  {
+    "id": "mizu-old",
+    "prompt": "Offline, tell me the exact control keys of our old customized mizuRoute fork; I have not supplied its revision.",
+    "expected_feature": "run",
+    "relevant_topics": [
+      "mizuroute/execution.md"
+    ],
+    "rubric": [
+      "No invented keys",
+      "Ask for or inspect local implementation evidence"
+    ]
+  },
+  {
+    "id": "modflow-family",
+    "prompt": "Can I pass my old MODFLOW-NWT input directly to a MODFLOW 6 executable?",
+    "expected_feature": "understand",
+    "relevant_topics": [
+      "modflow/overview.md"
+    ],
+    "rubric": [
+      "Model family not interchangeable",
+      "Inspect release and input conversion"
+    ]
+  },
+  {
+    "id": "modflow-grid",
+    "prompt": "The MODFLOW 6 DISV file lists vertices. Should I average its heads as if they were ISSM nodal values?",
+    "expected_feature": "analyze",
+    "relevant_topics": [
+      "modflow/overview.md",
+      "modflow/outputs.md"
+    ],
+    "rubric": [
+      "Geometry vertices do not establish nodal head support",
+      "Use actual discretization and field definitions"
+    ]
+  },
+  {
+    "id": "modflow-storage",
+    "prompt": "For an unconfined illustration only, Sy is 0.2, area is 1000 m2 and water table rises 1 m, ignoring elastic storage. What volume change follows and what does it not prove?",
+    "expected_feature": "analyze",
+    "relevant_topics": [
+      "modflow/outputs.md"
+    ],
+    "rubric": [
+      "200 m3 under stated assumptions",
+      "Not a general head-times-area budget or validation"
+    ]
+  },
+  {
+    "id": "modflow-time",
+    "prompt": "Our MODFLOW 6 run has three stress periods. Does that prove storage was simulated as transient?",
+    "expected_feature": "understand",
+    "relevant_topics": [
+      "modflow/execution.md"
+    ],
+    "rubric": [
+      "Inspect steady/transient storage configuration",
+      "Stress periods differ from steps and output intervals"
+    ]
+  },
+  {
+    "id": "stale-offline",
+    "prompt": "The local model pack was reviewed 200 days ago and there is no internet. Can you still explain the difference between VIC land runoff and downstream discharge?",
+    "expected_feature": "understand",
+    "relevant_topics": [
+      "vic/overview.md"
+    ],
+    "rubric": [
+      "Disclose scope/date without blanket refusal",
+      "No fabricated current-version claims"
+    ]
+  },
+  {
+    "id": "stale-url",
+    "prompt": "All source URLs returned HTTP 200. Should we change every Checked date to today?",
+    "expected_feature": "none",
+    "relevant_topics": [],
+    "rubric": [
+      "No: reachability is not content review",
+      "Only actual scoped review justifies dates"
+    ]
   }
 ]

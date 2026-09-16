@@ -1,11 +1,11 @@
 ---
 name: hydroclimmate
-description: Understand, plan, run and analyze hydrological, land-surface and ice-sheet modeling work. Supports targeted offline questions about HRLDAS/Noah-MP, WRF-Urban, CTSM, RBM and ISSM without requiring a project. Covers experiment design, spin-up and restart, calibration choices, forcing data, HPC job submission and failure diagnosis, and model-output analysis — runoff and streamflow, basin and catchment means, water balance closure and ice mass budgets, netCDF variable and unit semantics, grid, mesh and area weighting, time, interval and calendar semantics, and missing-data handling. Also supports project workflows for VIC and mizuRoute without bundled model knowledge. Not for generic editing, textbook questions unrelated to a documented model, manuscript writing, or broad literature surveys.
+description: Understand, plan, run and analyze hydrological, groundwater, land-surface and ice-sheet modeling work. Supports targeted offline questions about HRLDAS/Noah-MP, WRF-Urban, CTSM, RBM, ISSM, VIC, mizuRoute and MODFLOW without requiring a project. Covers experiment design, spin-up and restart, calibration choices, forcing data, HPC job submission and failure diagnosis, and model-output analysis — runoff and streamflow, basin and catchment means, water balance closure and ice mass budgets, netCDF variable and unit semantics, grid, mesh and area weighting, time, interval and calendar semantics, and missing-data handling. Not for generic editing, textbook questions unrelated to a documented model, manuscript writing, or broad literature surveys.
 ---
 
 # HydroClimMate
 
-HydroClimMate v0.6 — developed by ACT Hydro Lab.
+HydroClimMate v0.7 — developed by ACT Hydro Lab.
 
 One workflow with four features, normally used by one agent. Read only the feature needed
 for the current step. Do not load every reference or run all four stages in sequence.
@@ -14,7 +14,6 @@ Read [references/core.md](references/core.md) first for context checks, the shar
 plan-to-execution checklist, project-record policy and stopping rules. Then read the primary
 feature below; supplement it only for a concrete dependency.
 
-<!-- ROUTING TABLE: duplicated by design in SKILL.md and AGENTS.md. Keep both in sync. -->
 ## Choose the current feature
 
 | Feature | Use when | Do not use for | Contrasting prompts |
@@ -29,4 +28,3 @@ feature requests within scope. For mixed work, choose the current objective and 
 only missing context: a high-runoff diagnosis starts in Analyze, may need Understand,
 and reaches Plan only if evidence calls for a new scientific choice or expanded scope.
 Changing feature does not create another agent or grant additional execution authority.
-<!-- END ROUTING TABLE -->

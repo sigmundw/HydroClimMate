@@ -1,8 +1,7 @@
 # Core rules
 
-Cross-feature rules for the HydroClimMate workflow. Both entry points
-([SKILL.md](../SKILL.md) for native skill discovery, [AGENTS.md](../AGENTS.md) for explicit
-project integration) point here. Read once per task; start with the primary feature.
+Cross-feature rules loaded from the shared [SKILL.md](../SKILL.md) entrypoint.
+Read once per task; start with the primary feature. The legacy AGENTS.md is only a pointer.
 
 ## Establish context
 
@@ -19,6 +18,14 @@ project integration) point here. Read once per task; start with the primary feat
 - Prefer applicable local knowledge and inspect actual project metadata/code before assuming the description matches the run. Report source/implementation conflicts rather than silently changing definitions.
 - Citations point to local source records. Follow external sources only for missing, conflicting or explicitly current information, when permitted. Offline, continue supported work and identify the exact unresolved dependency; never invent defaults or API names.
 - Knowledge describes models, not execution authority. Lab settings stay in project records. Updates are deliberate, source-checked changes, not automatic rewriting during an ordinary task.
+
+### Source freshness
+
+- A `Checked:` date older than 180 days is a review reminder, not an expiration or proof of error. Also review relevant claims when upstream changes affect them, local evidence conflicts, or they underpin a consequential result.
+- With permitted access, compare the specific claim against the matching official release/source, not merely the newest webpage. Report changes or conflicts; preserve a valid older-version explanation with its scope.
+- Offline or unable to fetch, disclose the date/coverage once and use supported local material and project code. Pause only a version-sensitive action lacking evidence; do not block basic explanation solely because of age.
+- A working URL proves reachability only. Advance `Checked:` only after actually reviewing the pack's source-backed claims, recording scope and changes/gaps in its source record. A partial check is noted separately and does not refresh the entire pack.
+- Do not auto-edit knowledge or upgrade a scientific configuration during an unrelated task. Propose substantive method changes for adoption; freshness review does not grant execution authority.
 
 ## Shared plan-to-execution checklist
 

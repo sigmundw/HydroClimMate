@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.7
+
+- Added source-attributed VIC5 and mizuRoute offline packs using the existing four-topic layout.
+- Covered driver distinctions, runoff-to-routing contracts, remapping and avoiding duplicate area conversion/routing.
+- Preserved v0.6 vocabulary and near-miss evaluations; added new model-specific scenarios.
+- Made model counts/version checks extensible and rejected future source-review dates.
+- Clarified that stale sources do not disable offline use and reachable URLs do not establish content validity.
+- Kept RBM lab-identity uncertainty consistent between the index and its existing source record.
+
+### 0.7 small additions
+
+- Added MODFLOW 6 groundwater-flow knowledge, with explicit legacy-version and transport limits.
+- Centralized stale-source behavior: review reminder, offline continuation, claim-level verification and honest Checked-date updates.
+- Made SKILL.md the sole shared entrypoint; reduced package AGENTS.md to a compatibility pointer. Project instruction templates remain.
+- Kept version 0.7 and existing project records; no installation or model execution.
+
 ## 0.6
 
 - Added five offline model knowledge packs, topic routing, source records and coverage limits.

@@ -114,3 +114,35 @@ control and a uniform 100% failure as **UNMEASURED** rather than as a finding.
 
 That is the same failure this directory already documents for the `claude -p` harness.
 A result where every case fails identically is a broken instrument until proven otherwise.
+
+## v0.7 expansion check — 2026-09-16
+
+Added VIC and mizuRoute scenarios while preserving the v0.6 follow-up cases: 39 trigger
+fixtures (21 positive, 18 negative) and 18 knowledge fixtures. New behavior cases have not
+been executed as agent evaluations; no new trigger rate or knowledge pass rate is claimed.
+
+Actual checks: official skill format validation passed; 173 package links/anchors and all
+seven packs passed the structural check; 51 external URLs resolved with network access.
+The first sandboxed network attempt failed its DNS control and was correctly UNMEASURED;
+a permitted network retry passed. Reachability is not verification of scientific content.
+Targeted mocked checks passed for future/stale review dates, HTTP 000/200 classification
+and unavailable transport. A separate dimensional example preserved 2,500 m3/day when
+combining 1 and 3 mm/day over 0.25 and 0.75 km2. No model simulation, installation, routing
+adapter or new A/B agent run was performed. Historical v0.6 probe evidence is unchanged.
+
+### v0.7 small additions — 2026-09-16
+
+MODFLOW adds four topic files; total coverage is eight packs. The shared SKILL.md now
+owns routing; package AGENTS.md only forwards existing integrations. Structural checks
+validate the pointer and README version rather than comparing duplicated routing tables.
+Source freshness behavior lives in core.md: an aged review is a warning, partial reviews
+and HTTP success do not refresh a whole pack, and offline supported work can continue.
+
+Actual checks passed: skill format; 188 package links/anchors; shared-entrypoint/version
+consistency; all eight source-date records; and the stated simplified unconfined-storage
+example (200 m3). An initial URL check encountered two USGS www endpoints returning 403;
+source links were changed to the official developer repository/publication record and the
+retry resolved all 63 URLs. This is reachability, not a complete scientific source audit.
+There are now 43 trigger fixtures and 24 knowledge fixtures. New MODFLOW/freshness behavior
+cases have not been run as agent evaluations. No model/skill installation or simulation
+was performed, and the release remains v0.7.

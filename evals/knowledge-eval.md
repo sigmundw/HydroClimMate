@@ -28,7 +28,7 @@ a necessary dependency. Loading unrelated models or all topics without reason is
 ## Checks and status
 
 [check_knowledge.py](check_knowledge.py) validates package links/anchors, source references,
-route synchronization and fixture shape, then checks two mathematical examples independently.
+shared-entrypoint consistency and fixture shape, then checks two mathematical examples independently.
 It does not prove model physics or agent behavior. Run `python3 evals/check_knowledge.py`.
 
 [v0.6 results](v0.6-results.md) records what was actually performed and what remains unmeasured.
