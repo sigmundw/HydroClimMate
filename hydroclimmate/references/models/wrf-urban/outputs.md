@@ -20,6 +20,10 @@ Check the history configuration and corresponding model implementation.
 
 - Confirm the quantity: urban-only versus full-cell, canopy air versus surface, flux versus
   state. Inspect the active urban scheme and the output assignment if the header is ambiguous.
+  When HRLDAS hosts the urban option rather than a WRF-coupled run, see the
+  [HRLDAS/Noah-MP urban-tile scope note](../hrldas-noahmp/outputs.md#urban-tile-scope-version-scoped) —
+  that host's urban routine may not tile-weight every state variable the way this pack's
+  fields do.
 - Establish spatial support before comparing urban and rural samples. A change in sample
   mask or urban fraction can change the reported mean without a local physical response.
 - For vector fields, check staggering and coordinate orientation before interpolation or

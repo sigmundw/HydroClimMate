@@ -11,7 +11,10 @@ Read only the relevant topic under the [knowledge policy](core.md#local-model-kn
 - Read existing project facts, configuration, adopted decisions and available evidence first.
 - Ask only for goals, scientific choices or constraints that cannot be established from them.
 - Discuss the few choices that materially change the result, cost or feasibility.
-- Offer a small number of real alternatives, a recommendation and the evidence or limitation behind it.
+- Offer a small number of real alternatives, a recommendation and the evidence or limitation
+  behind it. Name the deciding criterion the recommendation rests on and what evidence would
+  reverse it. When the deciding factor is the research owner's value judgement or an unstated
+  budget/risk tolerance, present the options and hand the choice back instead of selecting one.
 - Resolve one blocking choice without replanning an otherwise settled task.
 
 ## Tailor the discussion

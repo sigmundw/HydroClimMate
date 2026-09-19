@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.8
+
+Changes drawn from the first evaluation of the four features on a real single-model case. Their effect
+has not yet been measured; a before/after comparison is planned for the next stage.
+
+- HRLDAS/Noah-MP outputs: added a version-scoped note that enabling urban physics reassigns the Noah-MP
+  column on urban cells to the table's natural class, that the urban routine tile-weights only surface
+  energy and radiative fields, and that snow state is never passed to it; added source record H6 and a
+  cross-reference from the WRF-Urban pack.
+- HRLDAS/Noah-MP outputs: noted that a layer-mass identity may not hold in a zero-layer snow state, and that
+  water-body cells can carry a large negative value with no declared fill attribute, so masking must be explicit.
+- Run: after enabling a physics option, verify that the intended quantity changed for the intended reason
+  rather than concluding from the absence of errors.
+- Plan: a recommendation names its deciding criterion and what evidence would reverse it; value, budget and
+  risk judgements are handed back to the research owner.
+- Core and SKILL.md: read the applicable model topic before tracing source code; verifying an existing input
+  archive before a run is Run preflight.
+- No new model packs, no change to the four-topic layout, no installation or model execution.
+
 ## 0.7
 
 - Added source-attributed VIC5 and mizuRoute offline packs using the existing four-topic layout.

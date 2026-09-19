@@ -13,7 +13,7 @@ Read once per task; start with the primary feature. The legacy AGENTS.md is only
 
 ## Local model knowledge
 
-- For a model-specific question, use the [model index](models/index.md) to select the needed topic; skip overview when the topic is already known. Do not read every model or every topic.
+- For a model-specific question, use the [model index](models/index.md) to select the needed topic; skip overview when the topic is already known. Do not read every model or every topic. Read the applicable topic before tracing source code for a mechanism question; treat source tracing as the fallback when the pack does not cover it, not the default first step.
 - Confirm the implementation/version and configuration when the answer depends on them. General explanation may proceed with explicitly stated scope if the version is unknown.
 - Prefer applicable local knowledge and inspect actual project metadata/code before assuming the description matches the run. Report source/implementation conflicts rather than silently changing definitions.
 - Citations point to local source records. Follow external sources only for missing, conflicting or explicitly current information, when permitted. Offline, continue supported work and identify the exact unresolved dependency; never invent defaults or API names.

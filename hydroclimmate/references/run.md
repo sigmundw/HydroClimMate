@@ -42,6 +42,10 @@ Check expected files and readable structure, time coverage, grid consistency and
 nonfinite or incomplete output, as relevant. Apply established model diagnostics without
 claiming full scientific validation. Send interpretation or requested evaluation to Analyze.
 
+For a newly enabled physics option, verify that the intended quantity changed for the
+intended physical reason — for example, that the response scales with its controlling
+parameter — rather than concluding from absence of errors or presence of any difference alone.
+
 ## Finish and preserve continuity
 
 Stop at the requested stage: submission-only requests end with confirmed submission;

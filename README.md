@@ -1,6 +1,6 @@
 # HydroClimMate
 
-Version 0.7 — for lab trials. Developed by ACT Hydro Lab.
+Version 0.8 — for lab trials. Developed by ACT Hydro Lab.
 
 An agent workflow for hydrological, groundwater, land-surface and ice-sheet modeling work: one workflow, four
 features, and lightweight project records. Normally one agent handles the task and loads

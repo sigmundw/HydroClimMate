@@ -33,6 +33,18 @@ comments are not guaranteed to describe an older executable. No defaults are ado
 single-point, regional and output-variable lesson listings. Notebook execution and all
 embedded examples were not validated.
 
+## H6
+
+NCAR HRLDAS repository (https://github.com/NCAR/hrldas), commit `d9f5b205`; `noahmp`
+submodule (https://github.com/NCAR/noahmp), commit `9fbe672` (`v3.7.1-355-g9fbe672`);
+`drivers/hrldas` build path. Inspected: `ConfigVarInTransferMod.F90:156-163` (urban-cell
+vegetation-type/`GVFMAX` reassignment when `SF_URBAN_PHYSICS>0`);
+`module_NoahMP_hrldas_driver.F:1028,1041-1101` (call sequence and IN/OUT argument list for
+the urban routine — no snow variable present); `NoahmpUrbanDriverMainMod.F:522-536`
+(`FRC_URB2D` tile-weighting formulas for the listed fluxes). Supports the urban-tile scope
+note in [outputs.md](outputs.md#urban-tile-scope-version-scoped). Checked 2026-09-19. Not a
+claim about other driver paths or releases.
+
 ## Further detail and gaps
 
 [Official docs directory](https://github.com/NCAR/noahmp/tree/master/docs) was inspected as
