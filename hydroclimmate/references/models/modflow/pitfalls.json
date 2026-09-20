@@ -1,0 +1,17 @@
+{
+  "pack": "modflow",
+  "pitfalls": [
+    {
+      "id": "head-change-multiplied-by-area-treated-as-storage-volume"
+    },
+    {
+      "id": "absence-of-a-saved-budget-record-taken-as-evidence-of-zero-exchange"
+    },
+    {
+      "id": "internal-cell-to-cell-exchanges-summed-as-external-inflow"
+    },
+    {
+      "id": "small-global-budget-discrepancy-taken-as-evidence-of-a-correct-model"
+    }
+  ]
+}

@@ -8,9 +8,9 @@ automatically a valid VIC5 configuration.
 
 VIC represents subgrid variability in infiltration/storage capacity statistically and
 calculates runoff and lower-layer drainage alongside other land water and energy
-processes. Its standard land calculation and river routing are separate responsibilities:
-runoff generated in a cell is not yet discharge at a downstream gauge.
-[V1](sources.md#v1), [V2](sources.md#v2)
+processes. Its standard land calculation and river routing are separate responsibilities.
+See [pitfalls](pitfalls.md#local-runoff-treated-as-gauge-discharge) before comparing
+generated runoff with gauge discharge. [V1](sources.md#v1), [V2](sources.md#v2)
 
 Vegetation tiles and elevation bands represent subgrid heterogeneity, not necessarily
 explicit geographic polygons inside a cell. Many outputs are aggregated using their

@@ -1,0 +1,50 @@
+{
+  "pack": "hrldas-noahmp",
+  "workflows": [
+    {
+      "name": "minimal-preflight-and-continuation",
+      "steps": [
+        {
+          "step": 1,
+          "what_is_done": "identify the forcing time convention, units, completeness and spatial alignment with the setup data",
+          "must_establish": "a file timestamp alone does not establish its represented interval",
+          "check": null,
+          "source": null, "scope": "unspecified in the pack", "basis": "unverified",
+          "from": {"file": "execution.md", "anchor": "minimal-preflight-and-continuation"}
+        },
+        {
+          "step": 2,
+          "what_is_done": "record the adopted physics options and parameter files",
+          "must_establish": "the checkout's own parser is inspected before applying a namelist key learned from another version",
+          "check": null,
+          "source": null, "scope": "unspecified in the pack", "basis": "unverified",
+          "from": {"file": "execution.md", "anchor": "minimal-preflight-and-continuation"}
+        },
+        {
+          "step": 3,
+          "what_is_done": "state whether the run starts from prescribed fields, repeated forcing spin-up, or a compatible restart",
+          "must_establish": "an equilibration diagnostic and tolerance for the relevant stores is chosen; a prescribed number of loops is not proof of equilibrium",
+          "check": null,
+          "source": null, "scope": "unspecified in the pack", "basis": "unverified",
+          "from": {"file": "execution.md", "anchor": "minimal-preflight-and-continuation"}
+        },
+        {
+          "step": 4,
+          "what_is_done": "run a short authorized interval into a separate directory",
+          "must_establish": "timestamps, missing values and the requested state/flux diagnostics are inspected",
+          "check": "accumulation-and-fill (on the short interval's output, for missing/large-negative values)",
+          "source": null, "scope": "unspecified in the pack", "basis": "unverified",
+          "from": {"file": "execution.md", "anchor": "minimal-preflight-and-continuation"}
+        },
+        {
+          "step": 5,
+          "what_is_done": "before continuation, check restart time and configuration, forcing continuity, existing live jobs, and whether the executable would append to or replace outputs",
+          "must_establish": "an existing restart filename alone is not proof of a successful restart (see pitfalls)",
+          "check": null,
+          "source": null, "scope": "unspecified in the pack", "basis": "unverified",
+          "from": {"file": "execution.md", "anchor": "minimal-preflight-and-continuation"}
+        }
+      ]
+    }
+  ]
+}

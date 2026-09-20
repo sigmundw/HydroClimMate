@@ -1,0 +1,17 @@
+{
+  "pack": "wrf-urban",
+  "pitfalls": [
+    {
+      "id": "perturbation-base-state-or-accumulated-fields-plotted-as-if-directly-usable"
+    },
+    {
+      "id": "missing-diagnostic-assumed-to-mean-the-process-was-disabled"
+    },
+    {
+      "id": "accumulated-quantity-divided-by-a-nominal-timestep"
+    },
+    {
+      "id": "fixed-nominal-grid-spacing-treated-as-equal-ground-area"
+    }
+  ]
+}

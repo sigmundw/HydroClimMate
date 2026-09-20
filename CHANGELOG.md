@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.9
+
+Structural release. The effect of these changes has not been measured yet, and the machine-readable
+layers are deliberately sparse: they restate only what each pack already said, so most tool output for
+most variables reads "NO DECLARATION". Filling them from real model source and output is later work.
+
+- Review added as a fifth feature (`references/review.md`): when an independent check is proportionate, how to
+  call a fresh agent or session, what a reviewer may and may not receive, per-claim three-state output, no
+  authority to modify, re-run or recover, and final acceptance by the research owner.
+- `tools/` added (optional; numpy and netCDF4 needed to read files): `hcm_check.py` with `paired-response`,
+  `accumulation-and-fill`, `describe`, `lookup`, `pack-info` and `pitfall-scan`; `hcm_review_packet.py`, which
+  assembles what a reviewer may see and refuses executor narrative; `build_index.py`; self-tests on synthetic
+  data. Checks print observations first, then VERIFIED / VIOLATED / UNVERIFIED; without project thresholds the
+  verdict is UNVERIFIED and the numbers are still shown.
+- `templates/EXPERIMENT.md`: a project-owned experiment record (claim, what varies and what must stay identical,
+  expected response, what would count against it, acceptance and who set it).
+- Core and feature references: the four questions (what was established, how it was checked, what is the owner's
+  to decide, does this need Review) and a uniform closing block in Understand, Plan, Run and Analyze.
+- All eight model packs: five-topic layout with a new `pitfalls.md` built only from cautions each pack already
+  contained, and machine-readable layers (`pack.json`, `interface.json`, `switches.json`, `pitfalls.json`,
+  `workflows.json`, generated `index.json`, `selftest.json`) whose every fact carries source, scope, basis and
+  the sentence it restates. No new model claim was added; two independent audits removed the ones that crept in.
+  Packs carry no acceptance thresholds. See `references/models/SCHEMA.md`.
+- Evaluation assets: trigger fixtures that restated routing-table prompts or named non-existent paths were
+  rewritten (originals kept in `previous_query`); `evals/README.md` gained a dated correction of the earlier
+  account of why trigger measurement had produced no valid result; `evals/check_knowledge.py` validates the new
+  layers and that the committed index equals a fresh build.
+- No new model packs, no installation, no model execution.
+
 ## 0.8
 
 Changes drawn from the first evaluation of the four features on a real single-model case. Their effect

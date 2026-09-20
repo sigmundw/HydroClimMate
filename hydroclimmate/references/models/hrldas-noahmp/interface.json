@@ -1,0 +1,96 @@
+{
+  "pack": "hrldas-noahmp",
+  "files": [
+    {
+      "file_kind": "setup data",
+      "statement": "setup data, forcing input and derived output have separate locations in the checked namelist description",
+      "source": "H4",
+      "scope": "HRLDAS namelist description, master branch, retrieved 2026-09-16",
+      "basis": "source_read",
+      "from": {"file": "execution.md", "anchor": "prepare-a-consistent-experiment"}
+    },
+    {
+      "file_kind": "forcing input",
+      "statement": "identify the forcing time convention, units, completeness and spatial alignment with the setup data; a file timestamp alone does not establish its represented interval",
+      "source": null,
+      "scope": "unspecified in the pack",
+      "basis": "unverified",
+      "from": {"file": "execution.md", "anchor": "minimal-preflight-and-continuation"}
+    },
+    {
+      "file_kind": "derived output",
+      "statement": "the checked namelist separates forcing, model and output intervals, and can suppress the initial-state record; an initial record with no completed flux interval is not an ordinary averaged timestep",
+      "source": "H4",
+      "scope": "HRLDAS namelist description, master branch, retrieved 2026-09-16",
+      "basis": "source_read",
+      "from": {"file": "outputs.md", "anchor": "follow-the-output-interface"}
+    },
+    {
+      "file_kind": "namelist configuration",
+      "statement": "the start date, duration and requested restart identify the experiment; a timing rule requires the model step to divide the forcing and output intervals",
+      "source": "H4",
+      "scope": "HRLDAS namelist description, master branch, retrieved 2026-09-16",
+      "basis": "source_read",
+      "from": {"file": "execution.md", "anchor": "prepare-a-consistent-experiment"}
+    },
+    {
+      "file_kind": "restart",
+      "statement": "an existing restart filename is not evidence of a successful restart; check restart time and configuration and forcing continuity instead",
+      "source": null,
+      "scope": "unspecified in the pack",
+      "basis": "unverified",
+      "from": {"file": "pitfalls.md", "anchor": "existing-restart-filename-assumed-to-prove-a-successful-restart"}
+    }
+  ],
+  "inputs": [
+    {
+      "variable": "meteorological forcing (precipitation, radiation, wind, humidity, temperature, pressure)",
+      "aspect": "forcing_categories",
+      "statement": "meteorological forcing includes precipitation, radiation, wind, humidity, temperature and pressure",
+      "source": "H1",
+      "scope": "NCAR HRLDAS README, retrieved 2026-09-16",
+      "basis": "source_read",
+      "from": {"file": "overview.md", "anchor": "two-components-different-jobs"}
+    },
+    {
+      "variable": "WRF-preprocessed geographic information (static/domain fields)",
+      "aspect": "valid_support",
+      "statement": "HRLDAS can use WRF preprocessed geographic information without running an interactive atmosphere",
+      "source": "H1",
+      "scope": "NCAR HRLDAS README, retrieved 2026-09-16",
+      "basis": "source_read",
+      "from": {"file": "overview.md", "anchor": "two-components-different-jobs"}
+    },
+    {
+      "variable": "vegetation-type parameter table (class-indexed)",
+      "aspect": "identity",
+      "statement": "when SF_URBAN_PHYSICS>0, the Noah-MP column vegetation type for urban cells is reassigned to the parameter table's NATURAL class (class 14 in the MODIS table; GVFMAX forced to 96%) before the urban routine runs",
+      "source": "H6",
+      "scope": "source commit d9f5b205; noahmp submodule 9fbe672; drivers/hrldas build path",
+      "basis": "source_read",
+      "from": {"file": "pitfalls.md", "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"}
+    }
+  ],
+  "outputs": [
+    {
+      "variable": "snow water equivalent (exact output name not given in the pack)",
+      "aspect": "identity",
+      "statement": "a layer-mass identity such as snow water equivalent equal to ice plus liquid layer stores may not hold in a zero-layer state, where a scalar total can carry mass while the layer arrays read zero",
+      "source": null,
+      "scope": "one output set; not verified elsewhere",
+      "basis": "observed_in_output",
+      "from": {"file": "pitfalls.md", "anchor": "snow-water-equivalent-identity-and-unmasked-fill-values"}
+    },
+    {
+      "variable": "snow fields on water-body cells (exact output name not given in the pack)",
+      "aspect": "fill",
+      "attribute_declared": false,
+      "known_raw_value_order": -1e33,
+      "statement": "a large negative fill (order -1e33) can appear on water-body cells with no declared _FillValue/missing_value attribute, so standard libraries will not mask it automatically",
+      "source": null,
+      "scope": "one output set; not verified elsewhere",
+      "basis": "observed_in_output",
+      "from": {"file": "pitfalls.md", "anchor": "snow-water-equivalent-identity-and-unmasked-fill-values"}
+    }
+  ]
+}

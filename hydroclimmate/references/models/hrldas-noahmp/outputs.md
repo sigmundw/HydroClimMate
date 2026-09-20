@@ -17,32 +17,18 @@ The checked namelist separates forcing, model and output intervals, and can supp
 initial-state record. Do not treat an initial record with no completed flux interval as an
 ordinary averaged timestep. [H4](sources.md#h4)
 
-## Urban-tile scope (version-scoped)
-
-At source commit `d9f5b205` (`noahmp` submodule `9fbe672`), `drivers/hrldas` build path:
-enabling urban physics (`SF_URBAN_PHYSICS>0`) reassigns the Noah-MP column vegetation type
-for urban cells to the parameter table's `NATURAL` class (class 14 in the MODIS table;
-`GVFMAX` forced to 96%) before
-the urban routine runs. That routine then tile-weights only surface energy and radiative
-fields (`TSK`, `HFX`, `QFX`, `LH`, `GRDFLX`, `ALBEDO`, `EMISS`, `QSFC`) by `FRC_URB2D`;
-snow-state variables are never passed to it. A paired on/off difference in snow variables on
-urban cells can reflect the vegetation-table swap rather than urban canopy physics. A genuine
-tile effect should scale with `FRC_URB2D`; a flat or non-monotonic response is a warning
-sign, not confirmation — flux scaling with `FRC_URB2D` was not established here. Verified
-only for this source version and driver path; not verified for other Noah-MP drivers or
-releases. [H6](sources.md#h6)
+See
+[pitfalls](pitfalls.md#paired-urban-onoff-snow-difference-attributed-to-canopy-physics)
+before attributing a paired urban on/off snow difference on urban cells to canopy physics
+rather than the version-scoped vegetation-table swap.
 
 ## Recommended analysis checks
 
 - Distinguish water stored in a layer from a concentration or volumetric water fraction.
   A column inventory requires the relevant thickness, phase and unit conversions; adding
   layer values without their meaning can produce a plausible but incorrect total.
-- A layer-mass identity such as snow water equivalent equal to ice plus liquid layer stores
-  may not hold in a zero-layer state, where a scalar total can carry mass while the layer
-  arrays read zero; check the layer-count variable before assuming it, especially in a mass
-  budget. Some outputs carry a large negative fill (order `-1e33`) on water-body cells for
-  snow fields with no declared `_FillValue`/`missing_value` attribute, so standard libraries
-  will not mask them automatically; confirm the fill convention and mask explicitly.
+- See [pitfalls](pitfalls.md#snow-water-equivalent-identity-and-unmasked-fill-values) before
+  trusting a snow-water-equivalent layer identity or automatic fill masking.
 - For fluxes, establish instantaneous rate, interval mean, interval total or cumulative
   counter. Integrate rates over represented durations; difference counters only after
   identifying their restart/reset behavior.

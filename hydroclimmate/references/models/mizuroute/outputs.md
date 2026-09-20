@@ -10,21 +10,22 @@ diagnostics, method-specific routed discharge and storage-related quantities. Ba
 reach identifiers accompany the output; not every field has the same spatial meaning.
 Output selection is configurable. [M6](sources.md#m6)
 
-The channel guide explicitly allows upstream runoff accumulation without routing. It is
-useful for separating volume production from transport, but is not evidence that timing
-or attenuation has been simulated. [M4](sources.md#m4)
+See [pitfalls](pitfalls.md#upstream-accumulation-output-mistaken-for-routed-discharge)
+before treating an upstream-accumulation output as evidence of routing timing or
+attenuation. [M4](sources.md#m4)
 
 ## Recommended checks
 
 - Match a gauge to a reach ID, outlet and contributing drainage area. Nearest coordinates
   alone can select the wrong branch at a confluence.
-- Do not sum every reach's discharge to obtain basin outflow: upstream water appears again
-  in downstream reaches. Define one outlet or non-overlapping control boundaries.
+- See [pitfalls](pitfalls.md#reach-discharges-summed-to-get-basin-outflow) before summing
+  every reach's discharge. Define one outlet or non-overlapping control boundaries.
 - For volume comparison, integrate discharge over the represented interval. Account for
   routing storage change and applicable boundary/management fluxes before calling a
   difference a conservation error.
-- Compare the same timestamp convention and temporal statistic. A depth accumulated over
-  one interval cannot be compared directly with an instantaneous discharge sample.
+- See
+  [pitfalls](pitfalls.md#accumulated-depth-compared-directly-with-an-instantaneous-discharge-sample)
+  before comparing series with different temporal statistics.
 - Separate a remapping volume error from a routing response error. Check source and target
   coverage and missing-data treatment before changing routing parameters.
 

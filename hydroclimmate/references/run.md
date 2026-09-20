@@ -54,3 +54,9 @@ Link run evidence from an existing task. Update README only for changed durable 
 facts, and HANDOVER only for unfinished work crossing sessions/owners. Record important
 adopted choices under the shared decision policy in any feature. Missing evidence remains
 unverified; do not repeat costly work to manufacture a complete report.
+
+## Before you state the result
+
+Answer [the four questions](core.md#the-four-questions): what was established, what was
+checked and how, what is the owner's to decide, and whether this needs
+[Review](review.md).

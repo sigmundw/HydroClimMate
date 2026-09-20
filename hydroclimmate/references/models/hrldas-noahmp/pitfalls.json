@@ -1,0 +1,31 @@
+{
+  "pack": "hrldas-noahmp",
+  "pitfalls": [
+    {
+      "id": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics",
+      "detect": {
+        "check": "paired-response",
+        "control_var_hint": "FRC_URB2D",
+        "what_counts": "a non-zero snow-variable difference on urban cells between SF_URBAN_PHYSICS on/off; snow-state variables are never passed to the urban routine, so such a difference is not attributable to it (a flat or non-monotonic response to FRC_URB2D is a warning sign, not confirmation)",
+        "source": "H6",
+        "scope": "source commit d9f5b205; noahmp submodule 9fbe672; drivers/hrldas build path",
+        "basis": "source_read",
+        "from": {"file": "pitfalls.md", "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"}
+      }
+    },
+    {
+      "id": "snow-water-equivalent-identity-and-unmasked-fill-values",
+      "detect": {
+        "check": "accumulation-and-fill",
+        "what_counts": "an undeclared large-negative value on a snow field (checks the fill part of this pitfall only; the layer-count identity is not checked by any tool)",
+        "source": null,
+        "scope": "one output set; not verified elsewhere",
+        "basis": "observed_in_output",
+        "from": {"file": "pitfalls.md", "anchor": "snow-water-equivalent-identity-and-unmasked-fill-values"}
+      }
+    },
+    {
+      "id": "existing-restart-filename-assumed-to-prove-a-successful-restart"
+    }
+  ]
+}

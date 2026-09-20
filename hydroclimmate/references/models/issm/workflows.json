@@ -1,0 +1,62 @@
+{
+  "pack": "issm",
+  "workflows": [
+    {
+      "name": "build-a-meaningful-model-state",
+      "steps": [
+        {
+          "step": 1,
+          "what_is_done": "verify geometry consistency, units and coordinate system",
+          "must_establish": "which mesh is used for the horizontal domain and whether a three-dimensional extrusion is present is established",
+          "check": null,
+          "source": null,
+          "scope": "unspecified in the pack",
+          "basis": "unverified",
+          "from": {
+            "file": "execution.md",
+            "anchor": "build-a-meaningful-model-state"
+          }
+        },
+        {
+          "step": 2,
+          "what_is_done": "check input array association with vertices/elements and the intended boundary nodes",
+          "must_establish": "connectivity and degenerate elements are checked before interpreting a numerical failure",
+          "check": null,
+          "source": null,
+          "scope": "unspecified in the pack",
+          "basis": "unverified",
+          "from": {
+            "file": "execution.md",
+            "anchor": "build-a-meaningful-model-state"
+          }
+        },
+        {
+          "step": 3,
+          "what_is_done": "identify the flow approximation, rheology, friction law and boundary conditions",
+          "must_establish": "an approximation is not silently substituted to reduce runtime or make convergence easier",
+          "check": null,
+          "source": null,
+          "scope": "unspecified in the pack",
+          "basis": "unverified",
+          "from": {
+            "file": "execution.md",
+            "anchor": "build-a-meaningful-model-state"
+          }
+        },
+        {
+          "step": 4,
+          "what_is_done": "preserve the observation dataset and objective when reproducing an inversion",
+          "must_establish": "changing either defines a different experiment, not merely a solver adjustment",
+          "check": null,
+          "source": null,
+          "scope": "unspecified in the pack",
+          "basis": "unverified",
+          "from": {
+            "file": "execution.md",
+            "anchor": "build-a-meaningful-model-state"
+          }
+        }
+      ]
+    }
+  ]
+}

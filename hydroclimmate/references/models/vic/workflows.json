@@ -1,0 +1,75 @@
+{
+  "pack": "vic",
+  "workflows": [
+    {
+      "name": "recommended-preflight",
+      "steps": [
+        {
+          "step": 1,
+          "what_is_done": "record code revision and driver; inspect the actual global configuration and data readers",
+          "must_establish": "flags from VIC4 or a different driver are treated as unverified until checked locally",
+          "check": null,
+          "source": null,
+          "scope": "unspecified in the pack",
+          "basis": "unverified",
+          "from": {
+            "file": "execution.md",
+            "anchor": "recommended-preflight"
+          }
+        },
+        {
+          "step": 2,
+          "what_is_done": "verify forcing completeness, units, time convention and timestep against the selected model/snow stepping configuration",
+          "must_establish": "an old daily-input disaggregation workflow is not assumed available in the current driver",
+          "check": null,
+          "source": null,
+          "scope": "unspecified in the pack",
+          "basis": "unverified",
+          "from": {
+            "file": "execution.md",
+            "anchor": "recommended-preflight"
+          }
+        },
+        {
+          "step": 3,
+          "what_is_done": "confirm active cells, vegetation fractions, elevation bands and soil parameters are consistent",
+          "must_establish": "a representative cell is inspected with the intended physics before scaling",
+          "check": null,
+          "source": null,
+          "scope": "unspecified in the pack",
+          "basis": "unverified",
+          "from": {
+            "file": "execution.md",
+            "anchor": "recommended-preflight"
+          }
+        },
+        {
+          "step": 4,
+          "what_is_done": "establish prescribed initialization versus saved state, start time and the stores whose equilibration matters",
+          "must_establish": "study-specific diagnostics are set instead of equating a number of spin-up repetitions with convergence",
+          "check": null,
+          "source": null,
+          "scope": "unspecified in the pack",
+          "basis": "unverified",
+          "from": {
+            "file": "execution.md",
+            "anchor": "recommended-preflight"
+          }
+        },
+        {
+          "step": 5,
+          "what_is_done": "run a small authorized interval into a separate location",
+          "must_establish": "logs, time coverage, budgets and the state/output products actually requested are inspected",
+          "check": null,
+          "source": null,
+          "scope": "unspecified in the pack",
+          "basis": "unverified",
+          "from": {
+            "file": "execution.md",
+            "anchor": "recommended-preflight"
+          }
+        }
+      ]
+    }
+  ]
+}

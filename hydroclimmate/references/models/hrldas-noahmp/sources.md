@@ -42,8 +42,8 @@ vegetation-type/`GVFMAX` reassignment when `SF_URBAN_PHYSICS>0`);
 `module_NoahMP_hrldas_driver.F:1028,1041-1101` (call sequence and IN/OUT argument list for
 the urban routine — no snow variable present); `NoahmpUrbanDriverMainMod.F:522-536`
 (`FRC_URB2D` tile-weighting formulas for the listed fluxes). Supports the urban-tile scope
-note in [outputs.md](outputs.md#urban-tile-scope-version-scoped). Checked 2026-09-19. Not a
-claim about other driver paths or releases.
+note in [pitfalls.md](pitfalls.md#paired-urban-onoff-snow-difference-attributed-to-canopy-physics).
+Checked 2026-09-19. Not a claim about other driver paths or releases.
 
 ## Further detail and gaps
 

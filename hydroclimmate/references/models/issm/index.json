@@ -1,0 +1,81 @@
+{
+  "pack": "issm",
+  "generated_by": "tools/build_index.py",
+  "entries": [
+    {
+      "name": "geometry, material properties and boundary conditions (stress-balance solve inputs)",
+      "kind": "input",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "overview.md",
+          "anchor": "distinguish-the-questions-being-solved"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "grounding-line statistics (grounded/floating/all-ice)",
+      "kind": "output",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "pitfalls.md",
+          "anchor": "integration-weights-reused-after-a-mesh-or-mask-change"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "mass-transport rates (surface accumulation, basal melt)",
+      "kind": "output",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "overview.md",
+          "anchor": "distinguish-the-questions-being-solved"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "mesh parameter arrays (vertex-sized and element-sized)",
+      "kind": "input",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "overview.md",
+          "anchor": "what-the-mesh-represents"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "velocity field (stress-balance solve output)",
+      "kind": "output",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "pitfalls.md",
+          "anchor": "a-completed-velocity-solve-mistaken-for-a-transient-thickness-history"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    }
+  ]
+}

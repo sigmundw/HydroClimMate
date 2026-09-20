@@ -1,24 +1,30 @@
 [
   {
-    "query": "can you explain how runoff generation works in our VIC setup? specifically im looking at the baseflow parameterization in models/vic/src and i cant tell which variable is the drainage term",
+    "query": "can you walk me through how baseflow gets generated in our VIC land calculation? I'm trying to figure out which variable actually represents the drainage term before I use it in a budget",
     "should_trigger": true,
     "expected_feature": "understand",
     "difficulty": "easy",
-    "routing_note": "close: 'Explain this runoff function'"
+    "routing_note": "close: 'Explain this runoff function'",
+    "previous_query": "can you explain how runoff generation works in our VIC setup? specifically im looking at the baseflow parameterization in models/vic/src and i cant tell which variable is the drainage term",
+    "revised": "v0.9"
   },
   {
-    "query": "what does the spin-up actually do in this CTSM config? trying to understand it before I change anything",
+    "query": "in our CTSM setup, is a grid cell always one uniform patch, or can it contain several different land covers tracked separately underneath it?",
     "should_trigger": true,
     "expected_feature": "understand",
     "difficulty": "easy",
-    "routing_note": "near-verbatim: 'what is spin-up in this config?'"
+    "routing_note": "near-verbatim: 'what is spin-up in this config?'",
+    "previous_query": "what does the spin-up actually do in this CTSM config? trying to understand it before I change anything",
+    "revised": "v0.9"
   },
   {
-    "query": "we need to decide between a 20-year and a 50-year spin-up for the CTSM runs before we submit. compute budget is tight this quarter. what are the tradeoffs and which would you recommend?",
+    "query": "we're deciding whether the next CTSM experiment should run with active biogeochemistry or stick with the simpler hydrology-only configuration, given our compute budget this quarter. what's the tradeoff, and which would you lean toward?",
     "should_trigger": true,
     "expected_feature": "plan",
     "difficulty": "easy",
-    "routing_note": "near-verbatim: 'Compare spin-up strategies'"
+    "routing_note": "near-verbatim: 'Compare spin-up strategies'",
+    "previous_query": "we need to decide between a 20-year and a 50-year spin-up for the CTSM runs before we submit. compute budget is tight this quarter. what are the tradeoffs and which would you recommend?",
+    "revised": "v0.9"
   },
   {
     "query": "compare doing the routing offline in mizuRoute vs coupling it online, for the Colorado headwaters domain. which is more likely to give us better low-flow skill?",
@@ -28,32 +34,40 @@
     "routing_note": "wording does not appear in the routing table; tests routing rather than recall"
   },
   {
-    "query": "my mizuRoute job died overnight on the cluster, job id 4471823. can you work out what happened and restart it from the last restart file?",
+    "query": "my mizuRoute job on the cluster stopped overnight with an out-of-memory error before finishing the routing step. can you look into what happened?",
     "should_trigger": true,
     "expected_feature": "run",
     "difficulty": "easy",
-    "routing_note": "near-verbatim: 'Resume this failed job'"
+    "routing_note": "near-verbatim: 'Resume this failed job'",
+    "previous_query": "my mizuRoute job died overnight on the cluster, job id 4471823. can you work out what happened and restart it from the last restart file?",
+    "revised": "v0.9"
   },
   {
-    "query": "set up and submit the WRF-urban run for the Phoenix domain using the config we agreed on last week",
+    "query": "please prepare and submit the WRF-Urban simulation for the Phoenix domain with the physics options we finalized in yesterday's meeting",
     "should_trigger": true,
     "expected_feature": "run",
     "difficulty": "easy",
-    "routing_note": "close: 'run the agreed config'"
+    "routing_note": "close: 'run the agreed config'",
+    "previous_query": "set up and submit the WRF-urban run for the Phoenix domain using the config we agreed on last week",
+    "revised": "v0.9"
   },
   {
-    "query": "simulated runoff is like 40% too high vs the USGS gauge at 09380000 for water year 2019. can you dig into why?",
+    "query": "our simulated streamflow is running well above the USGS gauge record for the last water year. can you help figure out what's driving that gap?",
     "should_trigger": true,
     "expected_feature": "analyze",
     "difficulty": "easy",
-    "routing_note": "near-verbatim: 'why is runoff biased high?'"
+    "routing_note": "near-verbatim: 'why is runoff biased high?'",
+    "previous_query": "simulated runoff is like 40% too high vs the USGS gauge at 09380000 for water year 2019. can you dig into why?",
+    "revised": "v0.9"
   },
   {
-    "query": "compute basin-mean monthly precip from the ERA5 forcing netcdfs in data/forcing/ for all the HUC8s in our domain, area weighted properly please",
+    "query": "can you compute the area-weighted basin-mean monthly precipitation from our downloaded ERA5 forcing files for each HUC8 in the domain?",
     "should_trigger": true,
     "expected_feature": "analyze",
     "difficulty": "easy",
-    "routing_note": "near-verbatim: 'Compute basin means'"
+    "routing_note": "near-verbatim: 'Compute basin means'",
+    "previous_query": "compute basin-mean monthly precip from the ERA5 forcing netcdfs in data/forcing/ for all the HUC8s in our domain, area weighted properly please",
+    "revised": "v0.9"
   },
   {
     "query": "need to check water balance closure on the HRLDAS output. does P - ET - Q - dS actually close, and within what tolerance?",
@@ -138,12 +152,14 @@
     "register_note": "rewritten in researcher register; routing verb removed so the prompt does not name its own feature"
   },
   {
-    "query": "issm job on the cluster bailed out overnight with a solver error, log is in run/logs/issm_4471.err. what now?",
+    "query": "the ISSM job on the cluster stopped overnight with a solver error. can you help figure out what went wrong?",
     "should_trigger": true,
     "expected_feature": "run",
     "difficulty": "hard",
     "routing_note": "v0.6 ice-sheet coverage",
-    "register_note": "rewritten in researcher register; routing verb removed so the prompt does not name its own feature"
+    "register_note": "rewritten in researcher register; routing verb removed so the prompt does not name its own feature",
+    "previous_query": "issm job on the cluster bailed out overnight with a solver error, log is in run/logs/issm_4471.err. what now?",
+    "revised": "v0.9"
   },
   {
     "query": "ive got ISSM vertex velocities on a triangular mesh thats way denser near the terminus, and i need a single domain average for a figure. whats the right way to do that?",
@@ -236,12 +252,14 @@
     "routing_note": "New model pack; no mandatory full-model read"
   },
   {
-    "query": "VIC finished half the period before the node failed; the state file and logs are in run/",
+    "query": "the VIC run on the cluster stopped partway through the simulation period after a node failure. can you check what state it's in?",
     "should_trigger": true,
     "added": "v0.7",
     "expected_feature": "run",
     "difficulty": "hard",
-    "routing_note": "New model pack; no mandatory full-model read"
+    "routing_note": "New model pack; no mandatory full-model read",
+    "previous_query": "VIC finished half the period before the node failed; the state file and logs are in run/",
+    "revised": "v0.9"
   },
   {
     "query": "write an introduction paragraph about VIC applications for my manuscript",

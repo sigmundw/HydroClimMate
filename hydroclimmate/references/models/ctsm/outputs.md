@@ -7,14 +7,17 @@ attributes and the version-matched field definition before interpreting an unfam
 
 Landunits, columns and vegetation patches/PFTs form a subgrid hierarchy with fractional
 areas. Combining values at one level requires the appropriate parent relation and weights.
-An unweighted average of columns or PFTs is generally not a grid-cell mean. A value already
-aggregated to the grid cell must not be weighted by the same subgrid fraction a second time.
-These recommendations follow from the documented hierarchy. [C3](sources.md#c3)
+These recommendations follow from the documented hierarchy. [C3](sources.md#c3). See
+[pitfalls](pitfalls.md#unweighted-subgrid-average-mistaken-for-grid-cell-mean) and
+[pitfalls](pitfalls.md#grid-cell-field-re-weighted-by-a-subgrid-fraction-a-second-time)
+for two common weighting mistakes at this hierarchy level.
 
 For a regional mean, establish the field's area basis (for example a selected landunit
 versus represented land), then combine its represented area with geographic cell area and
-the requested domain. Do not silently treat inactive, missing or excluded subgrid entries
-as zero. Check that fractions are referenced to the correct parent and time.
+the requested domain. See
+[pitfalls](pitfalls.md#missing-or-excluded-subgrid-entries-silently-treated-as-zero) before
+treating absent entries as zero. Check that fractions are referenced to the correct parent
+and time.
 
 ## Establish the field and temporal statistic
 
@@ -24,10 +27,11 @@ Layer water mass and a volumetric water fraction need different vertical integra
 depth selection and layer thickness matter when comparing soil moisture.
 [C6](sources.md#c6)
 
-History requests are configurable through the namelist. Output frequency and averaging
-settings must be inspected, not inferred from a monthly-looking filename or timestamp.
-Check the generated history settings together with file metadata before integrating rates
-or comparing snapshots. [C5](sources.md#c5)
+History requests are configurable through the namelist. See
+[pitfalls](pitfalls.md#a-monthly-looking-filename-or-timestamp-assumed-to-define-the-averaging-period)
+for why a filename can mislead about frequency and averaging. Check the generated history
+settings together with file metadata before integrating rates or comparing snapshots.
+[C5](sources.md#c5)
 
 ## Recommended checks
 

@@ -62,3 +62,9 @@ checks and limits. Stop after the requested outputs and relevant checks are comp
 Update only affected project facts and existing task state; apply the shared decision and
 handover policy. Consequential results require independent validation/review, not automatic
 review of every plot or routine calculation.
+
+## Before you state the result
+
+Answer [the four questions](core.md#the-four-questions): what was established, what was
+checked and how, what is the owner's to decide, and whether this needs
+[Review](review.md).

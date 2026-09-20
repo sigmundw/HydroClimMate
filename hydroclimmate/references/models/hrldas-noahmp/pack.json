@@ -1,0 +1,14 @@
+{
+  "pack": "hrldas-noahmp",
+  "version_scope": "source commit d9f5b205; noahmp submodule 9fbe672 (v3.7.1-355-g9fbe672); drivers/hrldas build path",
+  "layers": {
+    "narrative": {"file": null, "coverage": "partial"},
+    "interface": {"file": "interface.json", "coverage": "partial"},
+    "switches": {"file": "switches.json", "coverage": "partial"},
+    "pitfalls": {"file": "pitfalls.json", "coverage": "partial"},
+    "workflows": {"file": "workflows.json", "coverage": "partial"},
+    "index": {"file": "index.json", "coverage": "full"},
+    "selftest": {"file": "selftest.json", "coverage": "partial"}
+  },
+  "notes": "Sparse by design (decisions 0007, 0009; fault F-16): only what this pack's Markdown already states. Most variable kinds/fill/stamp conventions, file naming patterns and dimension orders are absent because the pack's prose explicitly defers exact names to actual files. index.json is generated (tools/build_index.py); it carries no claim of its own, so its coverage is 'full' by construction."
+}

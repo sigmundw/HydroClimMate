@@ -1,0 +1,96 @@
+{
+  "pack": "wrf-urban",
+  "generated_by": "tools/build_index.py",
+  "entries": [
+    {
+      "name": "WPS-prepared geographic/meteorological inputs",
+      "kind": "input",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "execution.md",
+          "anchor": "prepare-the-chain-not-only-the-final-executable"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "WRF history/restart output",
+      "kind": "file",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "outputs.md",
+          "anchor": "read-dimensions-and-definitions-before-plotting"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "WRF output fields (staggered dimensions)",
+      "kind": "output",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "outputs.md",
+          "anchor": "read-dimensions-and-definitions-before-plotting"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "accumulated quantity",
+      "kind": "output",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "outputs.md",
+          "anchor": "recommended-analysis-sequence"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "geographic categories and urban fractions",
+      "kind": "input",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "overview.md",
+          "anchor": "questions-to-settle-before-interpreting-an-experiment"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "urban-only vs full-cell / canopy air vs surface fields",
+      "kind": "output",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "outputs.md",
+          "anchor": "recommended-analysis-sequence"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    }
+  ]
+}

@@ -7,14 +7,17 @@ actual variable attributes and output aggregation configuration before using a f
 
 The documented variable catalog distinguishes surface runoff, bottom-layer baseflow,
 evaporation, soil-water storage and snow diagnostics. Its water flux entries often use
-depth units rather than discharge units. A catalog unit alone does not specify the
-actual output interval or aggregation operator. [V7](sources.md#v7)
+depth units rather than discharge units. See
+[pitfalls](pitfalls.md#catalog-unit-assumed-to-fix-the-output-interval-and-aggregation)
+before assuming the unit fixes the interval or aggregation. [V7](sources.md#v7)
 
 Image outputs use netCDF and configurable streams. Retain the selected variables and
 their temporal aggregation metadata with the data; file naming alone is not a definition
 of an average or accumulation. [V8](sources.md#v8)
 
-Do not weight a grid-cell aggregate by its vegetation/band fractions again. For explicit
+See
+[pitfalls](pitfalls.md#grid-cell-aggregate-weighted-by-vegetation-or-band-fractions-a-second-time)
+before weighting a grid-cell aggregate by its vegetation/band fractions again. For explicit
 subgrid fields, establish the correct parent fractions before combining them. Geographic
 area weighting is a separate step, using verified areas and basin overlap rather than
 assuming every degree-spaced cell is equal area. [V2](sources.md#v2)
@@ -31,7 +34,9 @@ assuming every degree-spaced cell is equal area. [V2](sources.md#v2)
   do not silently substitute one component for total runoff.
 - A simple dimensional example: 1 mm over 1 km2 is 1,000 m3. Distributed uniformly over
   one day, it is about 0.011574 m3/s. This is local generated water, not the delayed outlet
-  hydrograph, and must not be area-converted again by the receiving interface.
+  hydrograph. See
+  [pitfalls](pitfalls.md#land-output-area-converted-a-second-time-by-the-receiving-routing-model)
+  before area-converting it again at the receiving interface.
 - Check a converted interval and a basin-integrated volume independently before processing
   the full record. Diagnose masks, gaps and resets before retuning the model.
 

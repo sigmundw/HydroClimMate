@@ -9,8 +9,8 @@ Confirm the solution type, saved time, units, mesh connectivity, and whether eac
 is nodal, elemental, depth-averaged or defined at a particular vertical level. The official
 ISMIP example illustrates mixed vertex/element associations. [I4](sources.md#i4)
 
-Do not take an unweighted mean over vertices of a refined mesh: dense sampling would count
-more than coarse sampling of the same physical area. For a planar, fully included triangle
+See [pitfalls](pitfalls.md#unweighted-mean-over-a-refined-mesh-mistaken-for-an-area-mean)
+before averaging over mesh vertices. For a planar, fully included triangle
 with **linear nodal interpolation**, the integral of a scalar is exactly
 `A * (v1 + v2 + v3) / 3`. Summing those integrals and dividing by total included area gives
 the area mean. This is an elementary integration derivation for linear basis functions,
@@ -30,12 +30,13 @@ sea-level-equivalent calculation.
 
 The documented mass-transport balance includes transport divergence and surface/basal
 terms; surface accumulation and positive basal melt have opposite effects on thickness.
-Do not infer thickness change from surface balance alone, or mix water-equivalent and
-ice-equivalent rates without conversion. [I3](sources.md#i3)
+Do not infer thickness change from surface balance alone. See
+[pitfalls](pitfalls.md#water-equivalent-and-ice-equivalent-rates-mixed-without-conversion)
+before mixing water-equivalent and ice-equivalent rates. [I3](sources.md#i3)
 
-Grounding-line schemes can represent partly grounded elements. Grounded, floating and
-all-ice statistics therefore need explicit masks and treatment of partial elements.
-Recompute or align integration weights after mesh/mask changes. [I6](sources.md#i6)
+Grounding-line schemes can represent partly grounded elements. See
+[pitfalls](pitfalls.md#integration-weights-reused-after-a-mesh-or-mask-change) before reusing
+prior integration weights after such a change. [I6](sources.md#i6)
 
 Validate using a constant field, a linear-field case and a known area before a real integral.
 For a physical budget, state domain, time interval, all included fluxes and residual tolerance.

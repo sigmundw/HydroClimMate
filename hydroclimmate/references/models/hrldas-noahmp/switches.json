@@ -1,0 +1,39 @@
+{
+  "pack": "hrldas-noahmp",
+  "switches": [
+    {
+      "name": "SF_URBAN_PHYSICS",
+      "structural_change": {
+        "statement": "when SF_URBAN_PHYSICS>0, reassigns the Noah-MP column vegetation type for urban cells to the parameter table's NATURAL class (class 14 in the MODIS table), with GVFMAX forced to 96%, before the urban routine runs",
+        "source": "H6",
+        "scope": "source commit d9f5b205; noahmp submodule 9fbe672; drivers/hrldas build path",
+        "basis": "source_read",
+        "from": {"file": "pitfalls.md", "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"}
+      },
+      "exchanged_fields": {
+        "fields": ["TSK", "HFX", "QFX", "LH", "GRDFLX", "ALBEDO", "EMISS", "QSFC"],
+        "statement": "the urban routine tile-weights only surface energy and radiative fields (TSK, HFX, QFX, LH, GRDFLX, ALBEDO, EMISS, QSFC) by FRC_URB2D",
+        "source": "H6",
+        "scope": "source commit d9f5b205; noahmp submodule 9fbe672; drivers/hrldas build path",
+        "basis": "source_read",
+        "from": {"file": "pitfalls.md", "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"}
+      },
+      "untouched_fields": {
+        "fields": ["snow state"],
+        "statement": "snow-state variables are never passed to the urban routine",
+        "source": "H6",
+        "scope": "source commit d9f5b205; noahmp submodule 9fbe672; drivers/hrldas build path",
+        "basis": "source_read",
+        "from": {"file": "pitfalls.md", "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"}
+      },
+      "expected_scaling_variable": {
+        "variable": "FRC_URB2D",
+        "statement": "a genuine tile effect should scale with FRC_URB2D; a flat or non-monotonic response is a warning sign, not confirmation -- flux scaling with FRC_URB2D was not established in the source record",
+        "source": null,
+        "scope": "source commit d9f5b205; noahmp submodule 9fbe672; drivers/hrldas build path",
+        "basis": "unverified",
+        "from": {"file": "pitfalls.md", "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"}
+      }
+    }
+  ]
+}

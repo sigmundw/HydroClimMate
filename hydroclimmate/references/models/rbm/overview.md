@@ -33,8 +33,9 @@ multiple nodes in a confluence cell. It also documents limitations of its networ
 Those details must not be generalized to an unconfirmed fork. [R3](sources.md#r3)
 
 The repository characterizes RBM as research software with unevenly tested combinations
-of options. Passing its build is therefore not a validation of a new combination.
-[R4](sources.md#r4)
+of options. See
+[pitfalls](pitfalls.md#a-passing-build-treated-as-validation-of-a-new-option-combination)
+before treating a passing build as validation. [R4](sources.md#r4)
 
 Use [execution](execution.md) to identify required evidence before running and
 [outputs](outputs.md) for network-based interpretation. Reservoir stratification, alternate

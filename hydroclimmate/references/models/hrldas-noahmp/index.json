@@ -1,0 +1,369 @@
+{
+  "pack": "hrldas-noahmp",
+  "generated_by": "tools/build_index.py",
+  "entries": [
+    {
+      "name": "ALBEDO",
+      "kind": "variable",
+      "declared_in": [
+        "switches.json"
+      ],
+      "from": [
+        {
+          "file": "pitfalls.md",
+          "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+        }
+      ],
+      "related_switches": [
+        "SF_URBAN_PHYSICS"
+      ],
+      "related_pitfalls": [
+        "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+      ]
+    },
+    {
+      "name": "EMISS",
+      "kind": "variable",
+      "declared_in": [
+        "switches.json"
+      ],
+      "from": [
+        {
+          "file": "pitfalls.md",
+          "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+        }
+      ],
+      "related_switches": [
+        "SF_URBAN_PHYSICS"
+      ],
+      "related_pitfalls": [
+        "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+      ]
+    },
+    {
+      "name": "FRC_URB2D",
+      "kind": "variable",
+      "declared_in": [
+        "switches.json"
+      ],
+      "from": [
+        {
+          "file": "pitfalls.md",
+          "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+        }
+      ],
+      "related_switches": [
+        "SF_URBAN_PHYSICS"
+      ],
+      "related_pitfalls": [
+        "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+      ]
+    },
+    {
+      "name": "GRDFLX",
+      "kind": "variable",
+      "declared_in": [
+        "switches.json"
+      ],
+      "from": [
+        {
+          "file": "pitfalls.md",
+          "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+        }
+      ],
+      "related_switches": [
+        "SF_URBAN_PHYSICS"
+      ],
+      "related_pitfalls": [
+        "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+      ]
+    },
+    {
+      "name": "HFX",
+      "kind": "variable",
+      "declared_in": [
+        "switches.json"
+      ],
+      "from": [
+        {
+          "file": "pitfalls.md",
+          "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+        }
+      ],
+      "related_switches": [
+        "SF_URBAN_PHYSICS"
+      ],
+      "related_pitfalls": [
+        "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+      ]
+    },
+    {
+      "name": "LH",
+      "kind": "variable",
+      "declared_in": [
+        "switches.json"
+      ],
+      "from": [
+        {
+          "file": "pitfalls.md",
+          "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+        }
+      ],
+      "related_switches": [
+        "SF_URBAN_PHYSICS"
+      ],
+      "related_pitfalls": [
+        "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+      ]
+    },
+    {
+      "name": "QFX",
+      "kind": "variable",
+      "declared_in": [
+        "switches.json"
+      ],
+      "from": [
+        {
+          "file": "pitfalls.md",
+          "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+        }
+      ],
+      "related_switches": [
+        "SF_URBAN_PHYSICS"
+      ],
+      "related_pitfalls": [
+        "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+      ]
+    },
+    {
+      "name": "QSFC",
+      "kind": "variable",
+      "declared_in": [
+        "switches.json"
+      ],
+      "from": [
+        {
+          "file": "pitfalls.md",
+          "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+        }
+      ],
+      "related_switches": [
+        "SF_URBAN_PHYSICS"
+      ],
+      "related_pitfalls": [
+        "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+      ]
+    },
+    {
+      "name": "SF_URBAN_PHYSICS",
+      "kind": "switch",
+      "declared_in": [
+        "switches.json"
+      ],
+      "from": [
+        {
+          "file": "pitfalls.md",
+          "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": [
+        "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+      ]
+    },
+    {
+      "name": "TSK",
+      "kind": "variable",
+      "declared_in": [
+        "switches.json"
+      ],
+      "from": [
+        {
+          "file": "pitfalls.md",
+          "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+        }
+      ],
+      "related_switches": [
+        "SF_URBAN_PHYSICS"
+      ],
+      "related_pitfalls": [
+        "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+      ]
+    },
+    {
+      "name": "WRF-preprocessed geographic information (static/domain fields)",
+      "kind": "input",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "overview.md",
+          "anchor": "two-components-different-jobs"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "derived output",
+      "kind": "file",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "outputs.md",
+          "anchor": "follow-the-output-interface"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "forcing input",
+      "kind": "file",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "execution.md",
+          "anchor": "minimal-preflight-and-continuation"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "meteorological forcing (precipitation, radiation, wind, humidity, temperature, pressure)",
+      "kind": "input",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "overview.md",
+          "anchor": "two-components-different-jobs"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "namelist configuration",
+      "kind": "file",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "execution.md",
+          "anchor": "prepare-a-consistent-experiment"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "restart",
+      "kind": "file",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "pitfalls.md",
+          "anchor": "existing-restart-filename-assumed-to-prove-a-successful-restart"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "setup data",
+      "kind": "file",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "execution.md",
+          "anchor": "prepare-a-consistent-experiment"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "snow fields on water-body cells (exact output name not given in the pack)",
+      "kind": "output",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "pitfalls.md",
+          "anchor": "snow-water-equivalent-identity-and-unmasked-fill-values"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": [
+        "snow-water-equivalent-identity-and-unmasked-fill-values"
+      ]
+    },
+    {
+      "name": "snow state",
+      "kind": "variable",
+      "declared_in": [
+        "switches.json"
+      ],
+      "from": [
+        {
+          "file": "pitfalls.md",
+          "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+        }
+      ],
+      "related_switches": [
+        "SF_URBAN_PHYSICS"
+      ],
+      "related_pitfalls": [
+        "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+      ]
+    },
+    {
+      "name": "snow water equivalent (exact output name not given in the pack)",
+      "kind": "output",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "pitfalls.md",
+          "anchor": "snow-water-equivalent-identity-and-unmasked-fill-values"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": [
+        "snow-water-equivalent-identity-and-unmasked-fill-values"
+      ]
+    },
+    {
+      "name": "vegetation-type parameter table (class-indexed)",
+      "kind": "input",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "pitfalls.md",
+          "anchor": "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": [
+        "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+      ]
+    }
+  ]
+}

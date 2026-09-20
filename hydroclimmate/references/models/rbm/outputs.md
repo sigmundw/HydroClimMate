@@ -24,17 +24,18 @@ are not a unique record key. [R3](sources.md#r3)
 - For a point-temperature comparison, do not apply geographic cell-area weights. For a
   network aggregate, define the target measure explicitly: equal sites, stream length,
   water volume or another justified weighting answer different questions.
-- Do not sum discharges at all downstream nodes to obtain basin discharge: repeated
-  transport along the network can count the same water multiple times. Use the intended
-  outlet or non-overlapping control boundaries.
+- See [pitfalls](pitfalls.md#downstream-node-discharges-summed-for-basin-discharge) before
+  summing discharges at all downstream nodes. Use the intended outlet or non-overlapping
+  control boundaries.
 - Examine upstream flow/meteorological input, headwater boundaries and network mapping
   alongside a thermal bias. Separate structural limitations from corrupted preprocessing.
 - When an input/output table mixes unit systems, record conversions at the interface
   and verify one record against the reader/writer before bulk analysis.
 
 These are physical and data-consistency checks, not claims that a particular fork has
-every listed field. A river-temperature average is not a land-area mean, and a realistic
-seasonal cycle is not proof that all network links were mapped correctly.
+every listed field. A river-temperature average is not a land-area mean. See
+[pitfalls](pitfalls.md#a-realistic-seasonal-cycle-taken-as-proof-of-correct-network-mapping)
+before treating a plausible seasonal cycle as proof of correct network mapping.
 
 Preserve original files and write diagnostics separately. Report which observed quantity,
 locations and intervals were evaluated and what remained unmatched. If the branch or

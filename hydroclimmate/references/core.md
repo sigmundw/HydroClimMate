@@ -13,11 +13,12 @@ Read once per task; start with the primary feature. The legacy AGENTS.md is only
 
 ## Local model knowledge
 
-- For a model-specific question, use the [model index](models/index.md) to select the needed topic; skip overview when the topic is already known. Do not read every model or every topic. Read the applicable topic before tracing source code for a mechanism question; treat source tracing as the fallback when the pack does not cover it, not the default first step.
+- For a model-specific question, use the [model index](models/index.md) to select the needed topic; skip overview when the topic is already known. Do not read every model or every topic. Read the applicable topic before tracing source code for a mechanism question; treat source tracing as the fallback when the pack does not cover it, not the default first step. A pack's `pitfalls` topic covers ways a result can look right and be wrong; read it before reporting a result the pack's method could quietly get wrong.
 - Confirm the implementation/version and configuration when the answer depends on them. General explanation may proceed with explicitly stated scope if the version is unknown.
 - Prefer applicable local knowledge and inspect actual project metadata/code before assuming the description matches the run. Report source/implementation conflicts rather than silently changing definitions.
 - Citations point to local source records. Follow external sources only for missing, conflicting or explicitly current information, when permitted. Offline, continue supported work and identify the exact unresolved dependency; never invent defaults or API names.
 - Knowledge describes models, not execution authority. Lab settings stay in project records. Updates are deliberate, source-checked changes, not automatic rewriting during an ordinary task.
+- Some packs also carry optional machine-readable declarations (data interface, switch effects, detectable pitfalls, common workflows, a generated key index; see [SCHEMA.md](models/SCHEMA.md)) that `tools/hcm_check.py --pack` confronts with actual files. A declaration is not proof: it is the pack's own sourced claim, degraded to UNVERIFIED wherever it is not confirmed, never a substitute for reading the actual output.
 
 ### Source freshness
 
@@ -54,6 +55,7 @@ README. Initialize only when requested, or create a particular record for a real
 | [Task](../templates/TASK.md) | Current agent maintains a complex/coordinated task's checklist, progress and evidence | 30–50 lines or fewer |
 | [Handover](../templates/HANDOVER.md) | Current agent snapshots unfinished work crossing sessions/owners; link any task record | 20–30 lines |
 | [Decisions](../templates/DECISIONS.md) | Research owner or authorized decision maker adopts; current agent records important adopted choices in any feature | 5–8 lines per entry |
+| [Experiment](../templates/EXPERIMENT.md) | Research owner sets acceptance; current agent records the design and checks for a claim a paired/controlled comparison is meant to support | 20–30 lines or fewer |
 
 Keep commands in the project README, execution evidence beside outputs, and decisions
 in one log. Pending proposals remain in conversation or an active task/handover. Preserve
@@ -64,6 +66,17 @@ Small completed tasks need no new file; do not update every record on each invoc
 The project's own AGENTS.md carries project-specific boundaries only — entry points, paths,
 budgets, authorization scope and the research owner. The general working rules are these
 files, not that one; do not copy them back into it.
+
+## The four questions
+
+Before stating a result in any feature, answer these:
+
+1. What was established — fact, code-verified behavior, or assumption?
+2. What was checked, and how — independent basis, tool output, or none?
+3. What is the research owner's to decide — value judgement, acceptance, budget?
+4. Does this need [Review](review.md) — consequential, irreversible, or entering a record others rely on?
+
+An unresolved answer does not block stating the result; state the gap instead of guessing.
 
 ## Finish proportionately
 

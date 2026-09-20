@@ -41,3 +41,9 @@ Update the project README only when the task calls for preserving a confirmed du
 Do not create learning notes by default. If the researcher adopts an important choice during
 this discussion, the current agent records it under the shared decision policy; explanation
 or an agent recommendation alone is not adoption.
+
+## Before you state the result
+
+Answer [the four questions](core.md#the-four-questions): what was established, what was
+checked and how, what is the owner's to decide, and whether this needs
+[Review](review.md).

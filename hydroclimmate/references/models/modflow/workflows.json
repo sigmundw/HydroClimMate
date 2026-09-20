@@ -1,0 +1,75 @@
+{
+  "pack": "modflow",
+  "workflows": [
+    {
+      "name": "establish-time-properties-and-stresses",
+      "steps": [
+        {
+          "step": 1,
+          "what_is_done": "inspect the simulation/model configuration, enabled packages and actual executable",
+          "must_establish": "a MODFLOW-2005/NWT input file is not renamed and assumed to be MODFLOW 6 compatible",
+          "check": null,
+          "source": null,
+          "scope": "unspecified in the pack",
+          "basis": "unverified",
+          "from": {
+            "file": "execution.md",
+            "anchor": "establish-time-properties-and-stresses"
+          }
+        },
+        {
+          "step": 2,
+          "what_is_done": "check top/bottom elevations, thickness, active/pass-through cells, connectivity and boundary placement",
+          "must_establish": "property and stress arrays are verified to address the intended cells",
+          "check": null,
+          "source": null,
+          "scope": "unspecified in the pack",
+          "basis": "unverified",
+          "from": {
+            "file": "execution.md",
+            "anchor": "establish-time-properties-and-stresses"
+          }
+        },
+        {
+          "step": 3,
+          "what_is_done": "use consistent length/time units across conductivity, storage, recharge and pumping",
+          "must_establish": "sign conventions and the time intervals represented by each stress dataset are checked",
+          "check": null,
+          "source": null,
+          "scope": "unspecified in the pack",
+          "basis": "unverified",
+          "from": {
+            "file": "execution.md",
+            "anchor": "establish-time-properties-and-stresses"
+          }
+        },
+        {
+          "step": 4,
+          "what_is_done": "establish initial heads, steady/transient periods and the scientific reason for their sequence",
+          "must_establish": "the applied input state and output requests are saved",
+          "check": null,
+          "source": null,
+          "scope": "unspecified in the pack",
+          "basis": "unverified",
+          "from": {
+            "file": "execution.md",
+            "anchor": "establish-time-properties-and-stresses"
+          }
+        },
+        {
+          "step": 5,
+          "what_is_done": "run a small authorized case in a separate directory",
+          "must_establish": "solver/listing output, reached simulation time, selected head records and water budgets are inspected before scaling up",
+          "check": null,
+          "source": null,
+          "scope": "unspecified in the pack",
+          "basis": "unverified",
+          "from": {
+            "file": "execution.md",
+            "anchor": "establish-time-properties-and-stresses"
+          }
+        }
+      ]
+    }
+  ]
+}

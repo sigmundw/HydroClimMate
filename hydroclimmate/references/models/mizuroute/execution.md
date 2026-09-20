@@ -29,9 +29,9 @@ Recommended preflight:
    active jobs and output paths before submitting anything.
 
 For the documented depth-based workflow, HRU area participates in converting runoff to
-volume, followed by selected hillslope handling. A preprocessing step that has already
-converted depth to discharge cannot be passed unchanged through that conversion.
-[M3](sources.md#m3)
+volume, followed by selected hillslope handling. See
+[pitfalls](pitfalls.md#depth-to-discharge-conversion-applied-a-second-time) before repeating
+that conversion. [M3](sources.md#m3)
 
 Start with an authorized short interval and inspect completion, expected reach IDs, timing
 and finite outputs. Separate file-read success, numerical routing success and validation of

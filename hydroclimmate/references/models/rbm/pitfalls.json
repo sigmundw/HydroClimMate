@@ -1,0 +1,17 @@
+{
+  "pack": "rbm",
+  "pitfalls": [
+    {
+      "id": "a-passing-build-treated-as-validation-of-a-new-option-combination"
+    },
+    {
+      "id": "downstream-node-discharges-summed-for-basin-discharge"
+    },
+    {
+      "id": "a-realistic-seasonal-cycle-taken-as-proof-of-correct-network-mapping"
+    },
+    {
+      "id": "a-daily-specific-example-edited-to-a-different-timestep"
+    }
+  ]
+}

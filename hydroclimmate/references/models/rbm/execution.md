@@ -29,9 +29,9 @@ the thermal setup also requires headwater-temperature and hydraulic relationship
    or internal consistency case before scaling the run.
 
 The historical Salmon example contains daily-specific assumptions, whereas the broader
-tutorial discusses daily or subdaily temperatures. Treat this difference as a prompt to
-verify the local implementation, not permission to change a timestep by editing one value.
-[R2](sources.md#r2), [R3](sources.md#r3)
+tutorial discusses daily or subdaily temperatures. See
+[pitfalls](pitfalls.md#a-daily-specific-example-edited-to-a-different-timestep) before
+changing its timestep by editing one value. [R2](sources.md#r2), [R3](sources.md#r3)
 
 If inputs came from a newer hydrological driver, establish the conversion explicitly;
 the old example is not evidence that its preprocessing scripts accept the new format.

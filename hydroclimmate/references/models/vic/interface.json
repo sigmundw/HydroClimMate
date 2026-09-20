@@ -1,0 +1,78 @@
+{
+  "pack": "vic",
+  "files": [
+    {
+      "file_kind": "Classic driver I/O (ASCII/binary)",
+      "statement": "the Classic driver uses ASCII/binary I/O and processes time before moving through space",
+      "source": "V3",
+      "scope": "VIC5 Classic driver documentation, retrieved 2026-09-16",
+      "basis": "source_read",
+      "from": {
+        "file": "overview.md",
+        "anchor": "driver-is-part-of-the-model-identity"
+      }
+    },
+    {
+      "file_kind": "Image driver I/O (netCDF)",
+      "statement": "the Image driver uses netCDF I/O, processes space within each timestep and supports MPI",
+      "source": "V4",
+      "scope": "VIC5 Image driver documentation, retrieved 2026-09-16",
+      "basis": "source_read",
+      "from": {
+        "file": "overview.md",
+        "anchor": "driver-is-part-of-the-model-identity"
+      }
+    },
+    {
+      "file_kind": "Image inputs (global configuration, domain, forcing, parameters, initial state)",
+      "statement": "Image inputs include global configuration, domain, meteorological forcing and model parameters, with initial state when used",
+      "source": "V6",
+      "scope": "VIC5 Image inputs documentation, retrieved 2026-09-16",
+      "basis": "source_read",
+      "from": {
+        "file": "execution.md",
+        "anchor": "match-the-driver-and-data"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "variable": "meteorological forcing (Image driver netCDF)",
+      "aspect": "identity",
+      "statement": "presence of netCDF files alone does not establish that their masks, coordinates, time axes or variables match the requested domain",
+      "source": "V6",
+      "scope": "VIC5 Image inputs documentation, retrieved 2026-09-16",
+      "basis": "source_read",
+      "from": {
+        "file": "execution.md",
+        "anchor": "match-the-driver-and-data"
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "variable": "surface runoff, bottom-layer baseflow, evaporation, soil-water storage, snow diagnostics",
+      "aspect": "units",
+      "statement": "the documented variable catalog distinguishes surface runoff, bottom-layer baseflow, evaporation, soil-water storage and snow diagnostics; its water flux entries often use depth units rather than discharge units",
+      "source": "V7",
+      "scope": "VIC5 output variables documentation, retrieved 2026-09-16",
+      "basis": "source_read",
+      "from": {
+        "file": "outputs.md",
+        "anchor": "separate-quantity-statistic-and-support"
+      }
+    },
+    {
+      "variable": "Image output streams",
+      "aspect": "identity",
+      "statement": "Image outputs use netCDF and configurable streams; retain the selected variables and their temporal aggregation metadata with the data",
+      "source": "V8",
+      "scope": "VIC5 Image outputs documentation, retrieved 2026-09-16",
+      "basis": "source_read",
+      "from": {
+        "file": "outputs.md",
+        "anchor": "separate-quantity-statistic-and-support"
+      }
+    }
+  ]
+}

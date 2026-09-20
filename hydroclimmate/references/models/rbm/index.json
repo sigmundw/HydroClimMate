@@ -1,0 +1,66 @@
+{
+  "pack": "rbm",
+  "generated_by": "tools/build_index.py",
+  "entries": [
+    {
+      "name": "discharge, meteorological/heat inputs and boundary temperatures",
+      "kind": "input",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "execution.md",
+          "anchor": "establish-the-implementation-first"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "network output record (confluence cells)",
+      "kind": "output",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "outputs.md",
+          "anchor": "keep-producers-separate"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "network topology input",
+      "kind": "file",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "execution.md",
+          "anchor": "recommended-preflight"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    },
+    {
+      "name": "stream temperature, headwater temperature, air temperature (network output fields)",
+      "kind": "output",
+      "declared_in": [
+        "interface.json"
+      ],
+      "from": [
+        {
+          "file": "outputs.md",
+          "anchor": "keep-producers-separate"
+        }
+      ],
+      "related_switches": [],
+      "related_pitfalls": []
+    }
+  ]
+}

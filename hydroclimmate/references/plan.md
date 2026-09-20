@@ -49,3 +49,9 @@ options and unknowns instead of pretending that an executable plan has been agre
 - Discussion permits inexpensive read-only investigation, not job submission, environment changes or a full analysis run.
 - When execution is requested or already authorized for the selected scope, pass the same checklist to Run or Analyze without asking again about settled items.
 - Stop when the requested comparison or actionable plan is complete, or the remaining decision is clearly presented. Do not add an obligatory planning ceremony to later routine work.
+
+## Before you state the result
+
+Answer [the four questions](core.md#the-four-questions): what was established, what was
+checked and how, what is the owner's to decide, and whether this needs
+[Review](review.md).

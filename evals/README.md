@@ -33,6 +33,46 @@ Every one of the 60 runs died before reaching a tool call, so all 20 queries rec
 counted as passes purely because nothing ran. **Authentication failures invalidate the runs; zero variance alone does not diagnose the cause.** The numbers were discarded rather
 than recorded.
 
+### Correction — 2026-09-19
+
+The paragraphs above attribute the missing measurement entirely to nested-session
+authentication failure. That was true of the specific environment where this was first
+tried, but it is not the general story, and it should not be read as "fix authentication
+and rerun" advice on its own. On a different, more capable platform, authentication was
+**not** the blocker: a nested `claude -p` process authenticated and completed normally, exit
+0, `terminal_reason: "completed"`. Despite that, the upstream harness still failed to
+produce a valid measurement, for an unrelated and more subtle reason:
+
+The harness (`run_eval.py`) classifies a query as triggered or not by inspecting the
+**first** assistant-role event in the streamed output and returning immediately on a
+fallback branch once that event arrives. With extended thinking enabled, the model's first
+assistant event is reliably a thinking-only block that precedes any tool call. The harness's
+fallback branch treats that thinking-only event as a completed, non-triggering turn and
+returns `False` before the real tool call — including a skill invocation — has had a chance
+to appear later in the same stream. Every query was therefore recorded as not-triggered
+regardless of what actually happened: negatives "passed" for the wrong reason, and any run
+that crashed or timed out was also silently recorded as not-triggered, indistinguishable
+from a genuine miss. Manually replaying a captured transcript line by line confirmed the
+skill's own first tool call was a `Skill` invocation — the skill had triggered — while the
+harness had already returned `False` several stream events earlier.
+
+A small number of valid observations were obtained afterward with a corrected probe that
+classifies only once the complete transcript is written to disk, scans the whole run rather
+than the first event, and records an explicit `UNMEASURED` state for incomplete, crashed or
+ambiguous runs instead of silently defaulting to not-triggered. **These are observations,
+not a rate.** The sample is a handful of fixtures with one or a few runs each. Two findings
+from that small sample matter for anyone planning a real measurement:
+
+- The **same query triggered in one run and did not trigger in another**, so triggering
+  here is not deterministic and `--runs-per-query 1` cannot support any conclusion.
+- Natural triggering of an **installed** skill (as opposed to a skill made reachable only
+  through the harness's own command-file mechanism) remains unmeasured; the observations
+  above measure the description's pull, not an installed skill's real-world trigger rate.
+
+This correction does not replace the account above — it stays as the record of what was
+tried, since the underlying advice ("run where a nested `claude -p` can authenticate") is
+still correct, just not sufficient on its own to get a valid measurement.
+
 To get a real measurement, run it where a nested `claude -p` can authenticate: a plain
 terminal session outside the desktop app, or an environment with `ANTHROPIC_API_KEY` set.
 Sanity-check first with a single query and confirm the output contains tool calls:

@@ -4,7 +4,8 @@
     "prompt": "Why can an ISSM velocity solve finish without giving a thickness time series? I have no project open.",
     "expected_feature": "understand",
     "relevant_topics": [
-      "issm/overview.md"
+      "issm/overview.md",
+      "issm/pitfalls.md"
     ],
     "rubric": [
       "Distinguish diagnostic stress balance from selected transient components",
@@ -16,7 +17,8 @@
     "prompt": "Two fully included planar triangles have areas 1 and 3 m2. Their linear scalar nodal values are (0,0,3) and (3,3,3). Calculate the area mean and state the assumptions.",
     "expected_feature": "analyze",
     "relevant_topics": [
-      "issm/outputs.md"
+      "issm/outputs.md",
+      "issm/pitfalls.md"
     ],
     "rubric": [
       "2.5, not an unweighted nodal mean",
@@ -78,7 +80,8 @@
     "prompt": "My CTSM file has several columns for each grid cell. Can I average all column values equally to obtain a basin mean?",
     "expected_feature": "analyze",
     "relevant_topics": [
-      "ctsm/outputs.md"
+      "ctsm/outputs.md",
+      "ctsm/pitfalls.md"
     ],
     "rubric": [
       "Parent hierarchy and fractional area",
@@ -159,7 +162,8 @@
     "prompt": "VIC produced surface runoff in mm. Can I compare it directly with a gauge time series in m3/s?",
     "expected_feature": "analyze",
     "relevant_topics": [
-      "vic/outputs.md"
+      "vic/outputs.md",
+      "vic/pitfalls.md"
     ],
     "rubric": [
       "Units, interval, area, included runoff components",
@@ -184,7 +188,8 @@
     "expected_feature": "plan",
     "relevant_topics": [
       "vic/outputs.md",
-      "mizuroute/execution.md"
+      "mizuroute/execution.md",
+      "mizuroute/pitfalls.md"
     ],
     "rubric": [
       "Avoid duplicate area conversion and hillslope delay",
@@ -196,7 +201,8 @@
     "prompt": "Can I sum discharge across all reaches in mizuRoute to get basin outflow?",
     "expected_feature": "analyze",
     "relevant_topics": [
-      "mizuroute/outputs.md"
+      "mizuroute/outputs.md",
+      "mizuroute/pitfalls.md"
     ],
     "rubric": [
       "Downstream double counting",
@@ -245,7 +251,8 @@
     "prompt": "For an unconfined illustration only, Sy is 0.2, area is 1000 m2 and water table rises 1 m, ignoring elastic storage. What volume change follows and what does it not prove?",
     "expected_feature": "analyze",
     "relevant_topics": [
-      "modflow/outputs.md"
+      "modflow/outputs.md",
+      "modflow/pitfalls.md"
     ],
     "rubric": [
       "200 m3 under stated assumptions",

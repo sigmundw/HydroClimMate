@@ -33,7 +33,8 @@ Recommended checks for an actual project:
 5. Before continuation, check restart time and configuration, forcing continuity, existing
    live jobs and whether the executable would append to or replace outputs.
 
-Capture the executed configuration and logs, not only the template namelist. A successful
-restart reads and advances the intended state; merely finding a restart filename is not
-that evidence. Retain the [Run feature](../../run.md) resource and submission boundaries.
+Capture the executed configuration and logs, not only the template namelist. See
+[pitfalls](pitfalls.md#existing-restart-filename-assumed-to-prove-a-successful-restart)
+before treating a restart filename as proof of a successful restart. Retain the
+[Run feature](../../run.md) resource and submission boundaries.
 No compiler, HPC command or universally appropriate spin-up length is supplied here.

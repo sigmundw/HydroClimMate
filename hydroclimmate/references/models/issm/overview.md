@@ -10,8 +10,9 @@ A stress-balance calculation determines a velocity field for supplied geometry, 
 properties and boundary conditions. ISSM's documentation describes viscous, incompressible
 ice and a hierarchy of stress approximations. SSA neglects vertical shear; higher-order
 and full-Stokes formulations retain different terms. They are scientific approximations,
-not interchangeable performance switches. A completed velocity solve alone says nothing
-about how thickness evolved through time. [I1](sources.md#i1)
+not interchangeable performance switches. See
+[pitfalls](pitfalls.md#a-completed-velocity-solve-mistaken-for-a-transient-thickness-history)
+before treating a velocity solve as evidence about thickness history. [I1](sources.md#i1)
 
 A transient calculation advances a configured selection of components through time.
 Stress balance can be one component alongside thickness transport, thermal evolution or
