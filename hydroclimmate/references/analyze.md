@@ -1,11 +1,8 @@
 # Analyze hydrological, land-surface and ice-sheet data
 
-Use for processing, evaluating, plotting and diagnosing observations or model outputs.
-Read [the shared checklist](core.md#shared-plan-to-execution-checklist) as the input
-contract; a clear request can supply it directly without a separate planning stage.
+Use for processing, evaluating, plotting and diagnosing observations or model outputs. Read [the shared checklist](core.md#shared-plan-to-execution-checklist) as the input contract; a clear request can supply it directly without a separate planning stage.
 
-For model-specific context, select outputs from the [local model index](models/index.md).
-Read only the relevant topic under the [knowledge policy](core.md#local-model-knowledge).
+For model-specific context, select outputs from the [local model index](models/index.md). Read only the relevant topic under the [knowledge policy](core.md#local-model-knowledge).
 
 ## Establish the quantity and evidence
 
@@ -16,9 +13,7 @@ Read only the relevant topic under the [knowledge policy](core.md#local-model-kn
 
 ## Identify grid or mesh before spatial processing
 
-Inspect coordinate dimensions, CRS/grid mapping, cell bounds or mesh connectivity, cell
-versus node values, and supplied cell areas (such as CF cell_measures). Curvilinear coordinates
-or fixed projected spacing do not by themselves establish equal ground area.
+Inspect coordinate dimensions, CRS/grid mapping, cell bounds or mesh connectivity, cell versus node values, and supplied cell areas (such as CF cell_measures). Curvilinear coordinates or fixed projected spacing do not by themselves establish equal ground area.
 
 For area means of cell-based fields:
 
@@ -27,14 +22,9 @@ For area means of cell-based fields:
 - Other curvilinear grids or meshes: use supplied areas or areas derived from validated cell geometry; do not assume equal area or apply latitude-only weights.
 - Node-based values need a documented integration rule; do not treat nodes as equal-area cells. For finite elements, establish connectivity, interpolation order, domain measure (area/volume) and partial-element masks before integration.
 
-Check area units, positivity and alignment with the data. Use effective area (cell area ×
-included fraction), excluding missing values consistently from numerator and denominator.
-Report valid coverage; a zero effective denominator is missing, not zero. Distinguish an
-area mean from an integral or a sum of quantities already expressed as cell totals.
-Unresolved geometry requires investigation before weighting. See [CF cell measures](https://cfconventions.org/Data/cf-conventions/cf-conventions-1.3/build/ch07s02.html).
+Check area units, positivity and alignment with the data. Use effective area (cell area × included fraction), excluding missing values consistently from numerator and denominator. Report valid coverage; a zero effective denominator is missing, not zero. Distinguish an area mean from an integral or a sum of quantities already expressed as cell totals. Unresolved geometry requires investigation before weighting. See [CF cell measures](https://cfconventions.org/Data/cf-conventions/cf-conventions-1.3/build/ch07s02.html).
 
-For remapping, identify which physical quantity must be preserved and verify coordinate,
-mask and coverage alignment rather than selecting a method solely because it runs.
+For remapping, identify which physical quantity must be preserved and verify coordinate, mask and coverage alignment rather than selecting a method solely because it runs.
 
 ## Time, evaluation and scientific checks
 
@@ -47,24 +37,12 @@ mask and coverage alignment rather than selecting a method solely because it run
 
 ## Diagnose, deliver and stop
 
-For “why is simulated runoff too high?”, trace inputs, units, time matching, masks,
-aggregation and model behavior. Separate facts from hypotheses and allow the surprising
-result to be valid. Borrow [Understand](understand.md) for a code question; use Plan only
-when evidence requires choosing a new method or experiment. Do not silently tune or rerun.
+For “why is simulated runoff too high?”, trace inputs, units, time matching, masks, aggregation and model behavior. Separate facts from hypotheses and allow the surprising result to be valid. Borrow [Understand](understand.md) for a code question; use Plan only when evidence requires choosing a new method or experiment. Do not silently tune or rerun.
 
-Produce the requested reproducible analysis and figures with actual data, units, labels
-and provenance. Notebooks must run in order from a clean kernel. Preserve original outputs;
-keep diagnostic artifacts separate. Capture commands, code/configuration state, input
-versions, environment and checks in existing output records, or a small run-info.md.
+Produce the requested reproducible analysis and figures with actual data, units, labels and provenance. Notebooks must run in order from a clean kernel. Preserve original outputs; keep diagnostic artifacts separate. Capture commands, code/configuration state, input versions, environment and checks in existing output records, or a small run-info.md.
 
-Report execution, verified properties and scientific support separately, including failed
-checks and limits. Stop after the requested outputs and relevant checks are complete.
-Update only affected project facts and existing task state; apply the shared decision and
-handover policy. Consequential results require independent validation/review, not automatic
-review of every plot or routine calculation.
+Report execution, verified properties and scientific support separately, including failed checks and limits. Stop after the requested outputs and relevant checks are complete. Update only affected project facts and existing task state; apply the shared decision and handover policy. Consequential results require independent validation/review, not automatic review of every plot or routine calculation.
 
 ## Before you state the result
 
-Answer [the four questions](core.md#the-four-questions): what was established, what was
-checked and how, what is the owner's to decide, and whether this needs
-[Review](review.md).
+Answer [the four questions](core.md#the-four-questions): what was established, what was checked and how, what is the owner's to decide, and whether this needs [Review](review.md).

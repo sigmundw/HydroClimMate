@@ -7,12 +7,9 @@ description: Understand, plan, run and analyze hydrological, groundwater, land-s
 
 HydroClimMate v0.9 — developed by ACT Hydro Lab.
 
-One workflow with four features, normally used by one agent. Read only the feature needed
-for the current step. Do not load every reference or run all four stages in sequence.
+One workflow with five features, normally used by one agent. Read only the feature needed for the current step. Do not load every reference or run all five in sequence.
 
-Read [references/core.md](references/core.md) first for context checks, the shared
-plan-to-execution checklist, project-record policy and stopping rules. Then read the primary
-feature below; supplement it only for a concrete dependency.
+Read [references/core.md](references/core.md) first for context checks, the shared plan-to-execution checklist, project-record policy and stopping rules. Then read the primary feature below; supplement it only for a concrete dependency.
 
 ## Choose the current feature
 
@@ -24,15 +21,8 @@ feature below; supplement it only for a concrete dependency.
 | [Analyze](references/analyze.md) | Process, evaluate, plot or diagnose hydrological data/results | Submission of a new experiment | “Compute basin means” → analyze; “launch a calibration experiment” → run, or plan if choices remain |
 | [Review](references/review.md) | A consequential or irreversible result needs an independent check before it is recorded or acted on | A routine calculation already checked, or reviewing the same unchanged result again | “Have a fresh session check this before it goes in the report” → review; “try this again with a different setting” → run |
 
-Generic spelling fixes and unrelated coding need no research workflow. Honor explicit
-feature requests within scope. For mixed work, choose the current objective and borrow
-only missing context: a high-runoff diagnosis starts in Analyze, may need Understand,
-and reaches Plan only if evidence calls for a new scientific choice or expanded scope.
-Changing feature does not create another agent or grant additional execution authority.
+Generic spelling fixes and unrelated coding need no research workflow. Honor explicit feature requests within scope. For mixed work, choose the current objective and borrow only missing context: a high-runoff diagnosis starts in Analyze, may need Understand, and reaches Plan only if evidence calls for a new scientific choice or expanded scope. Changing feature does not create another agent or grant additional execution authority.
 
 ## When a claim needs checking
 
-Before stating a consequential result, prefer a deterministic tool over prose: see
-[tools/](tools/README.md) for checks that print evidence before any verdict. When the
-result is consequential enough that a wrong check also matters, use
-[Review](references/review.md) — a fresh agent or session, not the same one continuing.
+Before stating a consequential result, prefer a deterministic tool over prose: see [tools/](tools/README.md) for checks that print evidence before any verdict. When the result is consequential enough that a wrong check also matters, use [Review](references/review.md) — a fresh agent or session, not the same one continuing.

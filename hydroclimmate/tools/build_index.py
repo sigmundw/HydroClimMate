@@ -1,21 +1,18 @@
 #!/usr/bin/env python3
-"""build_index.py — generates a pack's index.json (K-index) from its other structured
-layers (interface, switches, pitfalls) plus its Markdown headings.
+"""build_index.py — generates a depth: reference pack's catalogs/index.json from its
+curated structured layers (interface, switches, checks) plus its Markdown headings. A
+depth: outline pack has no curated layers to index (see SCHEMA.md) and this tool refuses
+to build one for it.
 
-index.json itself always stays JSON (a machine-only generated lookup index, per
+catalogs/index.json itself always stays JSON (a machine-only generated lookup index, per
 SCHEMA.md's YAML-subset section) and carries no claims of its own: every fact in it
-already exists in the layer it was collected from. Regenerate and diff rather than
-hand-edit; evals/check_knowledge.py asserts the committed file equals a fresh build.
-
-A generation-2 pack (SCHEMA.md) carries interface.yaml/switches.yaml/pitfalls.yaml; a
-generation-1 pack still carries interface.json/switches.json/pitfalls.json. This reads
-whichever is present so it works for both without the caller needing to know which.
+already exists in the curated layer it was collected from. Regenerate and diff rather
+than hand-edit; evals/check_knowledge.py asserts the committed file equals a fresh build.
 
 Usage: python3 build_index.py <pack-name> [--write]
 With no --write, prints the built index to stdout without touching the file.
 """
 import json
-import re
 import sys
 from pathlib import Path
 
@@ -26,14 +23,11 @@ import _miniyaml  # noqa: E402
 
 
 def _load(pack_dir, stem):
-    """Load `<stem>.yaml` if present, else `<stem>.json`; return (data, filename actually
-    used) or (None, None) if neither exists."""
-    yaml_path = pack_dir / f"{stem}.yaml"
+    """Load `curated/<stem>.yaml` if present; return (data, filename actually used) or
+    (None, None) if it does not exist."""
+    yaml_path = pack_dir / "curated" / f"{stem}.yaml"
     if yaml_path.is_file():
         return _miniyaml.load_file(yaml_path), yaml_path.name
-    json_path = pack_dir / f"{stem}.json"
-    if json_path.is_file():
-        return json.loads(json_path.read_text()), json_path.name
     return None, None
 
 
@@ -41,7 +35,7 @@ def _entry(entries, name, kind):
     key = (name, kind)
     if key not in entries:
         entries[key] = {"name": name, "kind": kind, "declared_in": set(),
-                         "from": [], "related_switches": set(), "related_pitfalls": set()}
+                         "from": [], "related_switches": set(), "related_checks": set()}
     return entries[key]
 
 
@@ -56,7 +50,7 @@ def build_index_for_pack(pack_dir):
     pack_dir = Path(pack_dir)
     interface, interface_fn = _load(pack_dir, "interface")
     switches, switches_fn = _load(pack_dir, "switches")
-    pitfalls, _pitfalls_fn = _load(pack_dir, "pitfalls")
+    checks, _checks_fn = _load(pack_dir, "checks")
 
     entries = {}
 
@@ -100,20 +94,20 @@ def build_index_for_pack(pack_dir):
                 _add_from(ve, scaling)
                 ve["related_switches"].add(sw_name)
 
-    if pitfalls:
-        for pf in pitfalls.get("pitfalls", []):
-            detect = pf.get("detect")
+    if checks:
+        for chk in checks.get("checks", []):
+            detect = chk.get("detect")
             if not detect:
                 continue
             detect_anchor = (detect.get("from") or {}).get("anchor")
             for entry in entries.values():
                 if any(anchor == detect_anchor for _file, anchor in entry["from"]):
-                    entry["related_pitfalls"].add(pf["id"])
+                    entry["related_checks"].add(chk["id"])
             hint = detect.get("control_var_hint")
             if hint:
                 he = entries.get((hint, "variable"))
                 if he:
-                    he["related_pitfalls"].add(pf["id"])
+                    he["related_checks"].add(chk["id"])
 
     result = []
     for (name, kind), e in sorted(entries.items(), key=lambda kv: (kv[0][0] or "", kv[0][1])):
@@ -123,7 +117,7 @@ def build_index_for_pack(pack_dir):
             "declared_in": sorted(e["declared_in"]),
             "from": [{"file": f, "anchor": a} for f, a in sorted(e["from"])],
             "related_switches": sorted(e["related_switches"]),
-            "related_pitfalls": sorted(e["related_pitfalls"]),
+            "related_checks": sorted(e["related_checks"]),
         })
 
     return {"pack": pack_dir.name, "generated_by": "tools/build_index.py", "entries": result}
@@ -138,11 +132,17 @@ def main(argv=None):
     pack_dir = MODELS_DIR / pack_name
     if not pack_dir.is_dir():
         sys.exit(f"ERROR: no such pack directory: {pack_dir}")
+    manifest_path = pack_dir / "pack.yaml"
+    depth = _miniyaml.load_file(manifest_path).get("depth", "outline") if manifest_path.is_file() else "outline"
+    if depth != "reference":
+        sys.exit(f"outline pack: no machine-readable declarations to index for '{pack_name}'.")
     index = build_index_for_pack(pack_dir)
     text = json.dumps(index, indent=2) + "\n"
+    out_dir = pack_dir / "catalogs"
     if write:
-        (pack_dir / "index.json").write_text(text)
-        print(f"wrote {pack_dir / 'index.json'}")
+        out_dir.mkdir(exist_ok=True)
+        (out_dir / "index.json").write_text(text)
+        print(f"wrote {out_dir / 'index.json'}")
     else:
         print(text)
 

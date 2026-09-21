@@ -1,11 +1,11 @@
-"""_anchor_hash.py -- shared logic for the curated-fact/prose drift check (D1): a
-curated structured-layer fact's `confirmed_against` is a hash of the prose paragraph its
+"""_anchor_hash.py -- shared logic for the curated-fact/prose drift check: a curated
+structured-layer fact's `confirmed_against` is a hash of the prose paragraph its
 `from.anchor` points to, at the time the fact was last hand-confirmed against that prose.
 If the paragraph's text changes (a prose correction), the hash no longer matches, and
 the fact must be re-confirmed -- this is how a prose fix is made to force re-checking
-every curated fact that cites it, rather than silently going stale (see the incident
-that motivated this: switches.yaml/interface.yaml kept an old, corrected urban
-statement after processes.md was fixed, still citing the corrected anchor).
+every curated fact that cites it, rather than silently going stale. The hash is
+whitespace-insensitive (see anchor_paragraph_hash below), so reflowing a paragraph's line
+wrapping alone never forces a re-confirmation.
 
 Used by evals/check_knowledge.py (to verify) and tools/refresh_confirmed_against.py (to
 recompute after a legitimate prose change).

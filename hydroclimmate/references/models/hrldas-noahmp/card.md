@@ -1,55 +1,17 @@
 # HRLDAS / Noah-MP — card
 
-Pinned to HRLDAS `d9f5b205` + `noahmp` `9fbe6724` ([version.md](version.md)); `path:line` is
-relative to that root. Variable/option facts: `tools/hcm_lookup.py --pack hrldas-noahmp <NAME>`,
-from `catalogs/*.yaml` + curated `kinds_overlay.yaml`; catalogs are extracted, **not
-exhaustive** — read each one's `note`. Shorthand: **drv** =
-`hrldas/IO_code/module_NoahMP_hrldas_driver.F`, **io** = `hrldas/IO_code/module_hrldas_netcdf_io.F`,
-**nml** = `hrldas/run/README.namelist`.
+Pinned to HRLDAS `d9f5b205` + `noahmp` `9fbe6724` ([version.md](version.md)); `path:line` is relative to that root. Variable/option facts: `tools/hcm_lookup.py --pack hrldas-noahmp <NAME>`, from `catalogs/*.yaml` + curated `kinds_overlay.yaml`; catalogs are extracted, **not exhaustive** — read each one's `note`. Shorthand: **drv** = `hrldas/IO_code/module_NoahMP_hrldas_driver.F`, **io** = `hrldas/IO_code/module_hrldas_netcdf_io.F`, **nml** = `hrldas/run/README.namelist`.
 
-**Files.** Setup `HRLDAS_SETUP_FILE`; forcing `<stamp>.LDASIN_DOMAIN<n>` (one per
-`FORCING_TIMESTEP`); history `<stamp>.LDASOUT_DOMAIN<n>` (`.loopNNNN` in spin-up); restart
-`RESTART.YYYYMMDDHH_DOMAIN<n>` (io:2236-2242,3111-3119,3705). `<stamp>` is `YYYYMMDDHH`
-only when that file's timestep is whole hours; `...HHMM` whole minutes, `...HHMMSS` else. **A stamp is the file's FIRST record, not its last**: a file holds
-`SPLIT_OUTPUT_COUNT` records (io:3247-56). `Times` is `char(DateStrLen=19,Time)`.
+**Files.** Setup `HRLDAS_SETUP_FILE`; forcing `<stamp>.LDASIN_DOMAIN<n>` (one per `FORCING_TIMESTEP`); history `<stamp>.LDASOUT_DOMAIN<n>` (`.loopNNNN` in spin-up); restart `RESTART.YYYYMMDDHH_DOMAIN<n>` (io:2236-2242,3111-3119,3705). `<stamp>` is `YYYYMMDDHH` only when that file's timestep is whole hours; `...HHMM` whole minutes, `...HHMMSS` else. **A stamp is the file's FIRST record, not its last**: a file holds `SPLIT_OUTPUT_COUNT` records (io:3247-56). `Times` is `char(DateStrLen=19,Time)`.
 
-**Record time = END of step.** Loop `do ITIME = 0, NTIME` (`main_hrldas_driver.F:16-18`),
-physics is skipped at `ITIME==0` (drv:1008,1129); output is written, then the clock advances
-(drv:1131,1406-07). So the **first record is the initial state with fluxes never computed**:
-they hold `undefined_real = -9999.0` (`noahmp/utility/Machine.F90:22`;
-`NoahmpIOVarInitMod.F90:646` + siblings). Observed: about half the data variables were
-`-9999.0` on every land cell; states and `RAINRATE` were real. Drop it, or set
-`SKIP_FIRST_OUTPUT`.
+**Record time = END of step.** Loop `do ITIME = 0, NTIME` (`main_hrldas_driver.F:16-18`), physics is skipped at `ITIME==0` (drv:1008,1129); output is written, then the clock advances (drv:1131,1406-07). So the **first record is the initial state with fluxes never computed**: they hold `undefined_real = -9999.0` (`noahmp/utility/Machine.F90:22`; `NoahmpIOVarInitMod.F90:646` + siblings). Observed: about half the data variables were `-9999.0` on every land cell; states and `RAINRATE` were real. Drop it, or set `SKIP_FIRST_OUTPUT`.
 
-**Dimension ORDER** (io:3399,3433). 2-D → `(Time, south_north, west_east)` (`"XY "`); 3-D →
-**`(Time, south_north, <layer>, west_east)`** (`"XZY"`) — the layer axis sits **between** the
-horizontal axes, not first. Layer dims: `soil_layers_stag` (NSOIL, top-down), `snow_layers`
-(NSNOW=3, `NoahmpIOVarType.F90:674`, index 3 = bottom), `rad_num`.
+**Dimension ORDER** (io:3399,3433). 2-D → `(Time, south_north, west_east)` (`"XY "`); 3-D → **`(Time, south_north, <layer>, west_east)`** (`"XZY"`) — the layer axis sits **between** the horizontal axes, not first. Layer dims: `soil_layers_stag` (NSOIL, top-down), `snow_layers` (NSNOW=3, `NoahmpIOVarType.F90:674`, index 3 = bottom), `rad_num`.
 
-**Forcing units** (nml:93-101): `T2D` K, `Q2D` **specific** humidity kg/kg (converted internally
-to mixing ratio), `U2D`/`V2D` m/s at `ZLVL`, `PSFC` Pa, `LWDOWN`/`SWDOWN` W/m2 down, `RAINRATE`
-**mm/s**. All zeroed where `XLAND > 1.5` (drv:895-903); shortwave split 70/30 absent a
-direct-fraction field (drv:924).
+**Forcing units** (nml:93-101): `T2D` K, `Q2D` **specific** humidity kg/kg (converted internally to mixing ratio), `U2D`/`V2D` m/s at `ZLVL`, `PSFC` Pa, `LWDOWN`/`SWDOWN` W/m2 down, `RAINRATE` **mm/s**. All zeroed where `XLAND > 1.5` (drv:895-903); shortwave split 70/30 absent a direct-fraction field (drv:924).
 
-**Time bases — the rule that costs a factor of 2** (`kinds_overlay.yaml` has true `kind`s).
-(a) *Accumulated since start or the resumed restart*, never reset: `SFCRNOFF`, `UGDRNOFF`,
-`ACSNOW`, `ACSNOM`, `QTDRAIN`; with `IOPT_IRR > 0` also `IRSIVOL`/`IRMIVOL`/`IRFIVOL`/`IRELOSS`/
-`IRRSPLH`; with `IOPT_RUNSUB == 5` also `RECH`/`QRFS`/`QSLAT`/`QSPRINGS`. Difference two records. (b) *Per model timestep*: `RAINRATE` is mm per `NOAH_TIMESTEP`, not a rate
-(drv:913,1164). **Summing such a field over records gives the
-period total only when `OUTPUT_TIMESTEP == NOAH_TIMESTEP`; else multiply the sum by
-`OUTPUT_TIMESTEP / NOAH_TIMESTEP`, or take precipitation from the forcing or `ACC_PRCP`.** True mm/s rates (`ECAN`, `ETRAN`, `EDIR`, `QMELT`) are instantaneous
-samples: summing x `OUTPUT_TIMESTEP` is rectangle-rule quadrature — close (+0.37% vs the matching
-accumulator over a month) but **not exact**, error growing with `OUTPUT_TIMESTEP/NOAH_TIMESTEP`
-and the variable's variability. Prefer an accumulator where one exists. (c) *Per soil timestep, not accumulated*: `EFLXB` (J/m2)
-and `ACC_*`, zeroed the step after the soil update. (d) *State or instantaneous*: the rest —
-`ALBEDO` is `-9999` with no sun, `ALB*` are 0 at night; `SOILENERGY`/`SNOWENERGY` are states,
-MMF `QRF`/`QLAT`/`QSPRING` m/call.
+**Time bases — the rule that costs a factor of 2** (`kinds_overlay.yaml` has true `kind`s). (a) *Accumulated since start or the resumed restart*, never reset: `SFCRNOFF`, `UGDRNOFF`, `ACSNOW`, `ACSNOM`, `QTDRAIN`; with `IOPT_IRR > 0` also `IRSIVOL`/`IRMIVOL`/`IRFIVOL`/`IRELOSS`/ `IRRSPLH`; with `IOPT_RUNSUB == 5` also `RECH`/`QRFS`/`QSLAT`/`QSPRINGS`. Difference two records. (b) *Per model timestep*: `RAINRATE` is mm per `NOAH_TIMESTEP`, not a rate (drv:913,1164). **Summing such a field over records gives the period total only when `OUTPUT_TIMESTEP == NOAH_TIMESTEP`; else multiply the sum by `OUTPUT_TIMESTEP / NOAH_TIMESTEP`, or take precipitation from the forcing or `ACC_PRCP`.** True mm/s rates (`ECAN`, `ETRAN`, `EDIR`, `QMELT`) are instantaneous samples: summing x `OUTPUT_TIMESTEP` is rectangle-rule quadrature — close (+0.37% vs the matching accumulator over a month) but **not exact**, error growing with `OUTPUT_TIMESTEP/NOAH_TIMESTEP` and the variable's variability. Prefer an accumulator where one exists. (c) *Per soil timestep, not accumulated*: `EFLXB` (J/m2) and `ACC_*`, zeroed the step after the soil update. (d) *State or instantaneous*: the rest — `ALBEDO` is `-9999` with no sun, `ALB*` are 0 at night; `SOILENERGY`/`SNOWENERGY` are states, MMF `QRF`/`QLAT`/`QSPRING` m/call.
 
-**Fill and mask** (io:3147,3471,3493,3526). `missing_value = -1.E33` is a
-**global** attribute; no variable carries `_FillValue`/`missing_value`, so nothing masks it for
-you. Floats are `-1.E33` where `IVGTYP == ISWATER` — **except** 2-D restart fields, unmasked.
-Integers (`IVGTYP`, `ISLTYP`, `ISNOW`) are never masked. Mask on `< -1e30`; `-9999` is a separate
-sentinel it misses.
+**Fill and mask** (io:3147,3471,3493,3526). `missing_value = -1.E33` is a **global** attribute; no variable carries `_FillValue`/`missing_value`, so nothing masks it for you. Floats are `-1.E33` where `IVGTYP == ISWATER` — **except** 2-D restart fields, unmasked. Integers (`IVGTYP`, `ISLTYP`, `ISNOW`) are never masked. Mask on `< -1e30`; `-9999` is a separate sentinel it misses.
 
-**Next.** [processes.md](processes.md): question → switch → module → variable, with gates.
-[failures.md](failures.md): symptom-first. [recipes.md](recipes.md): cost-bounded.
+**Next.** [processes.md](processes.md): question → switch → module → variable, with gates. [failures.md](failures.md): symptom-first. [recipes.md](recipes.md): cost-bounded.

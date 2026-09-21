@@ -17,7 +17,7 @@
       "related_switches": [
         "SF_URBAN_PHYSICS"
       ],
-      "related_pitfalls": []
+      "related_checks": []
     },
     {
       "name": "FRC_URB2D",
@@ -34,8 +34,8 @@
       "related_switches": [
         "SF_URBAN_PHYSICS"
       ],
-      "related_pitfalls": [
-        "paired-urban-onoff-snow-difference-attributed-to-canopy-physics"
+      "related_checks": [
+        "a-paired-urban-onoff-run-differs-in-snow-soil-or-radiation"
       ]
     },
     {
@@ -53,7 +53,7 @@
       "related_switches": [
         "SF_URBAN_PHYSICS"
       ],
-      "related_pitfalls": []
+      "related_checks": []
     },
     {
       "name": "HFX",
@@ -70,7 +70,7 @@
       "related_switches": [
         "SF_URBAN_PHYSICS"
       ],
-      "related_pitfalls": []
+      "related_checks": []
     },
     {
       "name": "LH",
@@ -87,7 +87,7 @@
       "related_switches": [
         "SF_URBAN_PHYSICS"
       ],
-      "related_pitfalls": []
+      "related_checks": []
     },
     {
       "name": "QFX",
@@ -104,7 +104,7 @@
       "related_switches": [
         "SF_URBAN_PHYSICS"
       ],
-      "related_pitfalls": []
+      "related_checks": []
     },
     {
       "name": "QSFC",
@@ -121,7 +121,7 @@
       "related_switches": [
         "SF_URBAN_PHYSICS"
       ],
-      "related_pitfalls": []
+      "related_checks": []
     },
     {
       "name": "SF_URBAN_PHYSICS",
@@ -140,22 +140,7 @@
         }
       ],
       "related_switches": [],
-      "related_pitfalls": []
-    },
-    {
-      "name": "SNEQV (identity against SNICE + SNLIQ)",
-      "kind": "output",
-      "declared_in": [
-        "interface.yaml"
-      ],
-      "from": [
-        {
-          "file": "failures.md",
-          "anchor": "snow-water-equivalent-does-not-equal-the-sum-of-the-snow-layers"
-        }
-      ],
-      "related_switches": [],
-      "related_pitfalls": []
+      "related_checks": []
     },
     {
       "name": "TSK",
@@ -172,7 +157,7 @@
       "related_switches": [
         "SF_URBAN_PHYSICS"
       ],
-      "related_pitfalls": []
+      "related_checks": []
     },
     {
       "name": "UST",
@@ -189,69 +174,7 @@
       "related_switches": [
         "SF_URBAN_PHYSICS"
       ],
-      "related_pitfalls": []
-    },
-    {
-      "name": "float output fields on water-body cells (see catalogs/outputs.yaml fill_note)",
-      "kind": "output",
-      "declared_in": [
-        "interface.yaml"
-      ],
-      "from": [
-        {
-          "file": "failures.md",
-          "anchor": "everything-over-water-is-a-huge-negative-number-or-the-mean-is-nonsense"
-        }
-      ],
-      "related_switches": [],
-      "related_pitfalls": [
-        "snow-water-equivalent-identity-and-unmasked-fill-values"
-      ]
-    },
-    {
-      "name": "meteorological forcing (T2D, Q2D, U2D, V2D, PSFC, LWDOWN, SWDOWN, RAINRATE)",
-      "kind": "input",
-      "declared_in": [
-        "interface.yaml"
-      ],
-      "from": [
-        {
-          "file": "card.md",
-          "anchor": "hrldas--noah-mp--card"
-        }
-      ],
-      "related_switches": [],
-      "related_pitfalls": []
-    },
-    {
-      "name": "restart",
-      "kind": "file",
-      "declared_in": [
-        "interface.yaml"
-      ],
-      "from": [
-        {
-          "file": "failures.md",
-          "anchor": "a-restart-file-exists-so-the-run-restarted-successfully"
-        }
-      ],
-      "related_switches": [],
-      "related_pitfalls": []
-    },
-    {
-      "name": "setup data",
-      "kind": "file",
-      "declared_in": [
-        "interface.yaml"
-      ],
-      "from": [
-        {
-          "file": "card.md",
-          "anchor": "hrldas--noah-mp--card"
-        }
-      ],
-      "related_switches": [],
-      "related_pitfalls": []
+      "related_checks": []
     },
     {
       "name": "snow state",
@@ -268,7 +191,7 @@
       "related_switches": [
         "SF_URBAN_PHYSICS"
       ],
-      "related_pitfalls": []
+      "related_checks": []
     },
     {
       "name": "soil-moisture state",
@@ -285,7 +208,7 @@
       "related_switches": [
         "SF_URBAN_PHYSICS"
       ],
-      "related_pitfalls": []
+      "related_checks": []
     },
     {
       "name": "soil-temperature state",
@@ -302,22 +225,7 @@
       "related_switches": [
         "SF_URBAN_PHYSICS"
       ],
-      "related_pitfalls": []
-    },
-    {
-      "name": "vegetation-type parameter table (class-indexed, table-dependent)",
-      "kind": "input",
-      "declared_in": [
-        "interface.yaml"
-      ],
-      "from": [
-        {
-          "file": "processes.md",
-          "anchor": "urban-what-sf_urban_physics-does"
-        }
-      ],
-      "related_switches": [],
-      "related_pitfalls": []
+      "related_checks": []
     }
   ]
 }

@@ -1,16 +1,12 @@
 # Run and diagnose a model
 
-Use for model preparation, small trials, execution, restart and operational failure diagnosis.
-Scientific interpretation of completed outputs belongs to [Analyze](analyze.md).
+Use for model preparation, small trials, execution, restart and operational failure diagnosis. Scientific interpretation of completed outputs belongs to [Analyze](analyze.md).
 
-For model-specific context, select execution from the [local model index](models/index.md).
-Read only the relevant topic under the [knowledge policy](core.md#local-model-knowledge).
+For model-specific context, select execution from the [local model index](models/index.md). Read only the relevant topic under the [knowledge policy](core.md#local-model-knowledge).
 
 ## Consume the shared checklist
 
-Use the five fields in [the core rules](core.md#shared-plan-to-execution-checklist) as the
-input contract, whether supplied by a plan, a task record or the user's existing request.
-Resolve only gaps affecting the next step; do not require Plan for an already defined run.
+Use the five fields in [the core rules](core.md#shared-plan-to-execution-checklist) as the input contract, whether supplied by a plan, a task record or the user's existing request. Resolve only gaps affecting the next step; do not require Plan for an already defined run.
 
 ## Preflight
 
@@ -34,29 +30,16 @@ Resolve only gaps affecting the next step; do not require Plan for an already de
 
 ## Check outputs and report state
 
-Distinguish configured/ready, submitted, running, failed, execution completed, and output
-checks passed. Use scheduler/process evidence and logs; submission success proves only
-submission. If completion cannot be observed, leave it pending and provide the job/log reference.
+Distinguish configured/ready, submitted, running, failed, execution completed, and output checks passed. Use scheduler/process evidence and logs; submission success proves only submission. If completion cannot be observed, leave it pending and provide the job/log reference.
 
-Check expected files and readable structure, time coverage, grid consistency and obvious
-nonfinite or incomplete output, as relevant. Apply established model diagnostics without
-claiming full scientific validation. Send interpretation or requested evaluation to Analyze.
+Check expected files and readable structure, time coverage, grid consistency and obvious nonfinite or incomplete output, as relevant. Apply established model diagnostics without claiming full scientific validation. Send interpretation or requested evaluation to Analyze.
 
-For a newly enabled physics option, verify that the intended quantity changed for the
-intended physical reason — for example, that the response scales with its controlling
-parameter — rather than concluding from absence of errors or presence of any difference alone.
+For a newly enabled physics option, verify that the intended quantity changed for the intended physical reason — for example, that the response scales with its controlling parameter — rather than concluding from absence of errors or presence of any difference alone.
 
 ## Finish and preserve continuity
 
-Stop at the requested stage: submission-only requests end with confirmed submission;
-completion requests require observed completion and relevant checks, or an explicit blocker.
-Link run evidence from an existing task. Update README only for changed durable commands or
-facts, and HANDOVER only for unfinished work crossing sessions/owners. Record important
-adopted choices under the shared decision policy in any feature. Missing evidence remains
-unverified; do not repeat costly work to manufacture a complete report.
+Stop at the requested stage: submission-only requests end with confirmed submission; completion requests require observed completion and relevant checks, or an explicit blocker. Link run evidence from an existing task. Update README only for changed durable commands or facts, and HANDOVER only for unfinished work crossing sessions/owners. Record important adopted choices under the shared decision policy in any feature. Missing evidence remains unverified; do not repeat costly work to manufacture a complete report.
 
 ## Before you state the result
 
-Answer [the four questions](core.md#the-four-questions): what was established, what was
-checked and how, what is the owner's to decide, and whether this needs
-[Review](review.md).
+Answer [the four questions](core.md#the-four-questions): what was established, what was checked and how, what is the owner's to decide, and whether this needs [Review](review.md).

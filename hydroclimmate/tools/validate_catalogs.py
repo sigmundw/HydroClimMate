@@ -277,7 +277,6 @@ def main():
     p.add_argument("--ldasin", help="A real LDASIN_DOMAIN1 file")
     p.add_argument("--check-kind-sample", action="store_true",
                     help="Also run the <=12-file empirical kind check next to --ldasout")
-    p.add_argument("--summary-out", help="Write catalogs/VALIDATION.md (no paths/identifying names)")
     p.add_argument("--apply", action="store_true",
                     help="Upgrade evidence: source_read -> both in place for matched, non-conflicting "
                          "facts and rewrite the catalog YAML files (deterministic; see module docstring)")
@@ -290,7 +289,7 @@ def main():
     applied = {}
 
     kinds_overlay = {}
-    kinds_overlay_path = pack_dir / "catalogs" / "kinds_overlay.yaml"
+    kinds_overlay_path = pack_dir / "curated" / "kinds_overlay.yaml"
     if kinds_overlay_path.is_file():
         for row in load_catalog(kinds_overlay_path).get("rows", []):
             kinds_overlay[row["variable"].upper()] = row
@@ -308,7 +307,7 @@ def main():
             _miniyaml.write_file(catalog, pack_dir / "catalogs" / "outputs.yaml",
                                   header_lines=_catalog_header("outputs",
                                       "Evidence upgraded in place by tools/validate_catalogs.py --apply "
-                                      "against a real LDASOUT file; see catalogs/VALIDATION.md."))
+                                      "against a real LDASOUT file; see catalogs/MANIFEST.json's validation field."))
 
     if args.restart:
         catalog = load_catalog(pack_dir / "catalogs" / "restart.yaml")
@@ -323,7 +322,7 @@ def main():
             _miniyaml.write_file(catalog, pack_dir / "catalogs" / "restart.yaml",
                                   header_lines=_catalog_header("restart",
                                       "Evidence upgraded in place by tools/validate_catalogs.py --apply "
-                                      "against a real RESTART file; see catalogs/VALIDATION.md."))
+                                      "against a real RESTART file; see catalogs/MANIFEST.json's validation field."))
 
     if args.ldasin:
         catalog = load_catalog(pack_dir / "catalogs" / "forcing.yaml")
@@ -338,7 +337,7 @@ def main():
             _miniyaml.write_file(catalog, pack_dir / "catalogs" / "forcing.yaml",
                                   header_lines=_catalog_header("forcing",
                                       "Evidence upgraded in place by tools/validate_catalogs.py --apply "
-                                      "against a real LDASIN file; see catalogs/VALIDATION.md."))
+                                      "against a real LDASIN file; see catalogs/MANIFEST.json's validation field."))
 
     if args.apply and applied:
         refresh_manifest(pack_dir, [f"{name}.yaml" for name in applied])
@@ -351,56 +350,63 @@ def main():
         print("\n=== evidence upgrades applied ===")
         print(json.dumps(applied, indent=2))
 
-    if args.summary_out:
-        write_summary(sections, Path(args.summary_out))
-        print(f"\nwrote {args.summary_out}")
+    if sections:
+        write_validation_summary(pack_dir, sections)
+        print(f"\nupdated {pack_dir / 'catalogs' / 'MANIFEST.json'} validation summary")
 
     if args.json:
         print(json.dumps(sections, indent=2, default=str))
     return 0
 
 
-def write_summary(sections, out_path):
-    lines = ["# Catalog validation summary", "",
-             "Run against one regional offline HRLDAS/Noah-MP run built from the pinned "
-             "commit (paths and run identifiers withheld). Confirms or disagrees with "
-             "source-derived catalog facts; does not judge scientific acceptability.", ""]
+def write_validation_summary(pack_dir, sections):
+    """Condense `sections` (the same structured report already printed) into
+    catalogs/MANIFEST.json's own `validation` field -- run against one regional offline
+    run built from the pinned commit; no paths or run identifiers recorded. This
+    confirms or disagrees with source-derived catalog facts; it does not judge
+    scientific acceptability."""
+    manifest_path = pack_dir / "catalogs" / "MANIFEST.json"
+    manifest = json.loads(manifest_path.read_text()) if manifest_path.is_file() else {}
+    summary = {}
     for name, sub in sections.items():
-        lines.append(f"## {name}")
+        n_gated = 0
         if "in_catalog_not_in_file" in sub:
             n_gated = sum(1 for e in sub["in_catalog_not_in_file"] if e.get("gating"))
-            lines.append(f"- In catalog, not in this file's variable list: "
-                          f"{len(sub['in_catalog_not_in_file'])} "
-                          f"({n_gated} have a recorded gating condition that plausibly "
-                          "explains the absence; the rest have none recorded).")
+        entry = {}
+        if "in_catalog_not_in_file" in sub:
+            entry["in_catalog_not_in_file"] = len(sub["in_catalog_not_in_file"])
+            entry["in_catalog_not_in_file_gated"] = n_gated
         if "in_file_not_in_catalog" in sub:
-            lines.append(f"- In this file, not in the catalog: {len(sub['in_file_not_in_catalog'])}.")
+            entry["in_file_not_in_catalog"] = len(sub["in_file_not_in_catalog"])
         if "dim_order_reversed_as_expected" in sub:
-            lines.append(f"- Dimension order: {len(sub['dim_order_reversed_as_expected'])} variables "
-                          "match the catalog's source-declared order reversed (the expected "
-                          "Fortran-nf90_def_var-vs-netCDF4-python relationship); "
-                          f"{len(sub.get('dim_order_matches_literally', []))} match literally; "
-                          f"{len(sub.get('dim_order_mismatches', []))} disagree with both.")
+            entry["dim_order_reversed_as_expected"] = len(sub["dim_order_reversed_as_expected"])
+            entry["dim_order_matches_literally"] = len(sub.get("dim_order_matches_literally", []))
+            entry["dim_order_mismatches"] = len(sub.get("dim_order_mismatches", []))
         if "unit_mismatches" in sub:
-            lines.append(f"- Units attribute mismatches: {len(sub['unit_mismatches'])}.")
+            entry["unit_mismatches"] = len(sub["unit_mismatches"])
         if "fill_declared" in sub:
-            n_true = sum(1 for v in sub["fill_declared"].values() if v)
-            lines.append(f"- _FillValue/missing_value declared on {n_true} of "
-                          f"{len(sub['fill_declared'])} matched variables.")
+            entry["fill_declared_true"] = sum(1 for v in sub["fill_declared"].values() if v)
+            entry["fill_declared_checked"] = len(sub["fill_declared"])
         if "kind_sample" in sub:
             ks = sub["kind_sample"]
             if "results" in ks:
-                n_incons = sum(1 for r in ks["results"] if "INCONSISTENT" in r["consistency"])
-                n_overlay = sum(1 for r in ks["results"] if r.get("overlay_true_kind"))
-                lines.append(f"- Kind empirical sample ({ks.get('n_files')} files, "
-                              f"{len(ks['results'])} variables checked, {n_overlay} tested "
-                              f"against a curated kinds_overlay.yaml true_kind rather than "
-                              f"the generated kind): {n_incons} inconsistent.")
+                entry["kind_sample_files"] = ks.get("n_files")
+                entry["kind_sample_checked"] = len(ks["results"])
+                entry["kind_sample_tested_against_overlay"] = sum(
+                    1 for r in ks["results"] if r.get("overlay_true_kind"))
+                entry["kind_sample_inconsistent"] = sum(
+                    1 for r in ks["results"] if "INCONSISTENT" in r["consistency"])
         if "forcing_matched" in sub:
-            lines.append(f"- Forcing names matched in this LDASIN file: {len(sub['forcing_matched'])}; "
-                          f"not found: {len(sub['forcing_not_found_in_file'])}.")
-        lines.append("")
-    out_path.write_text("\n".join(lines) + "\n")
+            entry["forcing_matched"] = len(sub["forcing_matched"])
+            entry["forcing_not_found_in_file"] = len(sub["forcing_not_found_in_file"])
+        summary[name] = entry
+    manifest["validation"] = {
+        "note": "run against one regional offline run built from the pinned commit; no "
+                "paths or run identifiers recorded; confirms or disagrees with "
+                "source-derived catalog facts, does not judge scientific acceptability",
+        **summary,
+    }
+    manifest_path.write_text(json.dumps(manifest, indent=2, default=str) + "\n")
 
 
 if __name__ == "__main__":

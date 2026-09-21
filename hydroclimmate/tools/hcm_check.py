@@ -37,40 +37,52 @@ VALID_BASIS = ("source_read", "observed_in_output", "both", "unverified")
 
 def _load_structured(path):
     """Load a pack layer file: YAML (PyYAML, else _miniyaml) for .yaml, plain json for
-    .json -- a pack declares its generation (and so which extension its layers use) in
-    its manifest; see SCHEMA.md."""
+    .json (only catalogs/index.json and catalogs/MANIFEST.json stay JSON; see
+    SCHEMA.md)."""
     if path.suffix == ".yaml":
         return _miniyaml.load_file(path)
     return json.loads(path.read_text())
 
 
+# Curated (hand-authored) layers live under curated/, at these fixed filenames; the one
+# generated, machine-only lookup index lives at catalogs/index.json. Only a depth:
+# reference pack carries any of these -- a depth: outline pack is prose only. See
+# references/models/SCHEMA.md.
+_CURATED_LAYERS = ("interface", "switches", "checks", "workflows")
+
+
 def load_pack(name):
-    """Load a pack's optional structured layers, resolved relative to this tool's own
-    location (not the current working directory). A pack with no pack.yaml/pack.json, or
-    with a layer file it does not declare, simply has that layer come back empty -- this
-    tool never invents a declaration. See references/models/SCHEMA.md."""
+    """Load a pack's manifest and, for a depth: reference pack, its optional curated
+    layers and generated index -- resolved relative to this tool's own location (not the
+    current working directory). A depth: outline pack, or a missing layer file, simply
+    comes back with that layer as None -- this tool never invents a declaration. See
+    references/models/SCHEMA.md."""
     pack_dir = MODELS_DIR / name
     if not pack_dir.is_dir():
         sys.exit(f"ERROR: no such pack directory: {pack_dir}")
     manifest_path = pack_dir / "pack.yaml"
-    if not manifest_path.is_file():
-        manifest_path = pack_dir / "pack.json"
     manifest = {}
     if manifest_path.is_file():
         manifest = _load_structured(manifest_path)
-    layers = {}
-    generation = manifest.get("generation", 1)
-    default_ext = "yaml" if generation == 2 else "json"
-    for layer_name in ("interface", "switches", "pitfalls", "workflows", "index", "selftest"):
-        info = manifest.get("layers", {}).get(layer_name)
-        # info present but its "file" is null means the manifest declares this layer
-        # coverage: none (nothing this pack's prose supports) -- not a filename to guess.
-        filename = info.get("file") if info is not None else f"{layer_name}.{default_ext}"
-        layers[layer_name] = None
-        if filename:
-            path = pack_dir / filename
-            layers[layer_name] = _load_structured(path) if path.is_file() else None
-    return {"dir": pack_dir, "manifest": manifest, "layers": layers, "generation": generation}
+    depth = manifest.get("depth", "outline")
+    layers = {name: None for name in _CURATED_LAYERS}
+    layers["index"] = None
+    if depth == "reference":
+        for layer_name in _CURATED_LAYERS:
+            path = pack_dir / "curated" / f"{layer_name}.yaml"
+            if path.is_file():
+                layers[layer_name] = _load_structured(path)
+        index_path = pack_dir / "catalogs" / "index.json"
+        if index_path.is_file():
+            layers["index"] = _load_structured(index_path)
+    return {"dir": pack_dir, "manifest": manifest, "layers": layers, "depth": depth}
+
+
+def _is_outline(pack):
+    return pack["depth"] != "reference"
+
+
+OUTLINE_NOTE = "outline pack: no machine-readable declarations"
 
 
 def _fact_is_unverified(fact):
@@ -96,7 +108,7 @@ def _keyword_match(text, var_name):
 
 
 def find_output_facts(pack, var_name):
-    """Facts in the pack's interface.json 'outputs' section whose 'variable' text
+    """Facts in the pack's curated/interface.yaml 'outputs' section whose 'variable' text
     plausibly concerns var_name. The pack often names a variable descriptively rather
     than by its exact NetCDF name (the pack's own prose does not give one) -- this is a
     keyword match, not proof of identity, and is reported as such."""
@@ -107,7 +119,7 @@ def find_output_facts(pack, var_name):
 
 
 def find_input_facts(pack, var_name):
-    """Same keyword match as find_output_facts, over interface.json's 'inputs' section."""
+    """Same keyword match as find_output_facts, over curated/interface.yaml's 'inputs' section."""
     doc = pack["layers"]["interface"]
     if not doc:
         return []
@@ -326,7 +338,9 @@ def cmd_paired_response(args):
     if args.pack:
         pack = load_pack(args.pack)
         pack_report = {"pack": args.pack, "switch": args.switch}
-        if args.switch:
+        if _is_outline(pack):
+            print(f"\nNOTE: pack '{args.pack}': {OUTLINE_NOTE} to confront.")
+        elif args.switch:
             switches_doc = pack["layers"]["switches"]
             switch_info = None
             if switches_doc:
@@ -452,16 +466,19 @@ def cmd_paired_response(args):
 
 def declared_vs_observed(pack_name, var_name, monotone, fill_declared, n_large_neg):
     """Print and return the declared-vs-observed block for accumulation-and-fill: what the
-    pack's semantics.json says about this variable (keyword-matched, see
+    pack's curated/interface.yaml says about this variable (keyword-matched, see
     find_output_facts), set against what was actually observed in the files. Returns
     (verdict, detail) where verdict is DISAGREES / CONSISTENT / NO DECLARATION /
     UNVERIFIED. A fact with basis: unverified can never produce a positive (CONSISTENT)
     reading -- it is downgraded to UNVERIFIED, with the reason printed."""
     pack = load_pack(pack_name)
-    facts = find_output_facts(pack, var_name)
     print(f"\n# Declared vs observed (pack: {pack_name}, variable: {var_name})")
+    if _is_outline(pack):
+        print(f"  NO DECLARATION: {OUTLINE_NOTE}.")
+        return "NO DECLARATION", {"matched_facts": 0}
+    facts = find_output_facts(pack, var_name)
     if not facts:
-        print("  NO DECLARATION: the pack's semantics.json states nothing that keyword-matches "
+        print("  NO DECLARATION: curated/interface.yaml states nothing that keyword-matches "
               "this variable name.")
         return "NO DECLARATION", {"matched_facts": 0}
 
@@ -512,27 +529,42 @@ def cmd_pack_info(args):
     manifest = pack["manifest"]
     print(f"# pack-info: {args.pack}")
     if not manifest:
-        print("  No pack.yaml/pack.json found for this pack.")
+        print("  No pack.yaml found for this pack.")
         return 0
+    print(f"  title: {manifest.get('title', '<none>')}")
+    print(f"  depth: {manifest.get('depth', '<none>')}")
     print(f"  version_scope: {manifest.get('version_scope', '<none>')}")
+    for entry in manifest.get("prose", []):
+        print(f"  prose: {entry.get('file')} -- {entry.get('purpose')}")
+    if _is_outline(pack):
+        print(f"  {OUTLINE_NOTE}.")
+        if args.json:
+            print(json.dumps({"pack": args.pack, "depth": pack["depth"],
+                               "version_scope": manifest.get("version_scope")}, indent=2))
+        return 0
+
     counts = {b: 0 for b in VALID_BASIS}
-    layer_lines = []
-    for layer_name, layer_info in manifest.get("layers", {}).items():
-        doc = pack["layers"].get(layer_name)
+    curated_lines = []
+    for entry in manifest.get("curated", []):
+        filename = entry.get("file")
+        path = pack["dir"] / filename if filename else None
+        doc = _load_structured(path) if path and path.is_file() else None
         n_facts = 0
         if doc:
             n_facts = sum(1 for _ in _iter_facts_local(doc))
             for _, fact in _iter_facts_local(doc):
                 if fact.get("basis") in counts:
                     counts[fact["basis"]] += 1
-        coverage = layer_info.get("coverage", "<none>")
-        layer_lines.append((layer_name, layer_info.get("file"), coverage, n_facts))
-        print(f"  layer {layer_name}: file={layer_info.get('file')} coverage={coverage} facts={n_facts}")
+        curated_lines.append((filename, entry.get("purpose"), n_facts))
+        print(f"  curated: {filename} -- {entry.get('purpose')} (facts={n_facts})")
+    for gap in manifest.get("known_gaps", []):
+        print(f"  known gap: {gap}")
     print(f"  fact counts by basis: {counts}")
     if args.json:
         print(json.dumps({
-            "pack": args.pack, "version_scope": manifest.get("version_scope"),
-            "layers": [{"name": n, "file": f, "coverage": c, "facts": k} for n, f, c, k in layer_lines],
+            "pack": args.pack, "depth": pack["depth"], "version_scope": manifest.get("version_scope"),
+            "curated": [{"file": f, "purpose": p, "facts": k} for f, p, k in curated_lines],
+            "known_gaps": manifest.get("known_gaps", []),
             "counts_by_basis": counts,
         }, indent=2))
     return 0
@@ -553,14 +585,17 @@ def _iter_facts_local(node, path=""):
 
 def cmd_pitfall_scan(args):
     pack = load_pack(args.pack)
-    pitfalls_doc = pack["layers"]["pitfalls"]
     print(f"# pitfall-scan: {args.pack}")
-    if not pitfalls_doc:
-        print("  No pitfalls layer (pitfalls.yaml/pitfalls.json) found for this pack.")
+    if _is_outline(pack):
+        print(f"  {OUTLINE_NOTE}.")
+        return 0
+    checks_doc = pack["layers"]["checks"]
+    if not checks_doc:
+        print("  No checks layer (curated/checks.yaml) found for this pack.")
         return 0
 
     results = []
-    for entry in pitfalls_doc.get("pitfalls", []):
+    for entry in checks_doc.get("checks", []):
         pid = entry["id"]
         detect = entry.get("detect")
         if detect is None:
@@ -619,6 +654,8 @@ def cmd_describe(args):
     import netCDF4
     pack = load_pack(args.pack)
     print(f"# describe: pack={args.pack} file={args.file}")
+    if _is_outline(pack):
+        print(f"  NOTE: {OUTLINE_NOTE}; every variable below reads NO DECLARATION.")
     with netCDF4.Dataset(args.file) as ds:
         for name, var in sorted(ds.variables.items()):
             attrs = {a: var.getncattr(a) for a in var.ncattrs()}
@@ -648,9 +685,12 @@ def cmd_lookup(args):
     """Print an index.json entry (see tools/build_index.py) for a variable name,
     configuration key or file kind -- exact match first, then a keyword match."""
     pack = load_pack(args.pack)
+    if _is_outline(pack):
+        print(f"{OUTLINE_NOTE}.")
+        return 0
     index_doc = pack["layers"]["index"]
     if not index_doc:
-        print(f"No index.json for pack '{args.pack}'. Build one with "
+        print(f"No catalogs/index.json for pack '{args.pack}'. Build one with "
               f"tools/build_index.py {args.pack} --write.")
         return 0
     entries = index_doc.get("entries", [])
@@ -664,7 +704,7 @@ def cmd_lookup(args):
         print(f"  declared_in: {e['declared_in']}")
         print(f"  from: {e['from']}")
         print(f"  related_switches: {e['related_switches']}")
-        print(f"  related_pitfalls: {e['related_pitfalls']}")
+        print(f"  related_checks: {e['related_checks']}")
     if args.json:
         print(json.dumps(matches, indent=2))
     return 0

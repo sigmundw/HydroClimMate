@@ -44,5 +44,38 @@
       "count": 5,
       "sha256": "4e88e0cfb219907a42e2a0b5cac3e4c3a178d589eb9d7bd964aafa69fb0bbacc"
     }
+  },
+  "validation": {
+    "note": "run against one regional offline run built from the pinned commit; no paths or run identifiers recorded; confirms or disagrees with source-derived catalog facts, does not judge scientific acceptability",
+    "outputs": {
+      "in_catalog_not_in_file": 81,
+      "in_catalog_not_in_file_gated": 81,
+      "in_file_not_in_catalog": 0,
+      "dim_order_reversed_as_expected": 98,
+      "dim_order_matches_literally": 0,
+      "dim_order_mismatches": 0,
+      "unit_mismatches": 0,
+      "fill_declared_true": 0,
+      "fill_declared_checked": 98,
+      "kind_sample_files": 12,
+      "kind_sample_checked": 85,
+      "kind_sample_tested_against_overlay": 35,
+      "kind_sample_inconsistent": 0
+    },
+    "restart": {
+      "in_catalog_not_in_file": 117,
+      "in_catalog_not_in_file_gated": 117,
+      "in_file_not_in_catalog": 0,
+      "dim_order_reversed_as_expected": 58,
+      "dim_order_matches_literally": 0,
+      "dim_order_mismatches": 0,
+      "unit_mismatches": 0,
+      "fill_declared_true": 0,
+      "fill_declared_checked": 58
+    },
+    "forcing": {
+      "forcing_matched": 8,
+      "forcing_not_found_in_file": 11
+    }
   }
 }

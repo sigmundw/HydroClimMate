@@ -1,8 +1,6 @@
 # <Task title> — Optional task record
 
-Use only for complex or coordinated work. Keep this concise (30–50 lines or fewer).
-Save in the existing task directory or tasks/YYYY-MM-DD-short-name.md; update in place.
-A handover links here rather than duplicating the checklist, state and evidence.
+Use only for complex or coordinated work. Keep this concise (30–50 lines or fewer). Save in the existing task directory or tasks/YYYY-MM-DD-short-name.md; update in place. A handover links here rather than duplicating the checklist, state and evidence.
 
 ## Shared plan-to-execution checklist
 
@@ -27,6 +25,4 @@ A handover links here rather than duplicating the checklist, state and evidence.
 - Review: <findings and resolution link, or Not performed>
 - Next action / completion: <remaining work and budget, or outcome; do not infer researcher acceptance>
 
-The current agent records important adopted choices in DECISIONS.md with the research owner
-or authorized decision maker. Pending proposals remain here. Existing authorization is reused;
-method adoption does not grant unlimited compute or permission to overwrite results.
+The current agent records important adopted choices in DECISIONS.md with the research owner or authorized decision maker. Pending proposals remain here. Existing authorization is reused; method adoption does not grant unlimited compute or permission to overwrite results.

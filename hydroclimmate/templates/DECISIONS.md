@@ -1,9 +1,6 @@
 # Important Decisions
 
-Create only when an important scientific or engineering choice is adopted. Keep each
-entry to 5–8 lines; link evidence. Pending proposals belong in the task or handover.
-The research owner or authorized decision maker adopts; the current agent records the
-decision in any feature. Preserve superseded entries and link replacements.
+Create only when an important scientific or engineering choice is adopted. Keep each entry to 5–8 lines; link evidence. Pending proposals belong in the task or handover. The research owner or authorized decision maker adopts; the current agent records the decision in any feature. Preserve superseded entries and link replacements.
 
 ## <Date> — <Decision title>
 - Status: <Adopted / Superseded>

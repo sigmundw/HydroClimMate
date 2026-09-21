@@ -927,7 +927,7 @@ def cmd_physics_options(root):
     a matched line's 'call Routine(...)', for cross-checking, not asserted as the
     scheme name itself. Harder judgement calls (disagreements between the two, or a
     value with an inline-branching, no-named-routine scheme) belong in the curated
-    catalogs/options_overlay.yaml, not guessed here."""
+    curated/options_overlay.yaml, not guessed here."""
     nml_file = "noahmp/drivers/hrldas/NoahmpReadNamelistMod.F90"
     nml_lines = read_lines(root / nml_file)
     # NoahmpIO%IOPT_X = namelist_local_var  (assignment lines in NoahmpReadNamelist)
@@ -1068,7 +1068,7 @@ def cmd_physics_options(root):
                 "noahmp/src and noahmp/drivers/hrldas, grouped by value with every citing "
                 "file:line, not deduplicated to one). A value present in code_branches but "
                 "not in readme_values, or vice versa, is a real, checkable disagreement, "
-                "not an extraction gap -- see catalogs/options_overlay.yaml for the "
+                "not an extraction gap -- see curated/options_overlay.yaml for the "
                 "curated cross-check on the options that have been hand-verified. 'routine' on a "
                 "citation is only the name literally following 'call' on that same line, "
                 "never inferred; a branch with routine: null genuinely dispatches inline "

@@ -14,18 +14,15 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 HCM_CHECK = HERE / "hcm_check.py"
 MODELS_DIR = HERE.parent / "references/models"
+EVALS_DIR = HERE.parent.parent / "evals"
 sys.path.insert(0, str(HERE))
 import _miniyaml  # noqa: E402
 
 
-def _load_layer(pack_dir, stem):
-    """Load `<stem>.yaml` if present, else `<stem>.json` (see SCHEMA.md: a pack declares
-    its generation, and so which extension its curated layers use, in its manifest)."""
-    yaml_path = pack_dir / f"{stem}.yaml"
-    if yaml_path.is_file():
-        return _miniyaml.load_file(yaml_path)
-    json_path = pack_dir / f"{stem}.json"
-    return json.loads(json_path.read_text()) if json_path.is_file() else None
+def _load_layer(dir_path, stem):
+    """Load `<stem>.yaml` from `dir_path` if present."""
+    yaml_path = dir_path / f"{stem}.yaml"
+    return _miniyaml.load_file(yaml_path) if yaml_path.is_file() else None
 
 
 def need_stack():
@@ -213,23 +210,26 @@ def _write_paired_pair(tmp, var, other_var, a_val, b_val, control_val=None):
 
 
 def run_pack_selftests():
-    """For each pack with a selftest.yaml/selftest.json, build the tiny synthetic
+    """For each pack with an evals/<pack>/selftest.yaml, build the tiny synthetic
     fixtures its cases declare and assert FIRED on the faulty one, QUIET on the clean
-    one. Fixtures
-    are built on the fly in a temp directory; none are stored in the repository."""
+    one. Fixtures are built on the fly in a temp directory; none are stored in the
+    repository."""
     need_stack()
     import numpy as np
 
     ok = True
-    pack_dirs = sorted(p for p in MODELS_DIR.iterdir() if p.is_dir()
-                       and ((p / "selftest.yaml").is_file() or (p / "selftest.json").is_file()))
-    if not pack_dirs:
-        print("No pack selftest.yaml/selftest.json files found; nothing to run for --packs.")
+    if not EVALS_DIR.is_dir():
+        print(f"No {EVALS_DIR} directory found; nothing to run for --packs.")
+        return True
+    fixture_dirs = sorted(p for p in EVALS_DIR.iterdir()
+                          if p.is_dir() and (p / "selftest.yaml").is_file())
+    if not fixture_dirs:
+        print("No evals/<pack>/selftest.yaml files found; nothing to run for --packs.")
         return True
 
-    for pack_dir in pack_dirs:
-        pack_name = pack_dir.name
-        cases = (_load_layer(pack_dir, "selftest") or {}).get("cases", [])
+    for fixture_dir in fixture_dirs:
+        pack_name = fixture_dir.name
+        cases = (_load_layer(fixture_dir, "selftest") or {}).get("cases", [])
         for case in cases:
             pid = case["pitfall_id"]
             for role, spec in (("faulty", case["faulty"]), ("clean", case["clean"])):

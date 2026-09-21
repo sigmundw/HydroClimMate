@@ -104,7 +104,7 @@ def _parse_block(lines, indent, pos):
 
 
 def _parse_list(lines, indent, pos):
-    """Parse a block list of mappings whose ``- `` markers sit at exactly `indent`."""
+    """Parse a block list of mappings or of double-quoted strings whose ``- `` markers sit at exactly `indent`."""
     items = []
     while pos[0] < len(lines):
         cur_indent, content = lines[pos[0]]
@@ -115,6 +115,10 @@ def _parse_list(lines, indent, pos):
             break
         first_field = m.group(1)
         pos[0] += 1
+        if first_field.startswith('"'):
+            # a scalar item: ``- "text"`` (always a double-quoted, JSON-escaped string)
+            items.append(json.loads(first_field))
+            continue
         item_lines = [(indent + 2, first_field)]
         while pos[0] < len(lines) and lines[pos[0]][0] >= indent + 2:
             item_lines.append(lines[pos[0]])

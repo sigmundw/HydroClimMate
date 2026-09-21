@@ -2,20 +2,20 @@
 """hcm_lookup.py -- answers a single-name lookup from a pack's generated catalogs
 (references/models/<pack>/catalogs/*.yaml; see SCHEMA.md), across output variables,
 restart variables, namelist keys, physics options, parameter-table entries, land-use/soil
-class names, and physical constants. Where present, catalogs/kinds_overlay.yaml and
-catalogs/options_overlay.yaml (curated, hand-verified -- never generated) are merged in:
-an overlay's `true_kind` is shown ahead of the generated `kind`, never silently replacing
+class names, and physical constants. Where present, curated/kinds_overlay.yaml and
+curated/options_overlay.yaml (hand-verified -- never generated) are merged in: an
+overlay's `true_kind` is shown ahead of the generated `kind`, never silently replacing
 it, plus any `sampling_note`/`units_note`/`gate`.
 
 Kept separate from hcm_check.py's own `lookup` subcommand (which answers from the
-curated, hand-authored index.json -- see SCHEMA.md) so that tool's existing behavior is
+generated catalogs/index.json -- see SCHEMA.md) so that tool's existing behavior is
 untouched.
 
 Exact match first; if none, a fuzzy "did you mean" against every catalog name (near-miss
-spellings, e.g. one or two changed letters, are a known failure mode -- see the rebuild
-plan's KISS comparison). Output is capped at 25 printed lines.
+spellings, e.g. one or two changed letters, are a known failure mode). Output is capped
+at 25 printed lines.
 
---list kind=<true_kind> lists every kinds_overlay.yaml row with that true_kind.
+--list kind=<true_kind> lists every curated/kinds_overlay.yaml row with that true_kind.
 --process <keyword> lists output variables/physics options whose name or description
 contains the keyword (a cheap substring filter over the already-loaded catalogs, not a
 second index) -- e.g. --process snow, --process urban, --process runoff.
@@ -35,8 +35,7 @@ import _miniyaml  # noqa: E402
 
 
 def _load(pack_dir, stem):
-    """Load `catalogs/<stem>.yaml`, or `catalogs/<stem>.json` for a pack that has not
-    been converted to the catalog family yet."""
+    """Load `catalogs/<stem>.yaml`, or `catalogs/<stem>.json`."""
     yaml_path = pack_dir / "catalogs" / f"{stem}.yaml"
     if yaml_path.is_file():
         return _miniyaml.load_file(yaml_path)
@@ -44,18 +43,24 @@ def _load(pack_dir, stem):
     return json.loads(json_path.read_text()) if json_path.is_file() else None
 
 
+def _load_curated(pack_dir, stem):
+    """Load `curated/<stem>.yaml`, the hand-maintained counterpart to `_load`."""
+    yaml_path = pack_dir / "curated" / f"{stem}.yaml"
+    return _miniyaml.load_file(yaml_path) if yaml_path.is_file() else None
+
+
 def load_overlays(pack_dir):
-    """kinds_overlay.yaml rows indexed by variable name (upper-cased), and
-    options_overlay.yaml rows grouped by internal_option_name. Either file is optional;
-    a pack with neither just gets no overlay merge."""
+    """curated/kinds_overlay.yaml rows indexed by variable name (upper-cased), and
+    curated/options_overlay.yaml rows grouped by internal_option_name. Either file is
+    optional; a pack with neither just gets no overlay merge."""
     kinds_by_var = {}
-    kinds_doc = _load(pack_dir, "kinds_overlay")
+    kinds_doc = _load_curated(pack_dir, "kinds_overlay")
     if kinds_doc:
         for row in kinds_doc.get("rows", []):
             kinds_by_var[row["variable"].upper()] = row
 
     options_by_opt = {}
-    options_doc = _load(pack_dir, "options_overlay")
+    options_doc = _load_curated(pack_dir, "options_overlay")
     if options_doc:
         for row in options_doc.get("rows", []):
             options_by_opt.setdefault(row["internal_option_name"], []).append(row)
@@ -345,6 +350,11 @@ def main(argv=None):
     pack_dir = MODELS_DIR / args.pack
     if not pack_dir.is_dir():
         sys.exit(f"ERROR: no such pack directory: {pack_dir}")
+    manifest_path = pack_dir / "pack.yaml"
+    depth = _miniyaml.load_file(manifest_path).get("depth", "outline") if manifest_path.is_file() else "outline"
+    if depth != "reference":
+        sys.exit("outline pack: no machine-readable declarations. "
+                  "hcm_lookup.py only applies to a depth: reference pack.")
     if not (pack_dir / "catalogs").is_dir():
         sys.exit(f"No catalogs/ directory for pack '{args.pack}'. "
                   f"Build one with tools/extract_pack.py all --source-root ROOT "

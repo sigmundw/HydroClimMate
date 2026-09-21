@@ -2,9 +2,7 @@
 
 <Research group or lab>. Follows the HydroClimMate workflow.
 
-Keep this concise (aim for 60–100 lines; shorter is fine). Link existing documentation,
-configuration and logs; omit irrelevant fields. Maintain run commands here only.
-Update confirmed durable facts affected by the task; do not turn this into a run history.
+Keep this concise (aim for 60–100 lines; shorter is fine). Link existing documentation, configuration and logs; omit irrelevant fields. Maintain run commands here only. Update confirmed durable facts affected by the task; do not turn this into a run history.
 
 ## Research objective and scope
 - Main question: <question>

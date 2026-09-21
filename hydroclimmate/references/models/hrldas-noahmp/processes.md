@@ -1,176 +1,54 @@
 # HRLDAS / Noah-MP — process map
 
-Source root HRLDAS `d9f5b205` + `noahmp` `9fbe6724`; `path:line` relative to it. **drv** =
-`hrldas/IO_code/module_NoahMP_hrldas_driver.F`, **io** = `hrldas/IO_code/module_hrldas_netcdf_io.F`,
-**nml** = `hrldas/run/README.namelist`, **src** = `noahmp/src`, **hdrv** = `noahmp/drivers/hrldas`,
-**TBL** = `noahmp/parameters/NoahmpTable.TBL`. Namelist → `IOPT_*` → `Opt*`
-(`hdrv/NoahmpReadNamelistMod.F90:357-382`, `ConfigVarInTransferMod.F90:39-64`). **Executable
-defaults are the initialisers at `NoahmpReadNamelistMod.F90:73-116`, not nml's `[default]`
-annotations.** Options: `tools/hcm_lookup.py --pack hrldas-noahmp <N>`.
+Source root HRLDAS `d9f5b205` + `noahmp` `9fbe6724`; `path:line` relative to it. **drv** = `hrldas/IO_code/module_NoahMP_hrldas_driver.F`, **io** = `hrldas/IO_code/module_hrldas_netcdf_io.F`, **nml** = `hrldas/run/README.namelist`, **src** = `noahmp/src`, **hdrv** = `noahmp/drivers/hrldas`, **TBL** = `noahmp/parameters/NoahmpTable.TBL`. Namelist → `IOPT_*` → `Opt*` (`hdrv/NoahmpReadNamelistMod.F90:357-382`, `ConfigVarInTransferMod.F90:39-64`). **Executable defaults are the initialisers at `NoahmpReadNamelistMod.F90:73-116`, not nml's `[default]` annotations.** Options: `tools/hcm_lookup.py --pack hrldas-noahmp <N>`.
 
 ## Forcing and setup file
 
-One forcing file per `FORCING_TIMESTEP` in `INDIR`, stamped `YYYYMMDDHH` for a whole number of
-hours, `...HHMM` for whole minutes, `...HHMMSS` otherwise (io:2236-2242); the stamp is the
-instant represented, and the forcing grid must match the setup grid. Between forcing times
-`T`,`Q`,`U`,`V`,`P`,`LW`,`SW` are **linearly interpolated** while **precipitation and snow are
-held at the earlier file's value** (io:2740-2752), so every model step inside a forcing interval
-sees the same rate.
-Setup file, three classes: **fatal if absent** — `XLAT`, `XLONG`, `HGT`, `TMN`, land-use/soil
-category, `CANWAT`, `TSK`, `SNOW`, `TSLB`, `SMOIS`, grid attributes (io:339,470-509,1879-1927);
-**silently defaulted** — `XLAND`, `SEAICE`, `MAPFAC_MX/MY`, `SNODEP`, `FRC_URB2D`; **read with
-`ierr` never checked** — `DZS` (io:1909-1910), whose absence leaves the layer interfaces undefined
-and silently corrupts `init_interp` (io:1925,1929).
+One forcing file per `FORCING_TIMESTEP` in `INDIR`, stamped `YYYYMMDDHH` for a whole number of hours, `...HHMM` for whole minutes, `...HHMMSS` otherwise (io:2236-2242); the stamp is the instant represented, and the forcing grid must match the setup grid. Between forcing times `T`,`Q`,`U`,`V`,`P`,`LW`,`SW` are **linearly interpolated** while **precipitation and snow are held at the earlier file's value** (io:2740-2752), so every model step inside a forcing interval sees the same rate. Setup file, three classes: **fatal if absent** — `XLAT`, `XLONG`, `HGT`, `TMN`, land-use/soil category, `CANWAT`, `TSK`, `SNOW`, `TSLB`, `SMOIS`, grid attributes (io:339,470-509,1879-1927); **silently defaulted** — `XLAND`, `SEAICE`, `MAPFAC_MX/MY`, `SNODEP`, `FRC_URB2D`; **read with `ierr` never checked** — `DZS` (io:1909-1910), whose absence leaves the layer interfaces undefined and silently corrupts `init_interp` (io:1925,1929).
 
 ## Radiation and albedo
 
-Options `RADIATIVE_TRANSFER_OPTION` 1-3, `SNOW_ALBEDO_OPTION` 1 BATS / 2 CLASS / 3 SNICAR
-(nml:190-198; `SNICAR_*` inert unless 3). `src/SurfaceAlbedoMod.F90:135-149`,
-`src/GroundAlbedoMod.F90:64-65`. Answers: `ALBEDO`, `ALBSFC*`/`ALBSOIL*`/`ALBSNOW*` (`rad_num`:
-1 vis, 2 near-IR), `FSA`, `SAV`/`SAG` (drv:1167-1230). **Gated on `CosSolarZenithAngle > 0`**
-(`:124`): every `ALB*` array is exactly 0 at night.
+Options `RADIATIVE_TRANSFER_OPTION` 1-3, `SNOW_ALBEDO_OPTION` 1 BATS / 2 CLASS / 3 SNICAR (nml:190-198; `SNICAR_*` inert unless 3). `src/SurfaceAlbedoMod.F90:135-149`, `src/GroundAlbedoMod.F90:64-65`. Answers: `ALBEDO`, `ALBSFC*`/`ALBSOIL*`/`ALBSNOW*` (`rad_num`: 1 vis, 2 near-IR), `FSA`, `SAV`/`SAG` (drv:1167-1230). **Gated on `CosSolarZenithAngle > 0`** (`:124`): every `ALB*` array is exactly 0 at night.
 
 ## Canopy, surface energy balance, turbulent exchange
 
-Every cell is two tiles, vegetated (`*V`) and bare (`*B`), combined by `FVEG`
-(`src/EnergyMainMod.F90:247-269`); solvers `src/SurfaceEnergyFlux*Mod.F90` (`:231,238`). Options
-`SURFACE_DRAG_OPTION` 1/2, `CANOPY_STOMATAL_RESISTANCE_OPTION` 1/2, `BTR_OPTION` 1/2/3,
-`SURFACE_RESISTANCE_OPTION` 1-4 (nml:143-150,178-180,231-235).
-Answers: `HFX`, `LH`, `GRDFLX`, `FIRA`, `TRAD`, `TG`, `TV`, `TAH`, `EAH`, `ECAN`, `ETRAN`,
-`EDIR` + `*V`/`*B` pairs (drv:1166-1273). `Q2M*` are **mixing ratios**; **no grid-mean 2-m
-diagnostic, `TSK`, `QFX` or `UST` is written** (drv:905-906). The bare solver runs **every step,
-even on fully vegetated cells**; in the bare-only branch `TGV` is overwritten with the bare
-value, aliasing `TGB`; grid skin T weights **canopy against bare** (`:238,285,259`).
+Every cell is two tiles, vegetated (`*V`) and bare (`*B`), combined by `FVEG` (`src/EnergyMainMod.F90:247-269`); solvers `src/SurfaceEnergyFlux*Mod.F90` (`:231,238`). Options `SURFACE_DRAG_OPTION` 1/2, `CANOPY_STOMATAL_RESISTANCE_OPTION` 1/2, `BTR_OPTION` 1/2/3, `SURFACE_RESISTANCE_OPTION` 1-4 (nml:143-150,178-180,231-235). Answers: `HFX`, `LH`, `GRDFLX`, `FIRA`, `TRAD`, `TG`, `TV`, `TAH`, `EAH`, `ECAN`, `ETRAN`, `EDIR` + `*V`/`*B` pairs (drv:1166-1273). `Q2M*` are **mixing ratios**; **no grid-mean 2-m diagnostic, `TSK`, `QFX` or `UST` is written** (drv:905-906). The bare solver runs **every step, even on fully vegetated cells**; in the bare-only branch `TGV` is overwritten with the bare value, aliasing `TGB`; grid skin T weights **canopy against bare** (`:238,285,259`).
 
 ## Snow
 
-`NSNOW = 3` is fixed in code (`hdrv/NoahmpIOVarType.F90:674`); `ISNOW` is the *negative* count of
-active layers. Per step: snowfall → compaction → combine → divide → hydrology
-(`src/SnowWaterMainMod.F90:77-92`). Options `SNOW_COMPACTION_OPTION`, `SNOW_COVER_OPTION` 1/2;
-`SNOW_THERMAL_CONDUCTIVITY` 1-5; `PCP_PARTITION_OPTION` 1-5 (nml:200-220; value 4 also needs
-`FORCING_NAME_SN`).
-Melt `src/SoilSnowWaterPhaseChangeMod.F90`, pack water `src/SnowpackHydrologyMod.F90`. Answers:
-`ISNOW`, `SNEQV`, `SNOWH`, `FSNO`, `SNICE`, `SNLIQ`, `SNOW_T`, `ZSNSO_SN`, `QSNOW`/`QRAIN`,
-`QMELT`/`QSNBOT`, `ACSNOW`, `ACSNOM` (drv:1218-41). Mass caps: 2000 mm at cold start only
-(`hdrv/NoahmpInitMainMod.F90:68-70`); 5000 mm every step **on land, not only glaciers**
-(`src/SnowWaterMainMod.F90:116-21`).
-- **A layer is created at `SnowDepth >= 0.025` m with no snowfall required**
-  (`src/SnowfallBelowCanopyMod.F90:57`) and collapses back below it, liquid becoming ponding
-  (`src/SnowLayerCombineMod.F90:190-193`); in that zero-layer state `SNEQV` can be positive while
-  `SNICE`/`SNLIQ` are exactly 0 (observed).
+`NSNOW = 3` is fixed in code (`hdrv/NoahmpIOVarType.F90:674`); `ISNOW` is the *negative* count of active layers. Per step: snowfall → compaction → combine → divide → hydrology (`src/SnowWaterMainMod.F90:77-92`). Options `SNOW_COMPACTION_OPTION`, `SNOW_COVER_OPTION` 1/2; `SNOW_THERMAL_CONDUCTIVITY` 1-5; `PCP_PARTITION_OPTION` 1-5 (nml:200-220; value 4 also needs `FORCING_NAME_SN`). Melt `src/SoilSnowWaterPhaseChangeMod.F90`, pack water `src/SnowpackHydrologyMod.F90`. Answers: `ISNOW`, `SNEQV`, `SNOWH`, `FSNO`, `SNICE`, `SNLIQ`, `SNOW_T`, `ZSNSO_SN`, `QSNOW`/`QRAIN`, `QMELT`/`QSNBOT`, `ACSNOW`, `ACSNOM` (drv:1218-41). Mass caps: 2000 mm at cold start only (`hdrv/NoahmpInitMainMod.F90:68-70`); 5000 mm every step **on land, not only glaciers** (`src/SnowWaterMainMod.F90:116-21`).
+- **A layer is created at `SnowDepth >= 0.025` m with no snowfall required** (`src/SnowfallBelowCanopyMod.F90:57`) and collapses back below it, liquid becoming ponding (`src/SnowLayerCombineMod.F90:190-193`); in that zero-layer state `SNEQV` can be positive while `SNICE`/`SNLIQ` are exactly 0 (observed).
 
 ## Soil heat
 
-`TBOT_OPTION` 1 zero bottom flux / 2 `TBOT` at `ZBOT_DATA = -8.0` m (nml:222-224,
-`src/SoilSnowThermalDiffusionMod.F90:94-101`, TBL:777); `TEMP_TIME_SCHEME_OPTION` 1/2/3
-(nml:226-229; the top-layer diagonal differs by scheme, `:111-117`); `FROZEN_SOIL_OPTION`,
-`SUPERCOOLED_WATER_OPTION` 1/2 (nml:182-188). Answers: `SOIL_T`, `SNOW_T`, `GRDFLX`; with
-`NOAHMP_OUTPUT > 0` also `ACC_SSOIL`/`EFLXB`.
-- **`EFLXB` is energy through the soil bottom during ONE soil timestep (J/m2), not a since-start
-  accumulator**, despite its `description` (`hdrv/EnergyVarOutTransferMod.F90:104`;
-  `src/SoilSnowTemperatureMainMod.F90:88`; `src/EnergyMainMod.F90:163`).
+`TBOT_OPTION` 1 zero bottom flux / 2 `TBOT` at `ZBOT_DATA = -8.0` m (nml:222-224, `src/SoilSnowThermalDiffusionMod.F90:94-101`, TBL:777); `TEMP_TIME_SCHEME_OPTION` 1/2/3 (nml:226-229; the top-layer diagonal differs by scheme, `:111-117`); `FROZEN_SOIL_OPTION`, `SUPERCOOLED_WATER_OPTION` 1/2 (nml:182-188). Answers: `SOIL_T`, `SNOW_T`, `GRDFLX`; with `NOAHMP_OUTPUT > 0` also `ACC_SSOIL`/`EFLXB`.
+- **`EFLXB` is energy through the soil bottom during ONE soil timestep (J/m2), not a since-start accumulator**, despite its `description` (`hdrv/EnergyVarOutTransferMod.F90:104`; `src/SoilSnowTemperatureMainMod.F90:88`; `src/EnergyMainMod.F90:163`).
 
 ## Soil water, infiltration, runoff, groundwater
 
-`SURFACE_RUNOFF_OPTION`, `SUBSURFACE_RUNOFF_OPTION` both 1-8 (nml:152-171): 1 TOPMODEL+groundwater,
-2 TOPMODEL equilibrium water table, 3 free drainage (**the executable default**, `:78-79` of
-`NoahmpReadNamelistMod.F90`), 4 BATS, 5 MMF, 6 VIC, 7 Xinanjiang, 8 dynamic VIC (then
-`DVIC_INFILTRATION_OPTION` 1/2/3); `SOIL_DATA_OPTION` 1-4, `PEDOTRANSFER_OPTION` (nml:173-250).
-Dispatch `src/SoilWaterMainMod.F90:146-153` (surface), `:140`/`:245`/`:248-250`/`:259`
-(subsurface 2 / 1 / 3-4-6-7-8 / 5). Answers: `SFCRNOFF`/`UGDRNOFF` (accumulated mm), `SOIL_M`,
-`SOIL_W`, `ZWT`, `WA`, `WT`, `PONDING`, `QTDRAIN`.
-- **`ZWT`/`WA`/`WT` are written every record under every option, but updated by almost none.**
-  `ZWT`: under 1 (`src/GroundWaterTopModelMod.F90:150`), 2 (`src/WaterTableDepthSearchMod.F90:71`)
-  and 5 (`src/ShallowWaterTableMmfMod.F90:69`). `WA`:
-  **1 only** (`GroundWaterTopModelMod.F90:148,154,197`); under 5 it is **forced to 0.0 at every
-  MMF call** (`src/RunoffSubSurfaceShallowMmfMod.F90:46`). `WT`: **1 only** (`:146,149,198`).
-  Under **3/4/6/7/8** (`RunoffSubSurfaceDrainage`, `:248-250`) all three keep their initial
-  values for the whole run — measured constant. `SMCWTD`, `RECH`,
-  `DEEPRECH`, `QRF*`, `QSPRING*`, `QLAT`/`QSLAT` exist **only** under 5.
-- **Timebases.** Runoff leaves `SoilWaterMain` in **mm per soil timestep**, not mm/s
-  (`:187,262-264`); `ACC_*` is zeroed the step **after** each soil update (`SOIL_TIMESTEP`,
-  nml:283-285; `hdrv/NoahmpDriverMainMod.F90:60-90`).
+`SURFACE_RUNOFF_OPTION`, `SUBSURFACE_RUNOFF_OPTION` both 1-8 (nml:152-171): 1 TOPMODEL+groundwater, 2 TOPMODEL equilibrium water table, 3 free drainage (**the executable default**, `:78-79` of `NoahmpReadNamelistMod.F90`), 4 BATS, 5 MMF, 6 VIC, 7 Xinanjiang, 8 dynamic VIC (then `DVIC_INFILTRATION_OPTION` 1/2/3); `SOIL_DATA_OPTION` 1-4, `PEDOTRANSFER_OPTION` (nml:173-250). Dispatch `src/SoilWaterMainMod.F90:146-153` (surface), `:140`/`:245`/`:248-250`/`:259` (subsurface 2 / 1 / 3-4-6-7-8 / 5). Answers: `SFCRNOFF`/`UGDRNOFF` (accumulated mm), `SOIL_M`, `SOIL_W`, `ZWT`, `WA`, `WT`, `PONDING`, `QTDRAIN`.
+- **`ZWT`/`WA`/`WT` are written every record under every option, but updated by almost none.** `ZWT`: under 1 (`src/GroundWaterTopModelMod.F90:150`), 2 (`src/WaterTableDepthSearchMod.F90:71`) and 5 (`src/ShallowWaterTableMmfMod.F90:69`). `WA`: **1 only** (`GroundWaterTopModelMod.F90:148,154,197`); under 5 it is **forced to 0.0 at every MMF call** (`src/RunoffSubSurfaceShallowMmfMod.F90:46`). `WT`: **1 only** (`:146,149,198`). Under **3/4/6/7/8** (`RunoffSubSurfaceDrainage`, `:248-250`) all three keep their initial values for the whole run — measured constant. `SMCWTD`, `RECH`, `DEEPRECH`, `QRF*`, `QSPRING*`, `QLAT`/`QSLAT` exist **only** under 5.
+- **Timebases.** Runoff leaves `SoilWaterMain` in **mm per soil timestep**, not mm/s (`:187,262-264`); `ACC_*` is zeroed the step **after** each soil update (`SOIL_TIMESTEP`, nml:283-285; `hdrv/NoahmpDriverMainMod.F90:60-90`).
 
 ## Phenology, dynamic vegetation, carbon
 
-`DYNAMIC_VEG_OPTION` 1-9 (nml:132-141, `src/PhenologyMainMod.F90`). LAI: table for 1,3,4
-(`:73-91`); input series for 7,8,9 (`:94-97`); prognostic carbon for 2,5,6 (`:157-159` →
-`src/BiochemNatureVegMainMod.F90`, carrying `LFMASS`/`WOOD`/`NEE`/`GPP`/`NPP`/`APAR`).
-FVEG (`:135-141`): 1/6/7 input greenness; 2/3/8 `1-exp(-0.52*(LAI+SAI))`; 4/5/9
-annual-maximum greenness; `update_lai`/`update_veg` follow the option (drv:845-846). FVEG has a
-0.05 floor, then is 0 for barren, leafless and — **only when `FlagUrban` is true, i.e. only with
-`SF_URBAN_PHYSICS == 0`** — urban (`:151-153`).
-- **A zero SAI zeroes LAI**: `SAI < 0.05 → 0`, then `SAI == 0 → LAI = 0` (`:97-99`), collapsing
-  FVEG under 2/3/8. For 7/8/9 SAI is `max(0.05, 0.1*LAI)` and then **reset to 0 whenever
-  `LAI < 0.05`** (`:95-96`), reversing that floor exactly where it matters.
+`DYNAMIC_VEG_OPTION` 1-9 (nml:132-141, `src/PhenologyMainMod.F90`). LAI: table for 1,3,4 (`:73-91`); input series for 7,8,9 (`:94-97`); prognostic carbon for 2,5,6 (`:157-159` → `src/BiochemNatureVegMainMod.F90`, carrying `LFMASS`/`WOOD`/`NEE`/`GPP`/`NPP`/`APAR`). FVEG (`:135-141`): 1/6/7 input greenness; 2/3/8 `1-exp(-0.52*(LAI+SAI))`; 4/5/9 annual-maximum greenness; `update_lai`/`update_veg` follow the option (drv:845-846). FVEG has a 0.05 floor, then is 0 for barren, leafless and — **only when `FlagUrban` is true, i.e. only with `SF_URBAN_PHYSICS == 0`** — urban (`:151-153`).
+- **A zero SAI zeroes LAI**: `SAI < 0.05 → 0`, then `SAI == 0 → LAI = 0` (`:97-99`), collapsing FVEG under 2/3/8. For 7/8/9 SAI is `max(0.05, 0.1*LAI)` and then **reset to 0 whenever `LAI < 0.05`** (`:95-96`), reversing that floor exactly where it matters.
 
 ## Crops, irrigation, tile drainage, wetland (source_read)
 
-`CROP_OPTION` 0/1 (nml:252-255; `src/BiochemCropMainMod.F90` at `src/NoahmpMainMod.F90:113`;
-`GRAIN`/`GDD`). On a crop column the vegetation type becomes `ISCROP`, **`VEGFRA`/`GVFMAX`
-forced to 95%** (`hdrv/ConfigVarInTransferMod.F90:172-177`) and `VegFrac = VegFracAnnMax`
-**whatever `DYNAMIC_VEG_OPTION` says** (`PhenologyMainMod.F90:146`).
-`IRRIGATION_OPTION` 0 off / 1 on / 2 crop-calendar / 3 LAI; `IRRIGATION_METHOD` 0 `geo_em` /
-1 sprinkler / 2 micro / 3 flood (nml:257-269, `src/Irrigation*Mod.F90`). It needs a cropland
-column with `IrrigationFracGrid >= IrriFracThreshold`, is cancelled while rainfall exceeds
-`IrriStopPrecipThr` (`src/IrrigationPrepareMod.F90:69,76`), and triggers on root-zone water vs
-`IrriMAD` (`src/IrrigationTriggerMod.F90:94`; TBL:518-521). `IRSIVOL`/`IRMIVOL`/`IRFIVOL` and
-`IRELOSS`/`IRRSPLH` are **accumulated since start**, `IRNUM*` are counters, all only with
-`IOPT_IRR > 0` (drv:1338-46).
-`TILE_DRAINAGE_OPTION` 0/1/2 (nml:271-275; `QTDRAIN`, accumulated) — **inert unless the surface
-runoff option is 3 and the tile fraction exceeds 0.3 (opt 1) or 0.1 (opt 2)**
-(`src/SoilWaterMainMod.F90:191-195`); needs `TDINPUT_FLNM`. `WETLAND_OPTION` → `FSAT`, `WSURF`
-(nml:277-281).
+`CROP_OPTION` 0/1 (nml:252-255; `src/BiochemCropMainMod.F90` at `src/NoahmpMainMod.F90:113`; `GRAIN`/`GDD`). On a crop column the vegetation type becomes `ISCROP`, **`VEGFRA`/`GVFMAX` forced to 95%** (`hdrv/ConfigVarInTransferMod.F90:172-177`) and `VegFrac = VegFracAnnMax` **whatever `DYNAMIC_VEG_OPTION` says** (`PhenologyMainMod.F90:146`). `IRRIGATION_OPTION` 0 off / 1 on / 2 crop-calendar / 3 LAI; `IRRIGATION_METHOD` 0 `geo_em` / 1 sprinkler / 2 micro / 3 flood (nml:257-269, `src/Irrigation*Mod.F90`). It needs a cropland column with `IrrigationFracGrid >= IrriFracThreshold`, is cancelled while rainfall exceeds `IrriStopPrecipThr` (`src/IrrigationPrepareMod.F90:69,76`), and triggers on root-zone water vs `IrriMAD` (`src/IrrigationTriggerMod.F90:94`; TBL:518-521). `IRSIVOL`/`IRMIVOL`/`IRFIVOL` and `IRELOSS`/`IRRSPLH` are **accumulated since start**, `IRNUM*` are counters, all only with `IOPT_IRR > 0` (drv:1338-46). `TILE_DRAINAGE_OPTION` 0/1/2 (nml:271-275; `QTDRAIN`, accumulated) — **inert unless the surface runoff option is 3 and the tile fraction exceeds 0.3 (opt 1) or 0.1 (opt 2)** (`src/SoilWaterMainMod.F90:191-195`); needs `TDINPUT_FLNM`. `WETLAND_OPTION` → `FSAT`, `WSURF` (nml:277-281).
 
 ## Glacier (source_read)
 
-`GLACIER_OPTION` 1 ice phase change / 2 Noah-like (nml:237-239). A column enters
-`src/NoahmpMainGlacierMod.F90` when its vegetation type is the table ice class
-(`hdrv/NoahmpDriverMainMod.F90:190-193`); its bottom temperature is clamped to <= 263.15 K
-(`:192`) and its water fluxes use the **main**, not the **soil**, timestep
-(`hdrv/WaterVarOutTransferMod.F90:57-58`) — different timebases into `SFCRNOFF`.
+`GLACIER_OPTION` 1 ice phase change / 2 Noah-like (nml:237-239). A column enters `src/NoahmpMainGlacierMod.F90` when its vegetation type is the table ice class (`hdrv/NoahmpDriverMainMod.F90:190-193`); its bottom temperature is clamped to <= 263.15 K (`:192`) and its water fluxes use the **main**, not the **soil**, timestep (`hdrv/WaterVarOutTransferMod.F90:57-58`) — different timebases into `SFCRNOFF`.
 
 ## Urban: what `SF_URBAN_PHYSICS` does
 
-`SF_URBAN_PHYSICS` 0 bulk slab / 1 SLUCM / 2 BEP / 3 BEP+BEM (nml:47-51); a `USE_WUDAPT_LCZ`
-mismatch is a hard `stop` (nml:53-59, drv:607-613). A column is urban when
-`IVGTYP == ISURBAN_TABLE .or. IVGTYP > URBTYPE_beg` (`hdrv/ConfigVarInTransferMod.F90:156`).
+`SF_URBAN_PHYSICS` 0 bulk slab / 1 SLUCM / 2 BEP / 3 BEP+BEM (nml:47-51); a `USE_WUDAPT_LCZ` mismatch is a hard `stop` (nml:53-59, drv:607-613). A column is urban when `IVGTYP == ISURBAN_TABLE .or. IVGTYP > URBTYPE_beg` (`hdrv/ConfigVarInTransferMod.F90:156`).
 
-**The gate that decides everything is `FlagUrban`.** `ConfigVarInitDefault` resets it `.false.`
-for every column at the start of that column's step (`src/ConfigVarInitMod.F90:66`, called at
-`hdrv/NoahmpDriverMainMod.F90:153` before the transfer at `:154`); `ConfigVarInTransfer` sets it
-`.true.` **only in the `SF_URBAN_PHYSICS == 0` branch** (`:157-9`).
-- `SF_URBAN_PHYSICS == 0`: the column keeps `ISURBAN_TABLE` and gets Noah-MP's *internal* urban
-  treatment. Unconditional on `FlagUrban` alone: 95% impervious top soil layer
-  (`src/SoilWaterMainMod.F90:143`), urban soil-moisture parameters
-  (`hdrv/WaterVarInTransferMod.F90:281-286`), soil heat capacity 3.0e6
-  (`hdrv/EnergyVarInTransferMod.F90:189`), the urban ground-thermal
-  (`src/GroundThermalPropertyMod.F90:67`) and roughness (`src/GroundRoughnessPropertyMod.F90:71`)
-  branches, the surface-humidity / `Q2MB` override (`src/WaterMainMod.F90:206`,
-  `src/SurfaceEnergyFluxBareGroundMod.F90:217`), no carbon (`src/BiochemNatureVegMainMod.F90:72`,
-  `src/BiochemCropMainMod.F90:74`), the zero-LAI/SAI branch (`src/PhenologyMainMod.F90:103`),
-  `FVEG = 0` (`:152`). **Doubly gated**: ground evaporation also needs `SnowDepth == 0`
-  (`src/ResistanceGroundEvaporationMod.F90:93`), and Saxton-Rawls pedotransfer is **skipped only
-  if `SOIL_DATA_OPTION == 3`** (`hdrv/WaterVarInTransferMod.F90:299`; the call at `:306-307` also
-  needs `PEDOTRANSFER_OPTION == 1`) — under 1/2/4 no column runs pedotransfer at all. Full list:
-  `grep -n FlagUrban noahmp/src/*.F90 noahmp/drivers/hrldas/*.F90`.
-- `SF_URBAN_PHYSICS > 0`: the vegetation type is **reassigned to the table `NATURAL` class** and
-  `GVFMAX` **forced to 96%** (`:161,163`); `FlagUrban` stays false, so the column **loses every
-  `FlagUrban` behaviour above** — no impervious layer, no urban soil or thermal parameters,
-  `FVEG` from ordinary phenology — and, **only under `SOIL_DATA_OPTION == 3`**, pedotransfer now
-  runs where it would have been skipped. Measured on urban cells of a paired run: `FVEG` = 0.000
-  off vs 0.960 on, while **`IVGTYP` in the output is identical in both runs** — the reassignment
-  is to the internal `VegType`, not the written field. That run used `SOIL_DATA_OPTION = 1`, so
-  it is **no** evidence for any pedotransfer difference.
+**The gate that decides everything is `FlagUrban`.** `ConfigVarInitDefault` resets it `.false.` for every column at the start of that column's step (`src/ConfigVarInitMod.F90:66`, called at `hdrv/NoahmpDriverMainMod.F90:153` before the transfer at `:154`); `ConfigVarInTransfer` sets it `.true.` **only in the `SF_URBAN_PHYSICS == 0` branch** (`:157-9`).
+- `SF_URBAN_PHYSICS == 0`: the column keeps `ISURBAN_TABLE` and gets Noah-MP's *internal* urban treatment. Unconditional on `FlagUrban` alone: 95% impervious top soil layer (`src/SoilWaterMainMod.F90:143`), urban soil-moisture parameters (`hdrv/WaterVarInTransferMod.F90:281-286`), soil heat capacity 3.0e6 (`hdrv/EnergyVarInTransferMod.F90:189`), the urban ground-thermal (`src/GroundThermalPropertyMod.F90:67`) and roughness (`src/GroundRoughnessPropertyMod.F90:71`) branches, the surface-humidity / `Q2MB` override (`src/WaterMainMod.F90:206`, `src/SurfaceEnergyFluxBareGroundMod.F90:217`), no carbon (`src/BiochemNatureVegMainMod.F90:72`, `src/BiochemCropMainMod.F90:74`), the zero-LAI/SAI branch (`src/PhenologyMainMod.F90:103`), `FVEG = 0` (`:152`). **Doubly gated**: ground evaporation also needs `SnowDepth == 0` (`src/ResistanceGroundEvaporationMod.F90:93`), and Saxton-Rawls pedotransfer is **skipped only if `SOIL_DATA_OPTION == 3`** (`hdrv/WaterVarInTransferMod.F90:299`; the call at `:306-307` also needs `PEDOTRANSFER_OPTION == 1`) — under 1/2/4 no column runs pedotransfer at all. Full list: `grep -n FlagUrban noahmp/src/*.F90 noahmp/drivers/hrldas/*.F90`.
+- `SF_URBAN_PHYSICS > 0`: the vegetation type is **reassigned to the table `NATURAL` class** and `GVFMAX` **forced to 96%** (`:161,163`); `FlagUrban` stays false, so the column **loses every `FlagUrban` behaviour above** — no impervious layer, no urban soil or thermal parameters, `FVEG` from ordinary phenology — and, **only under `SOIL_DATA_OPTION == 3`**, pedotransfer now runs where it would have been skipped. Measured on urban cells of a paired run: `FVEG` = 0.000 off vs 0.960 on, while **`IVGTYP` in the output is identical in both runs** — the reassignment is to the internal `VegType`, not the written field. That run used `SOIL_DATA_OPTION = 1`, so it is **no** evidence for any pedotransfer difference.
 
-**The urban routine** (`urban/wrf/NoahmpUrbanDriverMainMod.F:12-70`; arguments in
-`catalogs/urban_path.yaml`). IN/OUT: `TSK`, `HFX`, `QFX`, `LH`, `GRDFLX`, `ALBEDO`, `EMISS`,
-`QSFC` (`:17-18`); **no snow or soil variable is in the list at all**. Under **option 1 (SLUCM)**
-exactly eight fields are weighted
-`FRC_URB2D*<urban> + (1-FRC_URB2D)*<rural>` (`:522-536`): `ALBEDO`, `HFX`, `QFX`, `LH`, `GRDFLX`
-(sign-flipped urban part, `:527`), `TSK`, `QSFC`, `UST`. **`EMISS` is not weighted there**
-although declared INTENT(INOUT); BEP/BEM weights a larger set including `emiss` (`:740-763`), so
-an option-1 fact does not carry to 2/3. **Of the eight, only `ALBEDO`, `HFX`,
-`LH`, `GRDFLX` are history variables; `QSFC` is restart-only; `QFX`, `TSK`, `UST` are written
-nowhere**, and there are no urban-specific history variables (drv:1366).
-
+**The urban routine** (`urban/wrf/NoahmpUrbanDriverMainMod.F:12-70`; arguments in `catalogs/urban_path.yaml`). IN/OUT: `TSK`, `HFX`, `QFX`, `LH`, `GRDFLX`, `ALBEDO`, `EMISS`, `QSFC` (`:17-18`); **no snow or soil variable is in the list at all**. Under **option 1 (SLUCM)** exactly eight fields are weighted `FRC_URB2D*<urban> + (1-FRC_URB2D)*<rural>` (`:522-536`): `ALBEDO`, `HFX`, `QFX`, `LH`, `GRDFLX` (sign-flipped urban part, `:527`), `TSK`, `QSFC`, `UST`. **`EMISS` is not weighted there** although declared INTENT(INOUT); BEP/BEM weights a larger set including `emiss` (`:740-763`), so an option-1 fact does not carry to 2/3. **Of the eight, only `ALBEDO`, `HFX`, `LH`, `GRDFLX` are history variables; `QSFC` is restart-only; `QFX`, `TSK`, `UST` are written nowhere**, and there are no urban-specific history variables (drv:1366).

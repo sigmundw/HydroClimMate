@@ -1,10 +1,8 @@
 # Understand the project
 
-Use for project-specific explanation and targeted questions about documented models. The routing and document policy in
-[the core rules](core.md) apply; no execution stage is implied.
+Use for project-specific explanation and targeted questions about documented models. The routing and document policy in [the core rules](core.md) apply; no execution stage is implied.
 
-For model-specific context, select overview from the [local model index](models/index.md).
-Read only the relevant topic under the [knowledge policy](core.md#local-model-knowledge).
+For model-specific context, select overview from the [local model index](models/index.md). Read only the relevant topic under the [knowledge policy](core.md#local-model-knowledge).
 
 ## Start from the question
 
@@ -33,17 +31,10 @@ Read only the relevant topic under the [knowledge policy](core.md#local-model-kn
 
 ## Answer and stop
 
-Give a concise explanation with the relevant files or sources, confirmed facts, and any
-unknowns that affect the answer. No fixed report or comprehensive project map is required.
-Stop once the current question is answered or a concrete evidence gap is established.
+Give a concise explanation with the relevant files or sources, confirmed facts, and any unknowns that affect the answer. No fixed report or comprehensive project map is required. Stop once the current question is answered or a concrete evidence gap is established.
 
-Update the project README only when the task calls for preserving a confirmed durable fact.
-Do not create learning notes by default. If the researcher adopts an important choice during
-this discussion, the current agent records it under the shared decision policy; explanation
-or an agent recommendation alone is not adoption.
+Update the project README only when the task calls for preserving a confirmed durable fact. Do not create learning notes by default. If the researcher adopts an important choice during this discussion, the current agent records it under the shared decision policy; explanation or an agent recommendation alone is not adoption.
 
 ## Before you state the result
 
-Answer [the four questions](core.md#the-four-questions): what was established, what was
-checked and how, what is the owner's to decide, and whether this needs
-[Review](review.md).
+Answer [the four questions](core.md#the-four-questions): what was established, what was checked and how, what is the owner's to decide, and whether this needs [Review](review.md).

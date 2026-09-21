@@ -4,12 +4,13 @@ Pass --network to additionally verify that every cited external URL still resolv
 That check is opt-in so the default run stays offline and deterministic.
 
 Pass --source-root ROOT (the pinned HRLDAS+noahmp checkout) to additionally, for every
-generation-2 pack (see references/models/SCHEMA.md): resolve every `path:line` citation
-in its prose against that source tree's actual line counts, and assert that regenerating
-its catalogs with tools/extract_pack.py from ROOT reproduces the committed catalogs
-structurally (modulo `evidence: source_read` vs `both`, which only validate_catalogs.py
-against real output/restart/forcing files -- not available here -- can upgrade). Both
-checks are skipped cleanly, with a note, when --source-root is not given.
+depth: reference pack (see references/models/SCHEMA.md): resolve every `path:line`
+citation in its prose against that source tree's actual line counts, and assert that
+regenerating its catalogs with tools/extract_pack.py from ROOT reproduces the committed
+catalogs structurally (modulo `evidence: source_read` vs `both`, which only
+validate_catalogs.py against real output/restart/forcing files -- not available here --
+can upgrade). Both checks are skipped cleanly, with a note, when --source-root is not
+given.
 """
 import json
 import re
@@ -20,25 +21,23 @@ from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = ROOT / "hydroclimmate"
+EVALS_DIR = ROOT / "evals"
 # Source packs cite floating branch URLs, so they rot silently. Re-check by this age.
 STALE_DAYS = 180
 
-# Structured layers (see references/models/SCHEMA.md) are required for every pack. A pack
-# with no pack.yaml/pack.json is a validator failure, not a gap.
-REQUIRE_STRUCTURED_LAYERS = True
-
 BASIS_VALUES = {"source_read", "observed_in_output", "both", "unverified"}
-STRUCTURED_LAYERS = ("interface", "switches", "pitfalls", "workflows", "index", "selftest")
+# A depth: outline pack is prose only (pack.yaml + its 5 .md files); only a depth:
+# reference pack carries curated/ (hand-authored) and catalogs/ (generated). See
+# references/models/SCHEMA.md.
+DEPTH_VALUES = ("reference", "outline")
 
-GEN1_MD_FILES = {"overview.md", "execution.md", "outputs.md", "pitfalls.md", "sources.md"}
-# Generation 2 (v0.9 knowledge-layer rebuild): the new prose, plus the redirect stubs kept
-# only so pre-rebuild links and the pitfalls.yaml id namespace still resolve.
-GEN2_MD_FILES = {"card.md", "processes.md", "failures.md", "recipes.md", "version.md",
-                  "sources.md", "overview.md", "outputs.md", "execution.md", "pitfalls.md"}
-GEN2_SIZE_CAPS = {"card.md": 4096, "processes.md": 12288, "failures.md": 14336,
-                   "recipes.md": 10240, "version.md": 3072}
+REFERENCE_MD_FILES = {"card.md", "processes.md", "failures.md", "recipes.md", "version.md",
+                       "sources.md"}
+OUTLINE_MD_FILES = {"overview.md", "execution.md", "outputs.md", "pitfalls.md", "sources.md"}
+REFERENCE_SIZE_CAPS = {"card.md": 4096, "processes.md": 12288, "failures.md": 14336,
+                        "recipes.md": 10240, "version.md": 3072}
 
-# `path:line` citation resolution (generation-2 prose only; see check_source_citations).
+# `path:line` citation resolution (depth: reference prose only; see check_source_citations).
 CITATION_RE = re.compile(r"\b([\w./]+):(\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*)\b")
 CITATION_SHORTHAND_FILE = {
     "drv": "hrldas/IO_code/module_NoahMP_hrldas_driver.F",
@@ -52,6 +51,7 @@ CITATION_SHORTHAND_DIR = {"src": "noahmp/src", "hdrv": "noahmp/drivers/hrldas"}
 CITATION_PREFERRED_DIR_HINT = "drivers/hrldas"
 
 sys.path.insert(0, str(PACKAGE / "tools"))
+sys.path.insert(0, str(EVALS_DIR))
 import _miniyaml  # noqa: E402
 import _anchor_hash  # noqa: E402
 
@@ -85,52 +85,75 @@ def _iter_facts(node, path=""):
 
 
 def _pack_manifest_path(folder):
-    """A pack's manifest is pack.yaml (generation 2, or a generation-1 pack converted to
-    YAML) or pack.json (a generation-1 pack not yet converted); see SCHEMA.md."""
-    yaml_path = folder / "pack.yaml"
-    if yaml_path.is_file():
-        return yaml_path
-    return folder / "pack.json"
+    """A pack's manifest is always pack.yaml; see SCHEMA.md."""
+    return folder / "pack.yaml"
+
+
+MAX_PURPOSE_WORDS = 12
+
+
+def _check_purpose(model, filename, purpose):
+    assert isinstance(purpose, str) and purpose, (model, filename, "purpose must be a non-empty string")
+    n_words = len(purpose.split())
+    assert n_words <= MAX_PURPOSE_WORDS, (
+        model, filename, f"purpose is {n_words} words, over the {MAX_PURPOSE_WORDS}-word cap", purpose)
 
 
 def check_structured_layers(model, folder, valid_source_ids, valid_checks):
-    """Validate a pack's optional structured layers (see SCHEMA.md). Returns the number
-    of facts found, for the caller's summary line."""
+    """Validate a pack's manifest and, for a depth: reference pack, its curated layers
+    and generated catalogs (see SCHEMA.md). Returns the number of facts found, for the
+    caller's summary line."""
     manifest_path = _pack_manifest_path(folder)
-    if not manifest_path.is_file():
-        assert not REQUIRE_STRUCTURED_LAYERS, (
-            model, "pack.yaml/pack.json is required (REQUIRE_STRUCTURED_LAYERS=True) but missing")
-        return 0
+    assert manifest_path.is_file(), (model, "pack.yaml is required but missing")
 
     try:
         manifest = _load_layer_file(manifest_path)
     except (json.JSONDecodeError, _miniyaml.MiniYamlError) as exc:
         raise AssertionError((model, manifest_path.name, "does not parse", str(exc))) from exc
 
-    generation = manifest.get("generation", 1)
-    assert generation in (1, 2), (model, "manifest generation must be 1 or 2", generation)
+    depth = manifest.get("depth")
+    assert depth in DEPTH_VALUES, (model, "manifest depth must be one of", DEPTH_VALUES, depth)
+    assert manifest.get("pack") == model, (model, "manifest 'pack' does not match the directory name")
+    assert manifest.get("title"), (model, "manifest is missing 'title'")
+    assert manifest.get("version_scope"), (model, "manifest is missing 'version_scope'")
 
-    layers = manifest.get("layers", {})
+    prose = manifest.get("prose", [])
+    assert prose, (model, "manifest is missing 'prose'")
+    for entry in prose:
+        filename = entry.get("file")
+        assert filename and (folder / filename).is_file(), (model, "prose entry names a missing file", filename)
+        _check_purpose(model, filename, entry.get("purpose"))
+
+    if depth == "outline":
+        assert not (folder / "curated").is_dir(), (
+            model, "depth: outline pack must not carry a curated/ directory")
+        assert not (folder / "catalogs").is_dir(), (
+            model, "depth: outline pack must not carry a catalogs/ directory")
+        for key in ("curated", "catalogs", "known_gaps"):
+            assert key not in manifest, (model, f"depth: outline pack's manifest must not declare '{key}'")
+        return 0
+
+    # depth: reference.
+    catalogs_info = manifest.get("catalogs")
+    assert isinstance(catalogs_info, dict) and catalogs_info.get("generated_from") and \
+        catalogs_info.get("regenerate") and catalogs_info.get("validate"), (
+        model, "depth: reference manifest needs catalogs: {generated_from, regenerate, validate}")
+
+    curated = manifest.get("curated", [])
+    assert curated, (model, "depth: reference manifest is missing 'curated'")
     fact_count = 0
-    for layer_name, layer_info in layers.items():
-        filename = layer_info.get("file")
-        coverage = layer_info.get("coverage")
-        assert coverage in ("full", "partial", "none"), (model, layer_name, "bad coverage value")
-        if not filename:
-            continue
-        layer_path = folder / filename
-        assert layer_path.is_file(), (model, layer_name, f"declared file {filename} missing")
+    for entry in curated:
+        filename = entry.get("file")
+        assert filename and (folder / filename).is_file(), (model, "curated entry names a missing file", filename)
+        _check_purpose(model, filename, entry.get("purpose"))
         try:
-            doc = _load_layer_file(layer_path)
+            doc = _load_layer_file(folder / filename)
         except (json.JSONDecodeError, _miniyaml.MiniYamlError) as exc:
             raise AssertionError((model, filename, "does not parse", str(exc))) from exc
 
-        layer_has_unverified = False
         for fact_path, fact in _iter_facts(doc):
             fact_count += 1
             assert fact["basis"] in BASIS_VALUES, (model, filename, fact_path, "bad basis", fact["basis"])
-            if fact["basis"] == "unverified":
-                layer_has_unverified = True
             if fact["source"] is not None:
                 assert fact["source"] in valid_source_ids, (
                     model, filename, fact_path, "source id not in sources.md", fact["source"])
@@ -142,16 +165,17 @@ def check_structured_layers(model, folder, valid_source_ids, valid_checks):
             assert frm["anchor"] in anchors(from_file.read_text()), (
                 model, filename, fact_path, "'from' anchor not found", frm["anchor"], frm["file"])
 
-        assert not (coverage == "full" and layer_has_unverified), (
-            model, filename, "coverage: full is refused while an entry has basis: unverified")
+        if Path(filename).name == "checks.yaml":
+            check_checks_yaml(model, folder, doc, valid_checks)
 
-        if layer_name == "pitfalls":
-            check_pitfalls_json(model, folder, doc, valid_checks)
-        if layer_name == "index":
-            check_index_matches_build(model, folder, doc)
+    for gap in manifest.get("known_gaps", []):
+        assert isinstance(gap, str) and gap, (model, "known_gaps entries must be non-empty strings")
 
-    if generation == 2:
-        check_catalog_evidence(model, folder)
+    index_path = folder / "catalogs" / "index.json"
+    assert index_path.is_file(), (model, "depth: reference pack is missing catalogs/index.json")
+    check_index_matches_build(model, folder, json.loads(index_path.read_text()))
+
+    check_catalog_evidence(model, folder)
 
     return fact_count
 
@@ -182,13 +206,13 @@ def _iter_catalog_entries(node):
 
 
 def check_catalog_evidence(model, folder):
-    """Generation 2 (SCHEMA.md): every generated catalog entry (anything carrying a
+    """depth: reference (SCHEMA.md): every generated catalog entry (anything carrying a
     `where` fact-location) must also carry an `evidence` grade -- the two are meant to
     travel together, and extract_pack.py never emits one without the other."""
     catalogs_dir = folder / "catalogs"
-    assert catalogs_dir.is_dir(), (model, "generation 2 but no catalogs/ directory")
+    assert catalogs_dir.is_dir(), (model, "depth: reference but no catalogs/ directory")
     yaml_files = sorted(catalogs_dir.glob("*.yaml"))
-    assert yaml_files, (model, "generation 2 but catalogs/ has no *.yaml files")
+    assert yaml_files, (model, "depth: reference but catalogs/ has no *.yaml files")
     n_entries = 0
     for path in yaml_files:
         doc = _miniyaml.load_file(path)
@@ -245,41 +269,42 @@ def _resolve_and_check_citation(model, folder_label, source_root, where, context
 
 
 def check_overlay_catalogs(model, folder, source_root):
-    """catalogs/kinds_overlay.yaml and catalogs/options_overlay.yaml are curated,
+    """curated/kinds_overlay.yaml and curated/options_overlay.yaml are curated,
     hand-verified, never generated (see SCHEMA.md). Every row's subject must actually
     exist in the corresponding generated catalog (checked always -- cheap, no source
     tree needed), and every citation (`where`, `reset_where`) must resolve to a real
     file and an in-range line when --source-root is given (skipped cleanly otherwise)."""
     catalogs_dir = folder / "catalogs"
+    curated_dir = folder / "curated"
     n_checked = 0
 
-    kinds_path = catalogs_dir / "kinds_overlay.yaml"
+    kinds_path = curated_dir / "kinds_overlay.yaml"
     if kinds_path.is_file():
         outputs_doc = _miniyaml.load_file(catalogs_dir / "outputs.yaml")
         output_names = {v["name"] for v in outputs_doc["variables"]}
         for row in _miniyaml.load_file(kinds_path).get("rows", []):
             n_checked += 1
             assert row["variable"] in output_names, (
-                model, "kinds_overlay.yaml", "variable not in catalogs/outputs.yaml",
+                model, "curated/kinds_overlay.yaml", "variable not in catalogs/outputs.yaml",
                 row["variable"])
             if source_root is not None:
-                _resolve_and_check_citation(model, "kinds_overlay.yaml", source_root,
+                _resolve_and_check_citation(model, "curated/kinds_overlay.yaml", source_root,
                                              row["where"], row["variable"])
                 if row.get("reset_where"):
-                    _resolve_and_check_citation(model, "kinds_overlay.yaml", source_root,
+                    _resolve_and_check_citation(model, "curated/kinds_overlay.yaml", source_root,
                                                  row["reset_where"], row["variable"] + " (reset)")
 
-    options_path = catalogs_dir / "options_overlay.yaml"
+    options_path = curated_dir / "options_overlay.yaml"
     if options_path.is_file():
         physics_doc = _miniyaml.load_file(catalogs_dir / "physics_options.yaml")
         option_names = {o["internal_option_name"] for o in physics_doc["options"]}
         for row in _miniyaml.load_file(options_path).get("rows", []):
             n_checked += 1
             assert row["internal_option_name"] in option_names, (
-                model, "options_overlay.yaml", "internal_option_name not in "
+                model, "curated/options_overlay.yaml", "internal_option_name not in "
                 "catalogs/physics_options.yaml", row["internal_option_name"])
             if source_root is not None and row.get("where"):
-                _resolve_and_check_citation(model, "options_overlay.yaml", source_root,
+                _resolve_and_check_citation(model, "curated/options_overlay.yaml", source_root,
                                              row["where"], row["internal_option_name"])
     return n_checked
 
@@ -287,17 +312,13 @@ def check_overlay_catalogs(model, folder, source_root):
 def check_curated_facts_not_stale(model, folder):
     """A curated structured-layer fact's `confirmed_against` (see tools/_anchor_hash.py)
     must match the CURRENT hash of the prose paragraph its `from.anchor` points to. A
-    mismatch means the prose changed since a person last confirmed this fact against it
-    -- exactly the drift that let switches.yaml/interface.yaml keep an old, wrong urban
-    statement after processes.md was corrected to cite the same (corrected) anchor.
+    mismatch means the prose changed since a person last confirmed this fact against it.
     Re-confirm the fact against the new prose by hand, then run
     `tools/refresh_confirmed_against.py --pack <pack>` to update the hash -- never run
     the refresh tool first as a way to silence this without reading the diff."""
     stale = []
-    for stem in ("interface", "switches", "pitfalls", "workflows"):
-        path = folder / f"{stem}.yaml"
-        if not path.is_file():
-            path = folder / f"{stem}.json"
+    for stem in ("interface", "switches", "checks", "workflows"):
+        path = folder / "curated" / f"{stem}.yaml"
         if not path.is_file():
             continue
         doc = _load_layer_file(path)
@@ -330,17 +351,18 @@ def _looks_like_model_identifier(tok):
 
 
 def check_source_identifiers_resolve(model, folder):
-    """Generation 2: every backticked identifier in card.md/processes.md/failures.md/
+    """depth: reference: every backticked identifier in card.md/processes.md/failures.md/
     recipes.md that looks like a model identifier must resolve through hcm_lookup.py's
     own index (exact match or one of its aliases -- namelist key/IOPT_*/Opt* for a
     physics option, table key/NoahmpIO array/internal name for a parameter, written
     name/driver array/internal noahmp name for a variable) or be named in
-    lookup_allowlist.yaml with a reason. Returns (checked, unresolved_but_allowlisted)."""
+    evals/<pack>/lookup_allowlist.yaml with a reason. Returns (checked,
+    unresolved_but_allowlisted)."""
     import hcm_lookup
     items = hcm_lookup.collect_index(folder)
     names_lower = {n.lower() for n, _k, _e in items}
 
-    allowlist_path = folder / "lookup_allowlist.yaml"
+    allowlist_path = EVALS_DIR / folder.name / "lookup_allowlist.yaml"
     allowlist = {}
     if allowlist_path.is_file():
         for row in _miniyaml.load_file(allowlist_path).get("rows", []):
@@ -364,7 +386,7 @@ def check_source_identifiers_resolve(model, folder):
 
 
 def check_source_citations(model, folder, source_root, prose_files):
-    """Generation 2, --source-root given: every `path:line` citation in the prose
+    """depth: reference, --source-root given: every `path:line` citation in the prose
     resolves to a real file under source_root, whose line count is at least the largest
     line number cited. A citation whose prefix cannot be resolved at all (a handful of
     known prose shorthand forms this simple regex cannot split, e.g. brace-expansion
@@ -403,7 +425,7 @@ def check_source_citations(model, folder, source_root, prose_files):
 
 
 def check_catalogs_fresh_build(model, folder, source_root):
-    """Generation 2, --source-root given: re-run extract_pack.py against source_root and
+    """depth: reference, --source-root given: re-run extract_pack.py against source_root and
     assert the result is structurally identical to the committed catalogs, modulo
     `evidence` fields that could only differ source_read vs both (validate_catalogs.py
     --apply, which needs real output/restart/forcing files this eval does not have, is
@@ -455,22 +477,32 @@ def _diff_modulo_evidence(fresh, committed, path=""):
     return None
 
 
-def check_pitfalls_json(model, folder, doc, valid_checks):
-    """pitfalls.json ids must map one-to-one to pitfalls.md headings; each detect.check
-    must name a subcommand hcm_check.py actually has."""
+def check_checks_yaml(model, folder, doc, valid_checks):
+    """Every curated/checks.yaml id must be the anchor of an actual heading in this
+    pack's symptom-indexed prose (failures.md for a depth: reference pack, pitfalls.md
+    for a depth: outline pack -- whichever this pack has) -- no stale id left over after
+    a heading is renamed or removed. checks.yaml need not cover every heading: it is the
+    detectable-checks layer, one entry per failure this pack can automate a check for,
+    not a restatement of the whole prose list. Each detect.check must name a subcommand
+    hcm_check.py actually has."""
+    md_path = folder / "failures.md"
+    if not md_path.is_file():
+        md_path = folder / "pitfalls.md"
+    assert md_path.is_file(), (model, "curated/checks.yaml but neither failures.md nor "
+                                "pitfalls.md exists to cross-reference against")
     md_ids = {re.sub(r"[^\w\- ]", "", h.lower()).replace(" ", "-")
-              for h in re.findall(r"^## (.+)$", (folder / "pitfalls.md").read_text(), re.M)}
-    json_ids = [entry["id"] for entry in doc.get("pitfalls", [])]
-    assert len(json_ids) == len(set(json_ids)), (model, "pitfalls.json", "duplicate ids")
-    assert set(json_ids) == md_ids, (
-        model, "pitfalls.json ids do not match pitfalls.md headings one-to-one",
-        "json only:", set(json_ids) - md_ids, "md only:", md_ids - set(json_ids))
-    for entry in doc.get("pitfalls", []):
+              for h in re.findall(r"^## (.+)$", md_path.read_text(), re.M)}
+    yaml_ids = [entry["id"] for entry in doc.get("checks", [])]
+    assert len(yaml_ids) == len(set(yaml_ids)), (model, "curated/checks.yaml", "duplicate ids")
+    assert set(yaml_ids) <= md_ids, (
+        model, f"curated/checks.yaml has id(s) not among {md_path.name} headings (stale?)",
+        set(yaml_ids) - md_ids)
+    for entry in doc.get("checks", []):
         detect = entry.get("detect")
         if detect is None:
             continue
         assert detect.get("check") in valid_checks, (
-            model, "pitfalls.json", entry["id"], "detect.check is not an hcm_check.py subcommand",
+            model, "curated/checks.yaml", entry["id"], "detect.check is not an hcm_check.py subcommand",
             detect.get("check"))
 
 
@@ -588,6 +620,49 @@ PRIVATE_STRING_PATTERNS = {
 }
 CJK_RE = re.compile("[\u4e00-\u9fff\u3400-\u4dbf\u3040-\u30ff\uac00-\ud7af\uff00-\uffef]")
 
+# A pack's own history (how it got to its current form) does not belong anywhere in the
+# shipped product except CHANGELOG.md. This pattern list catches the common tells of that
+# narration; it is intentionally literal (a handful of fixed phrases), not a general
+# tense/style checker.
+PROCESS_NARRATION_PATTERNS = {
+    "moved_to": re.compile(r"\bmoved to\b", re.I),
+    "re_sourced": re.compile(r"\bre-sourced\b", re.I),
+    "converted_from": re.compile(r"\bconverted from\b", re.I),
+    "formerly": re.compile(r"\bformerly\b", re.I),
+    "no_longer": re.compile(r"\bno longer\b", re.I),
+    "superseded": re.compile(r"\bsuperseded\b", re.I),
+    "generation_12": re.compile(r"\bgeneration [12]\b", re.I),
+    "stub": re.compile(r"\bstub\b", re.I),
+    "redirect": re.compile(r"\bredirect(s|ed|ing)?\b", re.I),
+}
+# A tiny allowlist for a legitimate scientific (not process-history) use of one of the
+# phrases above. Matched against the same-line text, not the whole file -- so it stays
+# precise rather than silencing an entire file. Add an entry here only when the match is
+# genuinely not narrating this repository's own history.
+PROCESS_NARRATION_LINE_ALLOWLIST = (
+    "converted internally to mixing ratio",
+    # core.md / DECISIONS.md: a project's own decision log preserving a superseded
+    # *project* decision (generic project-record methodology), not narration about this
+    # package's history.
+    "preserve superseded decisions and link replacements",
+    "preserve superseded entries and link replacements",
+    "status: <adopted / superseded>",
+    # sources.md files: describe which cited SOURCE document is more authoritative than
+    # another (a citation-hierarchy fact about the literature), not this package's history.
+    "superseded for every",
+    "superseded by the pinned copy",
+    "superseded and corrected by",
+    # mizuroute pack: an upstream repository's own URL redirect, a fact about the cited
+    # source, not this package's history.
+    "url redirects there",
+    "retrieved via the redirect from",
+    # HANDOVER.md template: generic snapshot-hygiene instruction, not narration about
+    # this package's own history.
+    "remove completed items no longer needed",
+    # _anchor_hash.py: ordinary technical description of a hash comparison.
+    "the hash no longer matches",
+)
+
 # A short, explicit list of pre-existing files that use one of the words above in its
 # ordinary English sense (e.g. "have not been audited" = "have not been checked"), not
 # as a reference to a dev-repo process step. Listed with the reason, same discipline as
@@ -596,18 +671,18 @@ CJK_RE = re.compile("[\u4e00-\u9fff\u3400-\u4dbf\u3040-\u30ff\uac00-\ud7af\uff00
 PRIVATE_STRING_ALLOWLIST = {
     "evals/check_knowledge.py": "this file defines the patterns/allowlist above as "
         "literal strings, and its own comments explain them using the same words",
-    "evals/v0.6-results.md": "pre-existing v0.6 record; 'audit' used in its ordinary sense",
-    "evals/v0.6-offline-probe.json": "pre-existing v0.6 record; 'audit' used in its ordinary sense",
-    "evals/README.md": "pre-existing text: 'not a complete scientific source audit' (ordinary sense)",
     "hydroclimmate/references/models/vic/sources.md": "pre-existing pack text: 'have not been audited' (ordinary sense)",
     "hydroclimmate/references/models/ctsm/sources.md": "pre-existing pack text: 'have not been audited' (ordinary sense)",
 }
 
 
 def check_no_private_strings():
-    """Every file under the package and evals/, scanned for CJK characters and for the
-    private/internal-process string patterns above. A hit is a hard failure unless the
-    whole file is in PRIVATE_STRING_ALLOWLIST (see its own docstring)."""
+    """Every file under the package and evals/, scanned for CJK characters, for the
+    private/internal-process string patterns above, and (everywhere except
+    CHANGELOG.md) for process-narration language describing this repository's own
+    history. A hit is a hard failure unless the whole file is in
+    PRIVATE_STRING_ALLOWLIST, or (narration only) the matching line is covered by
+    PROCESS_NARRATION_LINE_ALLOWLIST."""
     hits = []
     scanned = 0
     roots = [PACKAGE, ROOT / "evals"]
@@ -631,10 +706,82 @@ def check_no_private_strings():
                 if m:
                     line_no = text.count("\n", 0, m.start()) + 1
                     hits.append((rel, name, f"line {line_no}: {m.group(0)!r}"))
+            if path.name != "CHANGELOG.md":
+                # A window of surrounding text, newlines collapsed to spaces, so the
+                # allowlist still matches a phrase that happens to be soft-wrapped across
+                # a line break in the source file.
+                for name, pat in PROCESS_NARRATION_PATTERNS.items():
+                    for m in pat.finditer(text):
+                        window_start = max(0, m.start() - 80)
+                        window_end = min(len(text), m.end() + 40)
+                        context = re.sub(r"\s+", " ", text[window_start:window_end]).lower()
+                        if any(allowed in context for allowed in PROCESS_NARRATION_LINE_ALLOWLIST):
+                            continue
+                        line_no = text.count("\n", 0, m.start()) + 1
+                        hits.append((rel, f"process_narration_{name}", f"line {line_no}: {m.group(0)!r}"))
     assert not hits, ("private/internal-process strings found (add a reason to "
-                       "PRIVATE_STRING_ALLOWLIST only if the match is genuinely not "
-                       "process bookkeeping)", hits[:20])
-    print(f"PASS: no CJK or private/internal-process strings in {scanned} package/evals files")
+                       "PRIVATE_STRING_ALLOWLIST, or the matching line to "
+                       "PROCESS_NARRATION_LINE_ALLOWLIST, only if the match is genuinely "
+                       "not process bookkeeping or history narration)", hits[:20])
+    print(f"PASS: no CJK, private/internal-process strings, or process-narration language "
+          f"in {scanned} package/evals files")
+
+
+def check_no_orphan_files(model, folder, manifest):
+    """Every hand-maintained file in a pack must be reachable: named in pack.yaml's
+    `prose` or `curated` list, or one of the generated catalog files
+    tools/extract_pack.py and tools/build_index.py always produce. A leftover file from a
+    restructuring that nothing points to any more is exactly the kind of clutter this
+    check exists to catch."""
+    referenced = {entry.get("file") for entry in manifest.get("prose", []) if entry.get("file")}
+    referenced |= {entry.get("file") for entry in manifest.get("curated", []) if entry.get("file")}
+    known_generated = {
+        "MANIFEST.json", "index.json", "outputs.yaml", "restart.yaml", "forcing.yaml",
+        "setup.yaml", "namelist.yaml", "physics_options.yaml", "parameters.yaml",
+        "constants.yaml", "urban_path.yaml",
+    }
+    known_curated = {"kinds_overlay.yaml", "options_overlay.yaml"}
+    for path in sorted(folder.rglob("*")):
+        if not path.is_file() or path.suffix not in (".yaml", ".json"):
+            continue
+        if path.name == "pack.yaml":
+            continue
+        rel = str(path.relative_to(folder))
+        if rel in referenced or path.name in known_generated:
+            continue
+        if path.parent.name == "curated" and path.name in known_curated:
+            continue
+        raise AssertionError((
+            model, rel, "not declared as a layer file in pack.yaml and not a recognized "
+            "generated catalog file -- an orphan left over from a restructuring, or a "
+            "new curated file pack.yaml has not been told about yet"))
+
+
+def check_markdown_formatted():
+    """Every Markdown file must already be one-line-per-paragraph formatted (see
+    format_markdown.py) -- run `python3 evals/format_markdown.py` and re-check if this
+    fails."""
+    import format_markdown
+    files = format_markdown.default_files()
+    problems_by_file = {}
+    not_formatted = []
+    for path in files:
+        original = path.read_text(encoding="utf-8")
+        formatted = format_markdown.format_text(original)
+        problems = format_markdown.verify(original, formatted)
+        rel = str(path.relative_to(ROOT))
+        if problems:
+            problems_by_file[rel] = problems
+            continue
+        if formatted != original:
+            not_formatted.append(rel)
+    assert not problems_by_file, (
+        "format_markdown.py could not safely reflow some file(s) -- fix the file or the "
+        "formatter, never by forcing the join", problems_by_file)
+    assert not not_formatted, (
+        "Markdown file(s) not one-line-per-paragraph formatted -- run "
+        "`python3 evals/format_markdown.py`", not_formatted)
+    print(f"PASS: {len(files)} Markdown files are one-line-per-paragraph formatted")
 
 
 def check_freshness():
@@ -643,7 +790,9 @@ def check_freshness():
     sources = sorted(PACKAGE.glob("references/models/*/sources.md"))
     assert sources, "No model source packs found"
     for source in sources:
-        match = re.search(r"^Checked:\s*(\d{4})-(\d{2})-(\d{2})", source.read_text(), re.M)
+        # Not line-anchored: one-line-per-paragraph formatting (see format_markdown.py)
+        # can leave a "Checked: ..." sentence mid-line, as the end of its paragraph.
+        match = re.search(r"Checked:\s*(\d{4})-(\d{2})-(\d{2})", source.read_text())
         assert match, f"{source} has no 'Checked: YYYY-MM-DD' line"
         age = (date.today() - date(*map(int, match.groups()))).days
         assert age >= 0, f"{source} has a future Checked date"
@@ -681,9 +830,6 @@ def main():
     match = re.search(r"HydroClimMate v(\d+\.\d+)", entry)
     assert match, "Missing skill version"
     assert f"Version {match.group(1)} " in (ROOT / "README.md").read_text(), "README version drift"
-    pointer = (PACKAGE / "AGENTS.md").read_text()
-    assert "[SKILL.md](SKILL.md)" in pointer, "Broken legacy integration pointer"
-    assert "| Feature |" not in pointer, "Routing rules duplicated in compatibility pointer"
 
     models = sorted(p.name for p in (PACKAGE / "references/models").iterdir() if p.is_dir())
     assert models, "No model packs found"
@@ -694,20 +840,25 @@ def main():
     total_overlay_rows_checked = 0
     total_identifiers_checked = 0
     total_identifiers_allowlisted = 0
+    n_reference = 0
     for model in models:
         folder = PACKAGE / "references/models" / model
         manifest_path = _pack_manifest_path(folder)
-        generation = _load_layer_file(manifest_path).get("generation", 1) if manifest_path.is_file() else 1
+        assert manifest_path.is_file(), (model, "pack.yaml is required")
+        manifest = _load_layer_file(manifest_path)
+        depth = manifest.get("depth")
+        assert depth in DEPTH_VALUES, (model, "manifest depth must be one of", DEPTH_VALUES, depth)
 
-        if generation == 1:
-            assert {p.name for p in folder.glob("*.md")} == GEN1_MD_FILES, model
+        if depth == "outline":
+            assert {p.name for p in folder.glob("*.md")} == OUTLINE_MD_FILES, model
             for name in ("overview", "execution", "outputs"):
                 text = (folder / f"{name}.md").read_text()
                 assert re.search(r"\[[A-Z]\d+\]\(sources.md#[a-z]\d+\)", text), (model, name)
             check_pitfalls(model, folder)
         else:
-            assert {p.name for p in folder.glob("*.md")} == GEN2_MD_FILES, model
-            for md_name, cap in GEN2_SIZE_CAPS.items():
+            n_reference += 1
+            assert {p.name for p in folder.glob("*.md")} == REFERENCE_MD_FILES, model
+            for md_name, cap in REFERENCE_SIZE_CAPS.items():
                 size = (folder / md_name).stat().st_size
                 assert size <= cap, (model, md_name, f"{size} bytes exceeds the {cap}-byte cap")
             total_overlay_rows_checked += check_overlay_catalogs(model, folder, source_root)
@@ -721,8 +872,10 @@ def main():
                     ["card.md", "processes.md", "failures.md", "recipes.md", "version.md", "sources.md"])
                 check_catalogs_fresh_build(model, folder, source_root)
 
+        check_no_orphan_files(model, folder, manifest)
         valid_source_ids = set(re.findall(r"^## ([A-Za-z]\d+)$", (folder / "sources.md").read_text(), re.M))
         total_facts += check_structured_layers(model, folder, valid_source_ids, valid_checks)
+    assert n_reference >= 1, "No depth: reference pack found"
 
     for filename in ("trigger-eval.json", "knowledge-eval.json"):
         cases = json.loads((ROOT / "evals" / filename).read_text())
@@ -749,11 +902,11 @@ def main():
     new_mass = 2 * 7 * 900
     assert new_mass - old_mass == -5400
     print(f"PASS: {count} package links/anchors, {len(models)} source-linked packs, shared entrypoint, fixtures")
-    print(f"PASS: {total_facts} structured-layer facts validated (source ids, from-anchors, basis, coverage)")
+    print(f"PASS: {total_facts} structured-layer facts validated (source ids, from-anchors, basis)")
     print(f"PASS: {total_overlay_rows_checked} curated overlay rows resolve to a real "
           f"catalog entry (kinds_overlay.yaml variables in outputs.yaml, options_overlay.yaml "
           f"internal_option_names in physics_options.yaml)")
-    print("PASS: every generation-2 curated structured-layer fact's confirmed_against hash "
+    print("PASS: every depth: reference curated structured-layer fact's confirmed_against hash "
           "matches its cited prose paragraph's current text (no stale re-confirmation)")
     print(f"PASS: {total_identifiers_checked} backticked model identifiers in card/processes/"
           f"failures/recipes.md resolve through hcm_lookup.py (exact or alias) or "
@@ -769,6 +922,7 @@ def main():
     print("These are static/arithmetic checks, not model or agent-behavior validation.")
     check_no_private_strings()
     check_freshness()
+    check_markdown_formatted()
     if "--network" in sys.argv:
         check_urls()
     else:

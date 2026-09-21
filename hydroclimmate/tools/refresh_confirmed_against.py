@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """refresh_confirmed_against.py -- the one-command step to re-sync a pack's curated
-structured-layer facts (interface/switches/pitfalls/workflows.yaml) with the CURRENT
-text of the prose paragraphs they cite, after a prose correction.
+structured-layer facts (curated/interface.yaml, curated/switches.yaml,
+curated/checks.yaml, curated/workflows.yaml) with the CURRENT text of the prose
+paragraphs they cite, after a prose correction.
 
 This does NOT check whether a fact's statement still agrees with the prose -- a person
 must read the diff and confirm that by hand (that is the point: it forces a human to
@@ -25,7 +26,7 @@ sys.path.insert(0, str(HERE))
 import _miniyaml  # noqa: E402
 import _anchor_hash  # noqa: E402
 
-CURATED_LAYER_STEMS = ("interface", "switches", "pitfalls", "workflows")
+CURATED_LAYER_STEMS = ("interface", "switches", "checks", "workflows")
 
 
 def _iter_facts_with_from(node):
@@ -42,7 +43,7 @@ def _iter_facts_with_from(node):
 def refresh_pack(pack_dir, dry_run=False):
     updated_files = []
     for stem in CURATED_LAYER_STEMS:
-        path = pack_dir / f"{stem}.yaml"
+        path = pack_dir / "curated" / f"{stem}.yaml"
         if not path.is_file():
             continue
         doc = _miniyaml.load_file(path)
@@ -90,7 +91,7 @@ def main(argv=None):
     if not updated:
         print(f"{args.pack}: all confirmed_against hashes already match the current prose.")
     for stem, n in updated:
-        print(f"{args.pack}/{stem}.yaml: {n} fact(s) {'would be ' if args.dry_run else ''}refreshed")
+        print(f"{args.pack}/curated/{stem}.yaml: {n} fact(s) {'would be ' if args.dry_run else ''}refreshed")
     return 0
 
 
