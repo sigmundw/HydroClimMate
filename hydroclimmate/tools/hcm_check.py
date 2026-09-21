@@ -29,33 +29,48 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 MODELS_DIR = HERE.parent / "references/models"
+sys.path.insert(0, str(HERE))
+import _miniyaml  # noqa: E402
 
-VALID_BASIS = ("source_read", "observed_in_output", "unverified")
+VALID_BASIS = ("source_read", "observed_in_output", "both", "unverified")
+
+
+def _load_structured(path):
+    """Load a pack layer file: YAML (PyYAML, else _miniyaml) for .yaml, plain json for
+    .json -- a pack declares its generation (and so which extension its layers use) in
+    its manifest; see SCHEMA.md."""
+    if path.suffix == ".yaml":
+        return _miniyaml.load_file(path)
+    return json.loads(path.read_text())
 
 
 def load_pack(name):
-    """Load a pack's optional K2-K6 JSON layers, resolved relative to this tool's own
-    location (not the current working directory). A pack with no pack.json, or with a
-    layer file it does not declare, simply has that layer come back empty -- this tool
-    never invents a declaration. See references/models/SCHEMA.md."""
+    """Load a pack's optional structured layers, resolved relative to this tool's own
+    location (not the current working directory). A pack with no pack.yaml/pack.json, or
+    with a layer file it does not declare, simply has that layer come back empty -- this
+    tool never invents a declaration. See references/models/SCHEMA.md."""
     pack_dir = MODELS_DIR / name
     if not pack_dir.is_dir():
         sys.exit(f"ERROR: no such pack directory: {pack_dir}")
-    manifest_path = pack_dir / "pack.json"
+    manifest_path = pack_dir / "pack.yaml"
+    if not manifest_path.is_file():
+        manifest_path = pack_dir / "pack.json"
     manifest = {}
     if manifest_path.is_file():
-        manifest = json.loads(manifest_path.read_text())
+        manifest = _load_structured(manifest_path)
     layers = {}
+    generation = manifest.get("generation", 1)
+    default_ext = "yaml" if generation == 2 else "json"
     for layer_name in ("interface", "switches", "pitfalls", "workflows", "index", "selftest"):
         info = manifest.get("layers", {}).get(layer_name)
         # info present but its "file" is null means the manifest declares this layer
         # coverage: none (nothing this pack's prose supports) -- not a filename to guess.
-        filename = info.get("file") if info is not None else f"{layer_name}.json"
+        filename = info.get("file") if info is not None else f"{layer_name}.{default_ext}"
         layers[layer_name] = None
         if filename:
             path = pack_dir / filename
-            layers[layer_name] = json.loads(path.read_text()) if path.is_file() else None
-    return {"dir": pack_dir, "manifest": manifest, "layers": layers}
+            layers[layer_name] = _load_structured(path) if path.is_file() else None
+    return {"dir": pack_dir, "manifest": manifest, "layers": layers, "generation": generation}
 
 
 def _fact_is_unverified(fact):
@@ -306,7 +321,7 @@ def cmd_paired_response(args):
             invariant_report[name] = identical
     out["invariants"] = invariant_report
 
-    # Pack-declared switch effects (K3): annotate, never silently apply.
+    # Pack-declared switch effects: annotate, never silently apply.
     pack_report = None
     if args.pack:
         pack = load_pack(args.pack)
@@ -497,7 +512,7 @@ def cmd_pack_info(args):
     manifest = pack["manifest"]
     print(f"# pack-info: {args.pack}")
     if not manifest:
-        print("  No pack.json found for this pack.")
+        print("  No pack.yaml/pack.json found for this pack.")
         return 0
     print(f"  version_scope: {manifest.get('version_scope', '<none>')}")
     counts = {b: 0 for b in VALID_BASIS}
@@ -541,7 +556,7 @@ def cmd_pitfall_scan(args):
     pitfalls_doc = pack["layers"]["pitfalls"]
     print(f"# pitfall-scan: {args.pack}")
     if not pitfalls_doc:
-        print("  No pitfalls.json found for this pack.")
+        print("  No pitfalls layer (pitfalls.yaml/pitfalls.json) found for this pack.")
         return 0
 
     results = []
@@ -619,7 +634,7 @@ def cmd_describe(args):
                 print(f"  observed: monotone non-decreasing along axis 0={monotone}")
             facts = find_output_facts(pack, name) + find_input_facts(pack, name)
             if not facts:
-                print("  declared: NO DECLARATION -- the pack's interface.json states nothing "
+                print("  declared: NO DECLARATION -- the pack's interface layer states nothing "
                       "that keyword-matches this variable name.")
             else:
                 for fact in facts:
@@ -789,7 +804,7 @@ def build_parser():
     p.add_argument("--pack", help="Model pack name (e.g. hrldas-noahmp), resolved under "
                                    "references/models/ next to this tool")
     p.add_argument("--switch", help="Switch name to read declared effects for from the pack's "
-                                     "switches.json (requires --pack); annotation only, never applied")
+                                     "the switches layer (requires --pack); annotation only, never applied")
     p.add_argument("--json", action="store_true", help="Also print a JSON summary")
     p.set_defaults(func=cmd_paired_response)
 
@@ -825,7 +840,7 @@ def build_parser():
 
     p = sub.add_parser(
         "pitfall-scan",
-        help="Run every K4 pitfall detection in a pack whose required inputs are available.",
+        help="Run every declared pitfall detection in a pack whose required inputs are available.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     p.add_argument("--pack", required=True, help="Model pack name, resolved under references/models/")

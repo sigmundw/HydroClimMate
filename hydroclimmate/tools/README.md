@@ -58,9 +58,14 @@ a review packet is proportionate to the task at hand.
     as not attributable to the switched routine, with the pack's scope.
 
 - **`build_index.py <pack> [--write]`** — (re)generates a pack's `index.json`
-  from `interface.json`, `switches.json` and `pitfalls.json`, so it is never
-  hand-written and can never drift or carry a claim of its own; the
-  validator checks the committed file equals a fresh build.
+  from `interface`, `switches` and `pitfalls`, so it is never hand-written
+  and can never drift or carry a claim of its own; the validator checks the
+  committed file equals a fresh build. (Throughout this file, `interface.json`
+  etc. name the layer, not literally the extension: a generation-2 pack per
+  [SCHEMA.md](../references/models/SCHEMA.md) stores these as
+  `interface.yaml` etc.; `index.json`/`catalogs/MANIFEST.json` are always
+  JSON. `hcm_lookup.py --pack <pack> <NAME>` answers from a generation-2
+  pack's generated `catalogs/*.yaml` instead — see SCHEMA.md.)
 
 - **`hcm_review_packet.py`** — assembles exactly what an independent
   reviewer may see: a goal file, an experiment record, decision records,
@@ -117,7 +122,7 @@ and assert the expected verdicts; they touch no project data:
 
 ```bash
 python3 hydroclimmate/tools/selftest.py                 # hcm_check.py
-python3 hydroclimmate/tools/selftest.py --packs          # pack self-tests (K5): FIRED on faulty, QUIET on clean
+python3 hydroclimmate/tools/selftest.py --packs          # pack self-tests: FIRED on faulty, QUIET on clean
 python3 hydroclimmate/tools/selftest_review_packet.py    # hcm_review_packet.py (stdlib only)
 ```
 

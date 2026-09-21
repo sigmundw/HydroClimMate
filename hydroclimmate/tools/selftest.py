@@ -14,6 +14,18 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 HCM_CHECK = HERE / "hcm_check.py"
 MODELS_DIR = HERE.parent / "references/models"
+sys.path.insert(0, str(HERE))
+import _miniyaml  # noqa: E402
+
+
+def _load_layer(pack_dir, stem):
+    """Load `<stem>.yaml` if present, else `<stem>.json` (see SCHEMA.md: a pack declares
+    its generation, and so which extension its curated layers use, in its manifest)."""
+    yaml_path = pack_dir / f"{stem}.yaml"
+    if yaml_path.is_file():
+        return _miniyaml.load_file(yaml_path)
+    json_path = pack_dir / f"{stem}.json"
+    return json.loads(json_path.read_text()) if json_path.is_file() else None
 
 
 def need_stack():
@@ -201,21 +213,23 @@ def _write_paired_pair(tmp, var, other_var, a_val, b_val, control_val=None):
 
 
 def run_pack_selftests():
-    """K5: for each pack with a selftest.json, build the tiny synthetic fixtures its
-    cases declare and assert FIRED on the faulty one, QUIET on the clean one. Fixtures
+    """For each pack with a selftest.yaml/selftest.json, build the tiny synthetic
+    fixtures its cases declare and assert FIRED on the faulty one, QUIET on the clean
+    one. Fixtures
     are built on the fly in a temp directory; none are stored in the repository."""
     need_stack()
     import numpy as np
 
     ok = True
-    pack_dirs = sorted(p for p in MODELS_DIR.iterdir() if p.is_dir() and (p / "selftest.json").is_file())
+    pack_dirs = sorted(p for p in MODELS_DIR.iterdir() if p.is_dir()
+                       and ((p / "selftest.yaml").is_file() or (p / "selftest.json").is_file()))
     if not pack_dirs:
-        print("No pack selftest.json files found; nothing to run for --packs.")
+        print("No pack selftest.yaml/selftest.json files found; nothing to run for --packs.")
         return True
 
     for pack_dir in pack_dirs:
         pack_name = pack_dir.name
-        cases = json.loads((pack_dir / "selftest.json").read_text()).get("cases", [])
+        cases = (_load_layer(pack_dir, "selftest") or {}).get("cases", [])
         for case in cases:
             pid = case["pitfall_id"]
             for role, spec in (("faulty", case["faulty"]), ("clean", case["clean"])):
@@ -260,7 +274,56 @@ def run_pack_selftests():
     return ok
 
 
+def run_yaml_selftests():
+    """Every pack YAML file must load to the identical
+    Python object under this repo's own strict-subset reader (_miniyaml.load) and under
+    PyYAML's yaml.safe_load, when PyYAML is importable -- the whole point of writing a
+    restricted subset is that both readers agree on every file this repo ships. Also a
+    minimal round-trip check via _miniyaml.dump."""
+    ok = True
+    yaml_files = sorted(MODELS_DIR.rglob("*.yaml"))
+    if not yaml_files:
+        print("FAIL: no pack YAML files found (expected at least hrldas-noahmp's)")
+        return False
+    try:
+        import yaml
+        have_pyyaml = True
+    except ImportError:
+        have_pyyaml = False
+        print("note: PyYAML not importable here; only the _miniyaml reader is exercised "
+              "(the equivalence claim itself is not tested this run).")
+
+    for path in yaml_files:
+        text = path.read_text(encoding="utf-8")
+        rel = path.relative_to(MODELS_DIR)
+        try:
+            mini = _miniyaml.load(text)
+        except _miniyaml.MiniYamlError as exc:
+            print(f"FAIL: {rel}: _miniyaml could not parse it: {exc}")
+            ok = False
+            continue
+        if have_pyyaml:
+            pyy = yaml.safe_load(text)
+            if pyy != mini:
+                print(f"FAIL: {rel}: PyYAML and _miniyaml disagree on parsed content")
+                ok = False
+                continue
+        redumped = _miniyaml.load(_miniyaml.dump(mini))
+        if redumped != mini:
+            print(f"FAIL: {rel}: _miniyaml.dump(load(x)) does not round-trip")
+            ok = False
+    if ok:
+        print(f"ok: {len(yaml_files)} pack YAML files -- _miniyaml"
+              + (" and PyYAML agree" if have_pyyaml else " parses cleanly")
+              + ", and round-trip through _miniyaml.dump")
+    return ok
+
+
 if __name__ == "__main__":
     if "--packs" in sys.argv:
         sys.exit(0 if run_pack_selftests() else 1)
-    sys.exit(main())
+    if "--yaml" in sys.argv:
+        sys.exit(0 if run_yaml_selftests() else 1)
+    yaml_ok = run_yaml_selftests()
+    base_rc = main()
+    sys.exit(0 if (base_rc == 0 and yaml_ok) else 1)

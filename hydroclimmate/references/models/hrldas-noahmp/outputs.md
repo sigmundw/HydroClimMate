@@ -1,45 +1,20 @@
-# HRLDAS / Noah-MP: output interpretation
+# HRLDAS / Noah-MP: output interpretation — moved
 
-Scope: semantic checks for offline output. Exact output names, units, time statistics and
-available budget terms must come from the actual files and corresponding driver revision.
+This file is a redirect stub. Output conventions (file kinds and naming, records per file, the
+time-stamp convention, dimension order, units, accumulated vs instantaneous, fill and mask
+behaviour) are in **[card.md](card.md)**. The exhaustive variable table is
+`catalogs/outputs.yaml` — query it with
+`tools/hcm_lookup.py --pack hrldas-noahmp <NAME>`. Analysis procedures with their cost
+are in **[recipes.md](recipes.md)**; ways an output analysis goes wrong are in
+**[failures.md](failures.md)**.
 
 ## Follow the output interface
 
-The v5.0 design separates column physics from a host-facing I/O representation. An internal
-process variable and a written history variable need not have the same name or shape.
-Trace the output through the host interface when metadata is insufficient. [H3](sources.md#h3)
-
-The official tutorial index includes a dedicated lesson on adding output variables. This
-establishes an appropriate route for extending diagnostics; this pack does not reproduce
-the notebook's code or assert that its edits fit another revision. [H5](sources.md#h5)
-
-The checked namelist separates forcing, model and output intervals, and can suppress the
-initial-state record. Do not treat an initial record with no completed flux interval as an
-ordinary averaged timestep. [H4](sources.md#h4)
-
-See
-[pitfalls](pitfalls.md#paired-urban-onoff-snow-difference-attributed-to-canopy-physics)
-before attributing a paired urban on/off snow difference on urban cells to canopy physics
-rather than the version-scoped vegetation-table swap.
-
-## Recommended analysis checks
-
-- Distinguish water stored in a layer from a concentration or volumetric water fraction.
-  A column inventory requires the relevant thickness, phase and unit conversions; adding
-  layer values without their meaning can produce a plausible but incorrect total.
-- See [pitfalls](pitfalls.md#snow-water-equivalent-identity-and-unmasked-fill-values) before
-  trusting a snow-water-equivalent layer identity or automatic fill masking.
-- For fluxes, establish instantaneous rate, interval mean, interval total or cumulative
-  counter. Integrate rates over represented durations; difference counters only after
-  identifying their restart/reset behavior.
-- Separate locally generated runoff from routed river discharge. Comparing a local depth
-  flux directly with a gauge discharge needs a defensible drainage-area and routing basis.
-- Inspect grid mapping, cell areas and masks. A WRF-derived geographic setup is not evidence
-  of equal physical cell area. Apply the [shared spatial rules](../../analyze.md#identify-grid-or-mesh-before-spatial-processing).
-- Define budget scope before computing a residual: include relevant snow, canopy, soil and
-  other active stores and boundary fluxes. If a needed term is absent, report partial closure.
-
-These checks are dimensional and diagnostic guidance, not an exhaustive model water-budget
-formula. For a bias after a forcing change, compare the applied forcing first, then state
-and flux responses over matching intervals. Preserve the original run while diagnosing.
-An output glossary is linked in [sources](sources.md), but its entries were not fully audited.
+An internal Noah-MP process variable and the written history variable need not share a name or
+a shape: the mapping happens in the driver's transfer layer, and the restart file uses a third
+set of spellings again. Resolve every name against `catalogs/outputs.yaml` and
+`catalogs/restart.yaml` for the pinned commit pair before writing analysis; see
+[failures.md: A restart file's variables are not where you expect](failures.md#a-restart-files-variables-are-not-where-you-expect)
+and [failures.md: A variable you remember from another Noah-MP does not exist here](failures.md#a-variable-you-remember-from-another-noah-mp-does-not-exist-here).
+Grid and area rules for spatial statistics: [recipes.md](recipes.md) recipe 4, plus the
+[shared spatial rules](../../analyze.md#identify-grid-or-mesh-before-spatial-processing).

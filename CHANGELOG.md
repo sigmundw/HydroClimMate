@@ -1,5 +1,47 @@
 # Changelog
 
+## Unreleased
+
+Model knowledge layer rebuild for one pack (`hrldas-noahmp`), plus a repository-wide format
+change. Not yet measured against the earlier layer; see `references/models/SCHEMA.md` for what
+changed and why.
+
+- `hrldas-noahmp` is now a "generation 2" pack (`references/models/SCHEMA.md`): a one-page
+  `card.md`, a `processes.md` question/switch/module/variable map, a `failures.md` list indexed
+  by symptom (each entry: what is happening, how to confirm it, the remedy, its source), bounded
+  `recipes.md` procedures that state their cost, and a `version.md` anchor -- all cited to a
+  pinned source-tree commit pair or to real output, never from memory. Indexing failure knowledge
+  by symptom, and stating a checkable data-interface contract, are ideas taken from KISS
+  (arXiv 2605.17856v1); this pack's schemas, file names, field names and content are its own, not
+  copied from that project.
+- New `catalogs/` directory for that pack: output, restart, forcing, setup, namelist,
+  physics-option, parameter and constant tables extracted mechanically from the pinned source by
+  `tools/extract_pack.py`, each fact citing an exact source `file:line@commit` and an evidence
+  grade (`source_read` / `observed_in_output` / `both`); `tools/validate_catalogs.py` confronts
+  them with real output/restart/forcing files and upgrades evidence in place, deterministically.
+  Query with `tools/hcm_lookup.py --pack hrldas-noahmp <name>` rather than reading a catalog file
+  whole.
+- Pack layers a person or agent reads are now YAML, not JSON, across all eight model packs (owner
+  decision, for readability): the curated layers (`interface`, `switches`, `pitfalls`,
+  `workflows`, `pack` manifest, `selftest`) and, for `hrldas-noahmp`, the generated catalogs.
+  Only machine-only build artifacts (`index.json`, `catalogs/MANIFEST.json`) stay JSON. A strict,
+  restricted YAML subset is used throughout, implemented in `tools/_miniyaml.py`, so every file
+  also loads identically under PyYAML when it is available; `tools/selftest.py` checks this for
+  every pack YAML file in the repository. `tools/build_index.py`, `hcm_check.py`, `hcm_lookup.py`
+  and `evals/check_knowledge.py` read either format; a pack declares which one it uses (its
+  "generation") in its manifest.
+- The other seven packs are unchanged in content, marked as the older, thinner generation in
+  `references/models/index.md`, and had their existing JSON layers mechanically converted to the
+  same YAML subset (verified equal by loading both encodings).
+- `references/models/index.md` and `core.md`'s local-model-knowledge paragraph now give a
+  separate reading order for a generation-2 pack (card first, then a lookup tool query, then the
+  process/failure/recipe files by need); the pack's own former five-topic files
+  (`overview.md`/`outputs.md`/`execution.md`/`pitfalls.md`) are kept only as redirects so older
+  links and the pitfalls id namespace still resolve.
+- `evals/check_knowledge.py` extended for the new generation: required files and size caps,
+  source-citation and generated-catalog checks when `--source-root` is given, and the existing
+  structured-layer/link/anchor checks generalized to load either format.
+
 ## 0.9
 
 Structural release. The effect of these changes has not been measured yet, and the machine-readable

@@ -6,7 +6,7 @@
       "name": "geometry, material properties and boundary conditions (stress-balance solve inputs)",
       "kind": "input",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -21,7 +21,7 @@
       "name": "grounding-line statistics (grounded/floating/all-ice)",
       "kind": "output",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -36,7 +36,7 @@
       "name": "mass-transport rates (surface accumulation, basal melt)",
       "kind": "output",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -51,7 +51,7 @@
       "name": "mesh parameter arrays (vertex-sized and element-sized)",
       "kind": "input",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -66,7 +66,7 @@
       "name": "velocity field (stress-balance solve output)",
       "kind": "output",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {

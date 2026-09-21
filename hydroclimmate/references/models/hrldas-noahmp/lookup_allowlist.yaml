@@ -1,0 +1,22 @@
+# Curated allowlist -- identifiers that appear backticked in card.md/processes.md/
+# failures.md/recipes.md and look like a model identifier, but do not resolve through
+# hcm_lookup.py (exact or alias), each with why. Checked by
+# evals/check_knowledge.py:check_source_identifiers_resolve. Never a silent exclusion:
+# every row states the specific reason it cannot resolve.
+pack: "hrldas-noahmp"
+catalog: "lookup_allowlist"
+curated: true
+count: 6
+rows:
+  - identifier: "LDASIN"
+    reason: "file-kind shorthand used in the naming pattern '<stamp>.LDASIN_DOMAIN<n>' (card.md), not a variable or table name."
+  - identifier: "YYYYMMDDHH"
+    reason: "a timestamp-format placeholder used in file-naming patterns (e.g. 'RESTART.YYYYMMDDHH_DOMAIN<n>'), not a variable."
+  - identifier: "START_DATE"
+    reason: "a global attribute on the restart file (failures.md: 'read Times/START_DATE in the restart'), not a namelist key (the namelist instead has five separate keys: start_year/month/day/hour/min) and not extracted by extract_pack.py, which only extracts namelist keys and get_2d_netcdf/nf90_get_att-style setup-file reads, not restart-file attributes."
+  - identifier: "TBOT"
+    reason: "processes.md uses it generically for 'bottom temperature' when describing TBOT_OPTION==2 ('TBOT at ZBOT (8m) read from a file'); the actual file variable for this quantity is TMN (already resolves), and TBOT_OPTION itself resolves as a physics option. Bare TBOT names no separate catalog entry at this commit."
+  - identifier: "QFX"
+    reason: "confirmed absent from both history and restart output at this commit (processes.md/recipes.md/failures.md all state this explicitly: 'QFX ... written nowhere'); a genuine absence, not an extraction gap."
+  - identifier: "UST"
+    reason: "confirmed absent from both history and restart output at this commit (failures.md: 'no UST output variable'; friction velocity is internal state only); a genuine absence, not an extraction gap."

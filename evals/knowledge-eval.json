@@ -68,7 +68,7 @@
     "prompt": "Does downloading Noah-MP alone give me the same complete offline system as HRLDAS?",
     "expected_feature": "understand",
     "relevant_topics": [
-      "hrldas-noahmp/overview.md"
+      "hrldas-noahmp/card.md"
     ],
     "rubric": [
       "Host versus physics distinction",
@@ -117,7 +117,8 @@
     "prompt": "Our HRLDAS water balance shifted after a forcing change. Explain what you would inspect, including where code understanding might be needed.",
     "expected_feature": "analyze",
     "relevant_topics": [
-      "hrldas-noahmp/outputs.md"
+      "hrldas-noahmp/recipes.md",
+      "hrldas-noahmp/failures.md"
     ],
     "rubric": [
       "Primary analysis; justified Understand supplement allowed",

@@ -1,40 +1,32 @@
-# HRLDAS / Noah-MP: execution
+# HRLDAS / Noah-MP: execution — moved
 
-Scope: concepts plus the official master-branch namelist description retrieved 2026-09-16.
-That file is a floating source, not the lab's configuration or a pinned API specification.
+This file is a redirect stub. Namelist items, their allowed values and their meanings are in
+`catalogs/namelist.yaml` and `catalogs/physics_options.yaml` (query with
+`tools/hcm_lookup.py --pack hrldas-noahmp <NAME>`); what each option actually changes is
+in **[processes.md](processes.md)**; version checks are in **[version.md](version.md)**.
 
 ## Prepare a consistent experiment
 
-Keep the host and submodule revisions together and verify that the physics code is actually
-present before diagnosing a build. The official tutorial provides separate download/build,
-single-point and regional examples; use one matching the checkout rather than constructing
-a command from an unrelated host. [H1](sources.md#h1), [H5](sources.md#h5)
-
-In the checked namelist description, setup data, forcing input and derived output have
-separate locations. The start date, duration and requested restart identify the experiment.
-Its timing rule requires the model step to divide the forcing and output intervals. It also
-describes repeated spin-up periods and an option to omit the first, initial-state output.
-These are reasons to inspect generated configuration, not recommendations for numerical
-values. [H4](sources.md#h4)
+Keep the host and submodule revisions together and check them before diagnosing anything
+([version.md](version.md)). `NOAH_TIMESTEP` must evenly divide both `FORCING_TIMESTEP` and
+`OUTPUT_TIMESTEP`. Exactly one of `KDAY` / `KHOUR` sets the length. `SPINUP_LOOPS > 0` writes
+files with a `.loop` suffix that must not be mixed into an analysis series. Several options are
+silently inert unless a gate is open — see
+[failures.md: A switch was turned on and the output is identical](failures.md#a-switch-was-turned-on-and-the-output-is-identical).
 
 ## Minimal preflight and continuation
 
-Recommended checks for an actual project:
+1. Confirm the commit pair, or the five header facts in [version.md](version.md).
+2. Confirm the forcing variable names, units and time convention against
+   [card.md](card.md) — precipitation forcing is mm/s, humidity is specific.
+3. Record the adopted physics options; check each one's gate, not just the namelist line.
+4. State whether the run starts from prescribed fields, spin-up loops or a restart, and choose
+   an equilibration diagnostic — a number of loops is not proof of equilibrium.
+5. Inspect the first output records for time stamps, `-9999` fields and fill values before
+   trusting anything ([failures.md](failures.md)).
+6. Before continuation, verify restart state time, configuration, forcing continuity and
+   accumulator continuity — not the restart file name
+   ([failures.md](failures.md#a-restart-file-exists-so-the-run-restarted-successfully)).
 
-1. Identify the forcing time convention, units, completeness and spatial alignment with
-   the setup data. A file timestamp alone does not establish its represented interval.
-2. Record the adopted physics options and parameter files. Inspect the checkout's parser
-   before applying a namelist key learned from another version.
-3. State whether the run starts from prescribed fields, repeated forcing spin-up or a
-   compatible restart. Choose an equilibration diagnostic and tolerance for the stores
-   relevant to the study; a prescribed number of loops is not proof of equilibrium.
-4. Run a short authorized interval into a separate directory and inspect timestamps,
-   missing values and the requested state/flux diagnostics.
-5. Before continuation, check restart time and configuration, forcing continuity, existing
-   live jobs and whether the executable would append to or replace outputs.
-
-Capture the executed configuration and logs, not only the template namelist. See
-[pitfalls](pitfalls.md#existing-restart-filename-assumed-to-prove-a-successful-restart)
-before treating a restart filename as proof of a successful restart. Retain the
-[Run feature](../../run.md) resource and submission boundaries.
-No compiler, HPC command or universally appropriate spin-up length is supplied here.
+Execution authority, queues and submission boundaries stay in the [Run feature](../../run.md);
+nothing here authorizes a job.

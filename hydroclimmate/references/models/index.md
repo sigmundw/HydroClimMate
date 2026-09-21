@@ -5,9 +5,23 @@ record only when checking attribution, version coverage or a missing detail. The
 [core knowledge policy](../core.md#local-model-knowledge) applies offline and online.
 
 
+**HRLDAS/Noah-MP is generation 2** (v0.9 knowledge-layer rebuild; see
+[SCHEMA.md](SCHEMA.md)): read [card.md](hrldas-noahmp/card.md) only, look up any
+variable/option/parameter/constant with `tools/hcm_lookup.py --pack hrldas-noahmp
+<NAME>`, then open [failures.md](hrldas-noahmp/failures.md) by symptom,
+[processes.md](hrldas-noahmp/processes.md) by process, or
+[recipes.md](hrldas-noahmp/recipes.md) by bounded task. Version pin:
+[version.md](hrldas-noahmp/version.md). Provenance: [sources.md](hrldas-noahmp/sources.md).
+Never read a `catalogs/*.yaml` file wholesale. `overview.md`/`outputs.md`/`execution.md`/
+`pitfalls.md` are redirect stubs kept only so pre-rebuild links and the pitfalls id
+namespace still resolve — do not route to them.
+
+The other seven packs below are **generation 1** (SCHEMA.md): the older, thinner
+five-file-plus-JSON layout, not rebuilt in v0.9 (no pinned source tree was available and
+downloading one was not authorized). Their content is unchanged.
+
 | Model / aliases | Identity and mechanisms | Setup and run checks | Output interpretation | Looks right, is wrong | Provenance |
 |---|---|---|---|---|---|
-| HRLDAS / Noah-MP / NoahMP | [Overview](hrldas-noahmp/overview.md) | [Execution](hrldas-noahmp/execution.md) | [Outputs](hrldas-noahmp/outputs.md) | [Pitfalls](hrldas-noahmp/pitfalls.md) | [Sources](hrldas-noahmp/sources.md) |
 | WRF-Urban / UCM / BEP / BEP+BEM | [Overview](wrf-urban/overview.md) | [Execution](wrf-urban/execution.md) | [Outputs](wrf-urban/outputs.md) | [Pitfalls](wrf-urban/pitfalls.md) | [Sources](wrf-urban/sources.md) |
 | CTSM / CLM | [Overview](ctsm/overview.md) | [Execution](ctsm/execution.md) | [Outputs](ctsm/outputs.md) | [Pitfalls](ctsm/pitfalls.md) | [Sources](ctsm/sources.md) |
 | RBM — UW-Hydro candidate; lab identity unconfirmed | [Overview](rbm/overview.md) | [Execution](rbm/execution.md) | [Outputs](rbm/outputs.md) | [Pitfalls](rbm/pitfalls.md) | [Sources](rbm/sources.md) |
@@ -16,12 +30,13 @@ record only when checking attribution, version coverage or a missing detail. The
 | mizuRoute | [Overview](mizuroute/overview.md) | [Execution](mizuroute/execution.md) | [Outputs](mizuroute/outputs.md) | [Pitfalls](mizuroute/pitfalls.md) | [Sources](mizuroute/sources.md) |
 | MODFLOW / MODFLOW 6 — groundwater flow focus | [Overview](modflow/overview.md) | [Execution](modflow/execution.md) | [Outputs](modflow/outputs.md) | [Pitfalls](modflow/pitfalls.md) | [Sources](modflow/sources.md) |
 
-Understand usually needs overview; Run needs execution; Analyze needs outputs. Plan
-selects the topic affecting the actual choice, not every file. Model comparisons may
-require two overviews. A known output question can go directly to outputs. Read the
-pitfalls file before accepting a result or an inference as final — not for every question —
-when a conclusion rests on a paired comparison, a budget closure, an accumulated-vs-
-instantaneous quantity, or any other "looks right" claim the pack already warns about.
+For these generation-1 packs: Understand usually needs overview; Run needs execution;
+Analyze needs outputs. Plan selects the topic affecting the actual choice, not every
+file. Model comparisons may require two overviews. A known output question can go
+directly to outputs. Read the pitfalls file before accepting a result or an inference as
+final — not for every question — when a conclusion rests on a paired comparison, a
+budget closure, an accumulated-vs-instantaneous quantity, or any other "looks right"
+claim the pack already warns about.
 
 Coverage is conceptual and task-oriented, not a complete parameter/API catalog. Exact
 lab versions and settings are unknown. Separate model packs do not establish a working

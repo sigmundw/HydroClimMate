@@ -36,5 +36,5 @@ support, but this pack does not select table values or a compatibility combinati
 Use [execution](execution.md) for input consistency and staged run checks, and
 [outputs](outputs.md) for spatial support, staggering and time semantics. HRLDAS can
 also host urban components, but a WRF-coupled atmospheric experiment and an offline
-land experiment are not equivalent. See the [HRLDAS identity note](../hrldas-noahmp/overview.md)
+land experiment are not equivalent. See the [HRLDAS identity note](../hrldas-noahmp/card.md)
 only if that distinction is relevant. No additional model is loaded by default.

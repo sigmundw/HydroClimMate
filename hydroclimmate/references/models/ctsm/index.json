@@ -6,7 +6,7 @@
       "name": "atmosphere/forcing stream (data-atmosphere vs active-atmosphere)",
       "kind": "input",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -21,7 +21,7 @@
       "name": "experiment identification checklist (forcing period/calendar, surface dataset, biogeochemistry/vegetation choices, initial state, transient land-use treatment)",
       "kind": "input",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -36,7 +36,7 @@
       "name": "history field (official history-field list)",
       "kind": "output",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -51,7 +51,7 @@
       "name": "history output filename/timestamp",
       "kind": "output",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -66,7 +66,7 @@
       "name": "land user namelist",
       "kind": "file",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -81,7 +81,7 @@
       "name": "soil moisture (layer water mass vs volumetric water fraction)",
       "kind": "output",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {

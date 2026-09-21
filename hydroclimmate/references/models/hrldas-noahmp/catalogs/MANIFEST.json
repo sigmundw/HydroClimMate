@@ -1,0 +1,48 @@
+{
+  "pack": "hrldas-noahmp",
+  "generator": "tools/extract_pack.py all",
+  "generator_version": "1.0.0",
+  "scope": "HRLDAS d9f5b205 + noahmp 9fbe6724",
+  "source_commits": {
+    "hrldas": "d9f5b205",
+    "noahmp": "9fbe6724"
+  },
+  "files": {
+    "outputs.yaml": {
+      "count": 179,
+      "sha256": "76af55b46a984393adc6268f4a59230c96d065a7d0df09b5aa392a4a2db04dd4"
+    },
+    "restart.yaml": {
+      "count": 175,
+      "sha256": "05239876b5e0f9d3a34cbf923049544534f3ce27061d4b367b8092a77c71cb98"
+    },
+    "forcing.yaml": {
+      "count": 22,
+      "sha256": "ce2b7e3df73bb92a7662e608f310eb3a400493d3e1e834514dec8ee2581aef95"
+    },
+    "setup.yaml": {
+      "count": 39,
+      "sha256": "e247ab6e3c3b764b95d527228df88b5c71c45df5d2ed829dce4f829196730349"
+    },
+    "namelist.yaml": {
+      "count": 109,
+      "sha256": "fe3b5325a21323325de0b114f6ffb2758efbeff734e2ccc923efacf73e9f7f93"
+    },
+    "physics_options.yaml": {
+      "count": 27,
+      "sha256": "ffc465fe9bbcfa537bb39d6d3a1f3ad7544b207c16a9dc2c3e68d55add3f2649"
+    },
+    "constants.yaml": {
+      "count": 22,
+      "sha256": "7b967ded4c536dfaf8181775ba145cbe1beceb23e14ca28f3f4a51c9196aa5cc"
+    },
+    "parameters.yaml": {
+      "count": 713,
+      "sha256": "d921b5d29aa718c15f90cb5f6ff89149b807369c13b74cc69e45311deed97c19"
+    },
+    "urban_path.yaml": {
+      "count": 5,
+      "sha256": "4e88e0cfb219907a42e2a0b5cac3e4c3a178d589eb9d7bd964aafa69fb0bbacc"
+    }
+  }
+}

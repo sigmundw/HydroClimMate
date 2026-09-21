@@ -6,7 +6,7 @@
       "name": "WPS-prepared geographic/meteorological inputs",
       "kind": "input",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -21,7 +21,7 @@
       "name": "WRF history/restart output",
       "kind": "file",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -36,7 +36,7 @@
       "name": "WRF output fields (staggered dimensions)",
       "kind": "output",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -51,7 +51,7 @@
       "name": "accumulated quantity",
       "kind": "output",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -66,7 +66,7 @@
       "name": "geographic categories and urban fractions",
       "kind": "input",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -81,7 +81,7 @@
       "name": "urban-only vs full-cell / canopy air vs surface fields",
       "kind": "output",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {

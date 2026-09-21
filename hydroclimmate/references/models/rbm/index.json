@@ -6,7 +6,7 @@
       "name": "discharge, meteorological/heat inputs and boundary temperatures",
       "kind": "input",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -21,7 +21,7 @@
       "name": "network output record (confluence cells)",
       "kind": "output",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -36,7 +36,7 @@
       "name": "network topology input",
       "kind": "file",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -51,7 +51,7 @@
       "name": "stream temperature, headwater temperature, air temperature (network output fields)",
       "kind": "output",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {

@@ -6,7 +6,7 @@
       "name": "array-recharge input vs well input",
       "kind": "file",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -21,7 +21,7 @@
       "name": "grid discretization (DIS/DISV/DISU)",
       "kind": "input",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -36,7 +36,7 @@
       "name": "hydraulic head",
       "kind": "output",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -51,7 +51,7 @@
       "name": "saved head/budget output (Output Control)",
       "kind": "file",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -66,7 +66,7 @@
       "name": "stress period / timestep configuration",
       "kind": "input",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {
@@ -81,7 +81,7 @@
       "name": "water budget record",
       "kind": "output",
       "declared_in": [
-        "interface.json"
+        "interface.yaml"
       ],
       "from": [
         {

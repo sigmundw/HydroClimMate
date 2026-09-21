@@ -20,7 +20,7 @@ configuration and corresponding model implementation. [W4](sources.md#w4)
 - Confirm the quantity: urban-only versus full-cell, canopy air versus surface, flux versus
   state. Inspect the active urban scheme and the output assignment if the header is ambiguous.
   When HRLDAS hosts the urban option rather than a WRF-coupled run, see the
-  [HRLDAS/Noah-MP pitfalls: paired urban on/off snow difference](../hrldas-noahmp/pitfalls.md#paired-urban-onoff-snow-difference-attributed-to-canopy-physics) —
+  [HRLDAS/Noah-MP failures: a paired urban on/off run differs in snow, soil or radiation](../hrldas-noahmp/failures.md#a-paired-urban-onoff-run-differs-in-snow-soil-or-radiation) —
   that host's urban routine may not tile-weight every state variable the way this pack's
   fields do.
 - Establish spatial support before comparing urban and rural samples. A change in sample
