@@ -1,0 +1,78 @@
+{
+  "pack": "mizuroute",
+  "generator": "tools/extract_pack.py all",
+  "generator_version": "1.0.0",
+  "scope": "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff; cesm-coupling noted only where the code branches on runMode",
+  "source_commits": {
+    "mizuroute": "28514dea"
+  },
+  "files": {
+    "control_keys.yaml": {
+      "count": 226,
+      "sha256": "823a7d6475ec9a738b41a5ded2c7ee3e6742d0d8f405df03fbdcb347ef369803"
+    },
+    "routing_methods.yaml": {
+      "count": 6,
+      "sha256": "1f5bab16b5f5c23c783db4e91a3b55f95a49de1614f78f2df2e7c3ea0c540eb6"
+    },
+    "network_inputs.yaml": {
+      "count": 101,
+      "sha256": "173b40c4236d845d436a34b1230f34a3d0bfaedeeaa4eef860b4d2f0afa82932"
+    },
+    "outputs.yaml": {
+      "count": 32,
+      "sha256": "493ea5136f27d3265fb5660241dddf0d6fff73f95ae3a473cb5c1b91bd65761b"
+    },
+    "restart.yaml": {
+      "count": 22,
+      "sha256": "40fa34408f9b96b0fdfc468b89c5ffcb4f016862579bb64307a7ccfadb989222"
+    },
+    "parameters.yaml": {
+      "count": 77,
+      "sha256": "a5de77f82b3e5181335c208c680a9a2e52143d66901191a540ab32c62485eb5d"
+    },
+    "constants.yaml": {
+      "count": 39,
+      "sha256": "5a614e3e2f97dd9763f067537c9459e02764f63af389aea5faf6e99c6c482a70"
+    },
+    "parallelism.yaml": {
+      "count": 6,
+      "sha256": "6c81acdd4c5fc17bfed41a645576b16f3728fa7e69963448041415a21ee417f0"
+    },
+    "build.yaml": {
+      "count": 15,
+      "sha256": "142ed0bac52eabb964949a9c03499d096b517a6720a249f6b6cbdaf067f17349"
+    }
+  },
+  "validation": {
+    "note": "parsed against the two sample control files shipped in the pinned checkout (route/settings/) -- control-file facts only; no model output exists anywhere reachable by this pack, so nothing here is or can be `observed_in_output`/`both`.",
+    "SAMPLE-coupled.control": {
+      "n_distinct_keys_in_sample_file": 49,
+      "n_recognized_by_catalog": 49,
+      "keys_in_sample_not_in_catalog": [],
+      "values_outside_the_catalogued_allowed_set": []
+    },
+    "SAMPLE.control": {
+      "n_distinct_keys_in_sample_file": 90,
+      "n_recognized_by_catalog": 85,
+      "keys_in_sample_not_in_catalog": [
+        "DWinflow",
+        "IRFinflow",
+        "KWTinflow",
+        "KWinflow",
+        "MCinflow"
+      ],
+      "values_outside_the_catalogued_allowed_set": []
+    },
+    "docs_cross_reference": {
+      "n_control_keys_parsed_by_code": 226,
+      "n_control_keys_presented_as_keys_in_docs": 111,
+      "documented_but_not_parsed": [
+        "dt_rof",
+        "topoNetworOption",
+        "vname_vname_hruid"
+      ],
+      "parsed_but_not_documented_count": 118
+    }
+  }
+}

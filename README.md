@@ -72,7 +72,7 @@ Each pack declares a `depth`: **reference** means source-extracted catalogs, lin
 | RBM | outline | UW-Hydro candidate implementation; lab identity remains unconfirmed |
 | ISSM | outline | Ice flow, mesh, stress balance, transient evolution and mass-change analysis |
 | VIC | outline | Classic/Image drivers, land runoff, subgrid output and routing handoff |
-| mizuRoute | outline | Network HRUs, runoff remapping, hillslope/channel routing and discharge |
+| mizuRoute | reference | Control file, network and runoff contract, five routing schemes, lakes, restart and output semantics |
 | MODFLOW | outline | MODFLOW 6 groundwater flow, discretization, boundaries, heads and budgets; legacy versions distinguished |
 
 These are concise, source-attributed explanations, not complete parameter catalogs or validated lab configurations. Unknown versions/interfaces require local evidence or an explicit gap. Lab settings remain in project records. No models or skills are installed by adding these documents. See [knowledge evaluation](evals/knowledge-eval.md) for coverage and limits.

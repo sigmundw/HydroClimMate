@@ -1,0 +1,131 @@
+{
+  "pack": "vic",
+  "generator": "tools/extract_pack.py all",
+  "generator_version": "1.0.0",
+  "scope": "VIC 14a371a8 (tag 5.1.0); drivers classic + image; sample data 3f2dcb4",
+  "source_commits": {
+    "vic": "14a371a8"
+  },
+  "files": {
+    "outputs.yaml": {
+      "count": 165,
+      "sha256": "49bc51de729bc1317d165468c9be83426f5fa44724b12c37367e2d111528a9a3"
+    },
+    "global_parameters.yaml": {
+      "count": 195,
+      "sha256": "36137f6826d71d9facf8f1f5dfe559ac55642544919bcfc1fdd926382b486d9c"
+    },
+    "options.yaml": {
+      "count": 58,
+      "sha256": "7c99256c1c63cea16bd196ec95f0f60bb643a374541d9ba4de83758dda79d45e"
+    },
+    "constants.yaml": {
+      "count": 69,
+      "sha256": "0aab724e23d805ce2cefa04a0958439b306909e509376405e574101ae3efd4ec"
+    },
+    "model_parameters.yaml": {
+      "count": 152,
+      "sha256": "2cdd6572ef106d7f2fded063cfcd0ed7ef82641bcc94b2a3fafa13ce9c8df3e0"
+    },
+    "forcing.yaml": {
+      "count": 30,
+      "sha256": "854c5936a37d53375962b328065b43d77ed3feb1300a5f2f372f6f467e3935b1"
+    },
+    "parameters.yaml": {
+      "count": 118,
+      "sha256": "b457aced1ea55d1bd33fa4571ff817098f0b57c50f363b9ca90db19b3bccf599"
+    },
+    "state.yaml": {
+      "count": 63,
+      "sha256": "146ab34f34745a19bf2f144e49d1a25afab3d1b61dd6e962bf906e9b142f511c"
+    }
+  },
+  "validation": {
+    "note": "confronted against the public VIC sample data (Stehekin, commit 3f2dcb4) -- input-format facts only; no model output exists anywhere reachable by this pack, so nothing here is or can be `observed_in_output`/`both`.",
+    "global_parameters": {
+      "classic": {
+        "sample_file": "global_param.STEHE.txt",
+        "n_distinct_keys_in_sample_file": 38,
+        "n_matched_in_catalog": 38,
+        "keys_in_sample_not_in_catalog": []
+      },
+      "image": {
+        "sample_file": "Stehekin_image_test.global.txt",
+        "n_distinct_keys_in_sample_file": 29,
+        "n_matched_in_catalog": 29,
+        "keys_in_sample_not_in_catalog": []
+      }
+    },
+    "classic_soil_columns": {
+      "sample_soil_file": "Stehekin_soil.txt",
+      "nlayer_from_sample_global_file": 3,
+      "catalogued_flat_columns": 20,
+      "catalogued_per_layer_column_groups": 16,
+      "expected_column_count_if_all_catalogued_columns_present": 68,
+      "actual_column_count_in_sample_file_first_line": 54,
+      "note": "This is an upper-bound expectation (every catalogued column present, including ones gated by an option not set in this sample's global file) confronted with the actual count; a match is not guaranteed and a mismatch is reported as a fact, not resolved by guessing which gated columns this particular sample enables."
+    },
+    "image_netcdf": {
+      "image_params": {
+        "sample_file": "Stehekin_test_params_20160327.nc",
+        "n_catalogued": 70,
+        "n_matched_in_sample_file": 44,
+        "catalogued_not_in_sample_file": [
+          "Ctype",
+          "LUE",
+          "MaxCarboxRate",
+          "MaxiE_or_CO2Spec",
+          "NPPfactor_sat",
+          "Nscale",
+          "Wnpp_inhib",
+          "basin_area",
+          "basin_depth",
+          "bulk_density_comb",
+          "bulk_density_org",
+          "depth_in",
+          "fcanopy",
+          "fetch",
+          "frost_slope",
+          "lag_one",
+          "lake_idx",
+          "max_snow_albedo",
+          "max_snow_distrib_slope",
+          "mindepth",
+          "numnod",
+          "organic",
+          "rpercent",
+          "sigma_slope",
+          "soil_density_org",
+          "wfrac"
+        ]
+      },
+      "domain_file_variables": {
+        "sample_file": "domain.stehekin.20151028.nc",
+        "variables": [
+          "area",
+          "frac",
+          "lat",
+          "lon",
+          "mask"
+        ],
+        "note": "Listed for reference; this pack's domain-field catalog coverage is a known_gap (not cross-checked name-by-name)."
+      },
+      "forcing_file_variables": {
+        "sample_file": "Stehekin_image_test.forcings_10days.1949.nc",
+        "variables": [
+          "dlwrf",
+          "dswrf",
+          "lat",
+          "lon",
+          "mask",
+          "prcp",
+          "pres",
+          "tas",
+          "time",
+          "vp",
+          "wind"
+        ]
+      }
+    }
+  }
+}

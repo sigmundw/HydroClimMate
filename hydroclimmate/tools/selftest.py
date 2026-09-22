@@ -319,9 +319,248 @@ def run_yaml_selftests():
     return ok
 
 
+def run_refresh_confirmed_against_selftest():
+    """tools/refresh_confirmed_against.py, exercised directly against a synthetic pack
+    directory (a curated/options_overlay.yaml-shaped file with one row citing a prose
+    paragraph, plus that prose file) built fresh in a temp dir -- never the real
+    references/models tree. Plants a deliberately WRONG confirmed_against hash and
+    asserts refresh_pack() both reports it stale (--dry-run) and fixes it (for real),
+    then asserts a curated file with no `from`-shaped facts still counts as "examined"
+    (D0: the previous hard-coded stem list could silently examine zero files for a pack
+    whose curated file used an unlisted stem, and report the same reassuring message
+    either way -- this proves that failure mode cannot recur)."""
+    sys.path.insert(0, str(HERE))
+    import refresh_confirmed_against as rca
+    import _anchor_hash
+
+    ok = True
+    with tempfile.TemporaryDirectory() as tmp:
+        pack_dir = Path(tmp)
+        (pack_dir / "curated").mkdir()
+        prose = "# Test pack\n\n## A heading\n\nThis is the paragraph text.\n"
+        (pack_dir / "failures.md").write_text(prose)
+        correct_hash = _anchor_hash.anchor_paragraph_hash(prose, "a-heading")
+        overlay_text = (
+            '# Hand-maintained test fixture.\n'
+            'pack: "test"\n'
+            'catalog: "options_overlay"\n'
+            'curated: true\n'
+            'scope: "test"\n'
+            'count: 1\n'
+            'rows:\n'
+            '  - internal_option_name: "X"\n'
+            '    global_parameter_key: "X"\n'
+            '    kind: "test"\n'
+            '    note: "test row"\n'
+            '    where: {"file": "a.c", "line": 1, "commit": "test@0"}\n'
+            '    evidence: "source_read"\n'
+            '    scope: "test"\n'
+            '    from: {"file": "failures.md", "anchor": "a-heading"}\n'
+            '    confirmed_against: "0000000000000000"\n'
+        )
+        (pack_dir / "curated" / "options_overlay.yaml").write_text(overlay_text)
+
+        updated, n_examined = rca.refresh_pack(pack_dir, dry_run=True)
+        found_stale = any(stem == "options_overlay" and n == 1 for stem, n in updated)
+        if found_stale and n_examined == 1:
+            print("ok: refresh_confirmed_against/dry-run: found the planted stale hash "
+                  "in options_overlay.yaml (1 curated file examined)")
+        else:
+            print(f"FAIL: refresh_confirmed_against/dry-run: expected 1 stale fact in "
+                  f"options_overlay.yaml and 1 file examined, got updated={updated} "
+                  f"n_examined={n_examined}")
+            ok = False
+
+        # --dry-run must not have written anything.
+        doc = _miniyaml.load_file(pack_dir / "curated" / "options_overlay.yaml")
+        if doc["rows"][0]["confirmed_against"] != "0000000000000000":
+            print("FAIL: refresh_confirmed_against/dry-run: wrote to disk despite --dry-run")
+            ok = False
+
+        updated2, _ = rca.refresh_pack(pack_dir, dry_run=False)
+        doc2 = _miniyaml.load_file(pack_dir / "curated" / "options_overlay.yaml")
+        if doc2["rows"][0]["confirmed_against"] == correct_hash:
+            print("ok: refresh_confirmed_against/real-run: fixed the planted stale hash")
+        else:
+            print(f"FAIL: refresh_confirmed_against/real-run: hash still wrong "
+                  f"({doc2['rows'][0]['confirmed_against']!r} != {correct_hash!r})")
+            ok = False
+
+        # A pack directory with no curated/ at all must be reported as "nothing to
+        # examine" (n_examined == 0), not silently equal to "everything already matched".
+        with tempfile.TemporaryDirectory() as tmp2:
+            _, n_empty = rca.refresh_pack(Path(tmp2), dry_run=True)
+            if n_empty == 0:
+                print("ok: refresh_confirmed_against/no-curated-dir: n_examined == 0")
+            else:
+                print(f"FAIL: refresh_confirmed_against/no-curated-dir: expected "
+                      f"n_examined == 0, got {n_empty}")
+                ok = False
+
+        # The symmetric half: evals/check_knowledge.py's own drift guard must FIRE on
+        # the same planted stale hash, and go quiet once the refresh has fixed it. The
+        # two must agree on which curated files they cover -- a guard that fires while
+        # the refresh tool reports success (or the reverse) leaves an operator following
+        # the guard's own remedy text with no way to clear it and no explanation.
+        ok = _check_knowledge_guard_selftest(pack_dir, correct_hash, overlay_text) and ok
+    return ok
+
+
+def _check_knowledge_guard_selftest(pack_dir, correct_hash, overlay_text):
+    sys.path.insert(0, str(HERE.parent.parent / "evals"))
+    import check_knowledge as ck
+
+    ok = True
+    overlay_path = pack_dir / "curated" / "options_overlay.yaml"
+    overlay_path.write_text(overlay_text)  # re-plant the wrong hash
+    try:
+        ck.check_curated_facts_not_stale("test", pack_dir)
+    except AssertionError as exc:
+        if "0000000000000000" in repr(exc.args):
+            print("ok: check_knowledge/drift-guard: FIRED on the planted stale hash")
+        else:
+            print(f"FAIL: check_knowledge/drift-guard: fired, but not on the planted "
+                  f"hash: {exc.args}")
+            ok = False
+    else:
+        print("FAIL: check_knowledge/drift-guard: did NOT fire on the planted stale hash")
+        ok = False
+
+    overlay_path.write_text(overlay_text.replace("0000000000000000", correct_hash))
+    try:
+        ck.check_curated_facts_not_stale("test", pack_dir)
+        print("ok: check_knowledge/drift-guard: quiet once the hash matches the prose")
+    except AssertionError as exc:
+        print(f"FAIL: check_knowledge/drift-guard: still fires after refresh: {exc.args}")
+        ok = False
+    return ok
+
+
+VIC_SAMPLE_ROOT_ENV = "VIC_SAMPLE_ROOT"
+
+
+def run_check_global_file_selftest():
+    """hcm_check.py check-global-file, --pack vic: QUIET on both public sample global
+    files (no synthetic case needed -- they are real, known-good inputs), FIRED on a
+    synthetic file with an unrecognized key, a removed-since-VIC-4 key, and a violated
+    step-count constraint. Pure stdlib (no numpy/netCDF4 needed -- the subcommand reads
+    plain text). Needs the pinned VIC checkout to find the two public sample global
+    files; skipped with a note if VIC_SAMPLE_ROOT is not set (this repository does not
+    vendor the VIC checkout itself)."""
+    import os
+    vic_root = os.environ.get(VIC_SAMPLE_ROOT_ENV)
+    ok = True
+    samples = [
+        ("classic", "classic/Stehekin/parameters/global_param.STEHE.txt"),
+        ("image", "image/Stehekin/parameters/Stehekin_image_test.global.txt"),
+    ]
+    if vic_root:
+        for driver, rel in samples:
+            sample_path = Path(vic_root) / "samples/data" / rel
+            if not sample_path.is_file():
+                print(f"FAIL: check-global-file selftest: sample file not found: {sample_path}")
+                ok = False
+                continue
+            rc, out, err = run("check-global-file", "--pack", "vic", "--driver", driver,
+                                "--file", str(sample_path))
+            quiet = "QUIET:" in out
+            if quiet:
+                print(f"ok: check-global-file/vic/{driver}/sample: QUIET as expected")
+            else:
+                print(f"FAIL: check-global-file/vic/{driver}/sample: expected QUIET, "
+                      f"got findings\n{out}\n{err}")
+                ok = False
+    else:
+        print(f"note: {VIC_SAMPLE_ROOT_ENV} not set; skipping the two real-sample-file "
+              f"QUIET cases for check-global-file (the synthetic FIRED case below still runs).")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        faulty = Path(tmp) / "faulty_global.txt"
+        faulty.write_text(
+            "NLAYER 3\n"
+            "MODEL_STEPS_PER_DAY 36\n"
+            "SNOW_STEPS_PER_DAY 24\n"
+            "RUNOFF_STEPS_PER_DAY 24\n"
+            "TIME_STEP 24\n"
+            "NOT_A_REAL_KEY 1\n"
+        )
+        rc, out, err = run("check-global-file", "--pack", "vic", "--driver", "classic",
+                            "--file", str(faulty))
+        fired = ("UNRECOGNIZED:" in out and "REMOVED:" in out and "VIOLATED:" in out)
+        if fired:
+            print("ok: check-global-file/vic/classic/faulty: FIRED (unrecognized + "
+                  "removed + violated) as expected")
+        else:
+            print(f"FAIL: check-global-file/vic/classic/faulty: expected all three "
+                  f"finding kinds, got:\n{out}\n{err}")
+            ok = False
+    return ok
+
+
+MIZUROUTE_SOURCE_ROOT_ENV = "MIZUROUTE_SOURCE_ROOT"
+
+
+def run_check_control_file_selftest():
+    """hcm_check.py check-control-file, --pack mizuroute: QUIET on the shipped
+    SAMPLE-coupled.control, FIRED on the shipped SAMPLE.control (five `<*inflow>` tags
+    the pinned parser has no case for, which is why that file is not runnable as it
+    stands -- the pack says so in its own prose, so it is the honest real-file fixture
+    for the firing side), and FIRED on a synthetic file with an unknown tag and a value
+    outside a catalogued accepted set. Pure stdlib. The two real files live in the pinned
+    checkout, which this repository does not vendor; those two cases are skipped with a
+    note when MIZUROUTE_SOURCE_ROOT is not set, and the synthetic case still runs."""
+    import os
+    root = os.environ.get(MIZUROUTE_SOURCE_ROOT_ENV)
+    ok = True
+    if root:
+        cases = [("SAMPLE-coupled.control", "QUIET"), ("SAMPLE.control", "FIRED")]
+        for name, expect in cases:
+            path = Path(root) / "route/settings" / name
+            if not path.is_file():
+                print(f"FAIL: check-control-file selftest: sample file not found: {path}")
+                ok = False
+                continue
+            rc, out, err = run("check-control-file", "--pack", "mizuroute", "--file", str(path))
+            got = "QUIET" if "QUIET:" in out else "FIRED"
+            if got == expect and (expect == "QUIET" or "UNRECOGNIZED:" in out):
+                print(f"ok: check-control-file/mizuroute/{name}: {expect} as expected")
+            else:
+                print(f"FAIL: check-control-file/mizuroute/{name}: expected {expect}, "
+                      f"got {got}\n{out}\n{err}")
+                ok = False
+    else:
+        print(f"note: {MIZUROUTE_SOURCE_ROOT_ENV} not set; skipping the two shipped-sample "
+              f"control-file cases for check-control-file (the synthetic FIRED case below "
+              f"still runs).")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        faulty = Path(tmp) / "faulty.control"
+        faulty.write_text(
+            "! synthetic control file\n"
+            "<case_name>        CASE                ! name\n"
+            "<route_opt>        5                   ! diffusive wave\n"
+            "<ro_time_stamp>    beginning           ! not one of start/end/middle\n"
+            "<dt_rof>           86400               ! the documented spelling the parser rejects\n"
+        )
+        rc, out, err = run("check-control-file", "--pack", "mizuroute", "--file", str(faulty))
+        fired = "UNRECOGNIZED: dt_rof" in out and "VALUE NOT ACCEPTED: ro_time_stamp" in out
+        if fired:
+            print("ok: check-control-file/mizuroute/faulty: FIRED (unrecognized tag + "
+                  "value outside the accepted set) as expected")
+        else:
+            print(f"FAIL: check-control-file/mizuroute/faulty: expected both finding "
+                  f"kinds, got:\n{out}\n{err}")
+            ok = False
+    return ok
+
+
 if __name__ == "__main__":
     if "--packs" in sys.argv:
-        sys.exit(0 if run_pack_selftests() else 1)
+        packs_ok = run_pack_selftests()
+        cgf_ok = run_check_global_file_selftest()
+        ccf_ok = run_check_control_file_selftest()
+        rca_ok = run_refresh_confirmed_against_selftest()
+        sys.exit(0 if (packs_ok and cgf_ok and ccf_ok and rca_ok) else 1)
     if "--yaml" in sys.argv:
         sys.exit(0 if run_yaml_selftests() else 1)
     yaml_ok = run_yaml_selftests()

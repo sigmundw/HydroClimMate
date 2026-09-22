@@ -544,6 +544,7 @@ def cmd_pack_info(args):
         return 0
 
     counts = {b: 0 for b in VALID_BASIS}
+    counts_by_evidence = {}
     curated_lines = []
     for entry in manifest.get("curated", []):
         filename = entry.get("file")
@@ -551,28 +552,50 @@ def cmd_pack_info(args):
         doc = _load_structured(path) if path and path.is_file() else None
         n_facts = 0
         if doc:
-            n_facts = sum(1 for _ in _iter_facts_local(doc))
             for _, fact in _iter_facts_local(doc):
+                n_facts += 1
                 if fact.get("basis") in counts:
                     counts[fact["basis"]] += 1
+            # A curated layer that uses the generated-catalog citation shape
+            # (where/evidence/scope -- e.g. vic's options_overlay.yaml) instead of the
+            # source/basis/from shape carries no `basis` field at all, so the walk
+            # above finds it but the by-basis tally above never sees it; counted here
+            # separately by `evidence` instead, so this pack does not report facts=0
+            # just because its curated layer uses the other of the two shapes every
+            # depth: reference pack's layers can legally use (SCHEMA.md).
+            for _, fact in _iter_facts_local_evidence_shape(doc):
+                n_facts += 1
+                counts_by_evidence[fact.get("evidence")] = counts_by_evidence.get(fact.get("evidence"), 0) + 1
         curated_lines.append((filename, entry.get("purpose"), n_facts))
         print(f"  curated: {filename} -- {entry.get('purpose')} (facts={n_facts})")
     for gap in manifest.get("known_gaps", []):
         print(f"  known gap: {gap}")
-    print(f"  fact counts by basis: {counts}")
+    # Print the by-basis tally only when this pack actually has a basis-shaped curated
+    # layer. A pack whose layers use the other shape SCHEMA.md allows carries no `basis`
+    # field anywhere, and printing an all-zero tally above the real counts told a reader
+    # of the pack's own validation command that nothing had been verified.
+    if any(counts.values()):
+        print(f"  fact counts by basis: {counts}")
+    else:
+        print("  fact counts by basis: n/a (this pack's curated layer is "
+              "where/evidence/scope-shaped -- see the evidence counts below)")
+    if counts_by_evidence:
+        print(f"  fact counts by evidence (where/evidence/scope-shaped curated layers): {counts_by_evidence}")
     if args.json:
         print(json.dumps({
             "pack": args.pack, "depth": pack["depth"], "version_scope": manifest.get("version_scope"),
             "curated": [{"file": f, "purpose": p, "facts": k} for f, p, k in curated_lines],
             "known_gaps": manifest.get("known_gaps", []),
-            "counts_by_basis": counts,
+            "counts_by_basis": counts if any(counts.values()) else None,
+            "counts_by_evidence": counts_by_evidence or None,
         }, indent=2))
     return 0
 
 
 def _iter_facts_local(node, path=""):
     """Same walk as evals/check_knowledge.py's _iter_facts, duplicated here so this tool
-    has no import dependency on the eval script."""
+    has no import dependency on the eval script. Matches the source/scope/basis/from
+    curated-layer shape (interface.yaml/switches.yaml/checks.yaml/workflows.yaml)."""
     if isinstance(node, dict):
         if {"source", "scope", "basis", "from"} <= node.keys():
             yield path, node
@@ -581,6 +604,21 @@ def _iter_facts_local(node, path=""):
     elif isinstance(node, list):
         for i, item in enumerate(node):
             yield from _iter_facts_local(item, f"{path}[{i}]")
+
+
+def _iter_facts_local_evidence_shape(node, path=""):
+    """Same walk, for the OTHER curated-layer shape SCHEMA.md allows: where/evidence/
+    scope (kinds_overlay.yaml/options_overlay.yaml for any pack, e.g. vic's
+    curated/options_overlay.yaml, which carries no source/basis/from fields at all and
+    so is invisible to _iter_facts_local alone)."""
+    if isinstance(node, dict):
+        if {"where", "evidence", "scope"} <= node.keys():
+            yield path, node
+        for key, value in node.items():
+            yield from _iter_facts_local_evidence_shape(value, f"{path}.{key}" if path else key)
+    elif isinstance(node, list):
+        for i, item in enumerate(node):
+            yield from _iter_facts_local_evidence_shape(item, f"{path}[{i}]")
 
 
 def cmd_pitfall_scan(args):
@@ -800,6 +838,300 @@ def cmd_accumulation_and_fill(args):
     return 0
 
 
+_CGF_STRUCT_FIELD_TO_KEY_RE = re.compile(r"(global_param|options)\s*\.\s*(\w+)")
+_CGF_TOKEN_RE = re.compile(r"[A-Za-z_]\w*")
+# A small, fixed resolver for the handful of named C constants VIC's own
+# global-parameter-file validation conditions compare against, that are not
+# themselves global-parameter-file keys or physical `#define`s already in a pack's
+# constants.yaml (they are compiled-in structural limits from vic_def.h, not
+# vic_physical_constants.h). Generic in spirit -- reused for any pack whose
+# constraints reference them -- but this specific name set is VIC's; a future pack
+# would extend it, not replace the mechanism.
+_CGF_STRUCT_CONSTANTS = {"MIN_SUBDAILY_STEPS_PER_DAY": 4, "MAX_SUBDAILY_STEPS_PER_DAY": 1440}
+
+
+def _cgf_parse_file(path):
+    """First whitespace token of every non-comment, non-blank line -> its remaining
+    tokens (so a repeated key like FORCE_TYPE/OUTVAR keeps every occurrence, not just
+    the last) -- same convention as validate_catalogs.py's own
+    _parse_global_param_file_keys, kept independent here so this subcommand has no
+    import-order dependency on that module."""
+    rows = []
+    for raw in Path(path).read_text(encoding="utf-8", errors="replace").splitlines():
+        s = raw.strip()
+        if not s or s.startswith("#"):
+            continue
+        toks = s.split()
+        rows.append((toks[0], toks[1:]))
+    return rows
+
+
+def _cgf_build_constant_env(pack_dir):
+    env = dict(_CGF_STRUCT_CONSTANTS)
+    const_path = pack_dir / "catalogs" / "constants.yaml"
+    if const_path.is_file():
+        doc = _load_structured(const_path)
+        for c in doc.get("constants", []):
+            try:
+                env[c["name"]] = float(c["value"]) if "." in c["value"] or "e" in c["value"].lower() else int(c["value"])
+            except (ValueError, KeyError):
+                continue
+    return env
+
+
+def _cgf_eval_condition(condition, file_values, const_env):
+    """Best-effort evaluation of one catalog `constraints[].condition` string (raw C,
+    e.g. 'global_param.snow_steps_per_day % global_param.model_steps_per_day != 0')
+    against the parsed global-parameter-file's own integer values. Returns (result:
+    bool, reason: str) or (None, reason) if the condition could not be evaluated (a key
+    the file does not set, an unresolved constant, or C syntax this narrow translator
+    does not cover -- e.g. a function call or array index) -- never guessed, always
+    reported as NOT EVALUATED rather than silently skipped."""
+    py_expr = condition.replace("&&", " and ").replace("||", " or ")
+
+    def repl_field(m):
+        struct, field = m.groups()
+        key = file_values.get("_field_to_key", {}).get(f"{struct}.{field}")
+        if key is None or key not in file_values:
+            raise KeyError(f"{struct}.{field}")
+        return repr(file_values[key])
+    try:
+        py_expr = _CGF_STRUCT_FIELD_TO_KEY_RE.sub(repl_field, py_expr)
+    except KeyError as exc:
+        return None, f"NOT EVALUATED (key not set in this file: {exc})"
+
+    def repl_const(m):
+        tok = m.group(0)
+        if tok in ("and", "or", "not", "True", "False"):
+            return tok
+        if re.match(r"^\d", tok):
+            return tok
+        if tok in const_env:
+            return repr(const_env[tok])
+        raise KeyError(tok)
+    try:
+        py_expr = _CGF_TOKEN_RE.sub(repl_const, py_expr)
+    except KeyError as exc:
+        return None, f"NOT EVALUATED (unresolved constant/expression: {exc})"
+    try:
+        result = bool(eval(py_expr, {"__builtins__": {}}, {}))  # noqa: S307 -- fully substituted, digits/operators only
+    except Exception as exc:  # noqa: BLE001 -- any leftover C syntax this translator can't handle
+        return None, f"NOT EVALUATED (could not translate: {exc})"
+    return result, py_expr
+
+
+def cmd_check_global_file(args):
+    """Validate a user's VIC (or any pack with the same global_parameters.yaml shape)
+    global parameter file against catalogs/global_parameters.yaml: every key present
+    is checked for recognition by the given --driver's parser (typo/wrong-driver
+    detection), a removed-since-VIC-4 key is flagged with its own quoted rejection
+    message, and every catalog `constraints[].condition` this narrow C-expression
+    translator can evaluate against the file's own values is checked and reported
+    VIOLATED/OK/NOT EVALUATED. Read-only; never modifies the file. Does NOT establish
+    that an accepted file will run to completion -- only the checks named above."""
+    pack_dir = MODELS_DIR / args.pack
+    gp_path = pack_dir / "catalogs" / "global_parameters.yaml"
+    if not gp_path.is_file():
+        sys.exit(f"ERROR: no catalogs/global_parameters.yaml for pack '{args.pack}' -- "
+                  f"this subcommand needs that catalog's shape (key/type/constraints).")
+    gp_doc = _load_structured(gp_path)
+    driver_keys = {k["key"].upper(): k for k in gp_doc["keys"] if k["where"]["driver"] == args.driver}
+    field_to_key = {}
+    for k in gp_doc["keys"]:
+        if k["where"]["driver"] == args.driver and k.get("assigned_field"):
+            field_to_key.setdefault(k["assigned_field"], k["key"].upper())
+
+    rows = _cgf_parse_file(args.file)
+    file_values = {"_field_to_key": field_to_key}
+    seen_keys = set()
+    findings = []
+    for key, rest in rows:
+        ku = key.upper()
+        seen_keys.add(ku)
+        entry = driver_keys.get(ku)
+        if entry is None:
+            findings.append(("UNRECOGNIZED", ku, f"'{key}' is not a key --driver={args.driver}'s "
+                                                    f"get_global_param.c recognizes at this pinned commit "
+                                                    f"(checked against catalogs/global_parameters.yaml)."))
+            continue
+        if entry.get("type") == "removed_since_vic4":
+            findings.append(("REMOVED", ku, entry.get("removed_since_vic4_message") or
+                              "removed since VIC 4 (no message text extracted)."))
+        if rest:
+            try:
+                file_values[ku] = int(rest[0])
+            except ValueError:
+                try:
+                    file_values[ku] = float(rest[0])
+                except ValueError:
+                    file_values[ku] = rest[0]
+
+    const_env = _cgf_build_constant_env(pack_dir)
+    n_evaluated = n_violated = n_not_evaluated = 0
+    for c in gp_doc.get("constraints", []):
+        if c["where"]["driver"] not in (args.driver, "both"):
+            continue
+        result, detail = _cgf_eval_condition(c["condition"], file_values, const_env)
+        if result is None:
+            n_not_evaluated += 1
+            continue
+        n_evaluated += 1
+        if result:
+            n_violated += 1
+            findings.append(("VIOLATED", c["condition"], c.get("message") or "(no message text extracted)"))
+
+    print(f"# check-global-file: pack={args.pack} driver={args.driver} file={args.file}")
+    print(f"  {len(rows)} lines read, {len(seen_keys)} distinct keys, "
+          f"{n_evaluated} constraint(s) evaluated ({n_not_evaluated} not evaluated -- "
+          f"see tools/README.md), {n_violated} violated.")
+    for kind, name, detail in findings:
+        print(f"  {kind}: {name} -- {detail}")
+    if not findings:
+        print("  QUIET: no unrecognized/removed keys, no evaluated constraint violated.")
+    if args.json:
+        print(json.dumps({"pack": args.pack, "driver": args.driver, "file": str(args.file),
+                           "n_keys": len(seen_keys), "n_constraints_evaluated": n_evaluated,
+                           "n_not_evaluated": n_not_evaluated,
+                           "findings": [{"kind": k, "name": n, "detail": d} for k, n, d in findings]},
+                          indent=2))
+    return 1 if findings else 0
+
+
+_CCF_LINE_RE = re.compile(r"^<([^>]+)>(.*)$")
+
+
+def _ccf_parse_file(path):
+    """(key, value, line number) for every `<key>  value  ! comment` line of a tag-style
+    control file: a line whose first non-blank character is not `<` is a comment or
+    blank and is skipped, and a value ends at the first `!`. This is the file shape the
+    catalog's own keys are written as (`<key>`), not a second format guess."""
+    rows = []
+    for n, raw in enumerate(Path(path).read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+        s = raw.strip()
+        m = _CCF_LINE_RE.match(s)
+        if not m:
+            continue
+        value = m.group(2).split("!", 1)[0].strip()
+        rows.append((m.group(1).strip(), value, n))
+    return rows
+
+
+def _ccf_allowed_value_findings(key_entry, value):
+    """(findings, not_evaluated) for one key's `allowed_values` rows against the value
+    the file gives it. A row constrains the value as a whole when its `variable` names
+    the key itself or the variable the key assigns to; a row about a *part* of the value
+    (a units string's length or time half) names that part instead, and this translator
+    does not split values, so such a row is reported NOT EVALUATED with its own note
+    rather than guessed at. A row without the parser's own `rejection_message` is not a
+    closed set -- the code accepts other forms of the value too (a keyword OR a number,
+    say) -- so membership is not asserted for it either."""
+    findings, not_evaluated = [], []
+    for row in key_entry.get("allowed_values") or []:
+        subject = row.get("variable")
+        whole_value = subject in (key_entry.get("key"), key_entry.get("assigns_to"))
+        accepted = [v for group in (row.get("values") or []) for v in (group.get("values") or [])]
+        if not accepted:
+            continue
+        note = row.get("note") or ""
+        if not whole_value:
+            not_evaluated.append(f"{key_entry['key']}: the accepted set is stated for "
+                                  f"{subject} ({note or 'a part of the value'}), not for the "
+                                  f"whole value -- not evaluated")
+            continue
+        if not row.get("rejection_message"):
+            not_evaluated.append(f"{key_entry['key']}: {subject} has a listed set "
+                                  f"({', '.join(accepted)}) but the code rejects nothing "
+                                  f"outside it ({note or 'other forms are accepted too'}) "
+                                  f"-- not evaluated")
+            continue
+        fold = "case insensitive" in note.lower() or "case-insensitive" in note.lower()
+        hay = [a.lower() for a in accepted] if fold else accepted
+        if (value.lower() if fold else value) not in hay:
+            findings.append(("VALUE NOT ACCEPTED", key_entry["key"],
+                              f"'{value}' is not one of {', '.join(accepted)}"
+                              + (" (matched case-insensitively)" if fold else "")
+                              + f" -- the parser's own message: {row['rejection_message']}"))
+    return findings, not_evaluated
+
+
+def cmd_check_control_file(args):
+    """Validate a tag-style control file against a pack's catalogs/control_keys.yaml:
+    every `<key>` the file sets is checked for recognition by the pinned parser (a
+    documented-but-unparsed or sample-file-but-unparsed key is named with the catalogued
+    consequence), and every value the catalog carries a closed accepted set for is
+    checked against it, quoting the parser's own rejection message. Read-only; never
+    modifies the file. Does NOT establish that an accepted file will run: the post-parse
+    constraints the catalog carries as messages only, the input files the control file
+    points at, and every key whose accepted set is stated for part of its value are all
+    outside what this subcommand evaluates -- each is counted and named, never skipped
+    silently."""
+    pack_dir = MODELS_DIR / args.pack
+    ck_path = pack_dir / "catalogs" / "control_keys.yaml"
+    if not ck_path.is_file():
+        sys.exit(f"ERROR: no catalogs/control_keys.yaml for pack '{args.pack}' -- "
+                  f"this subcommand needs that catalog's shape (key/allowed_values/"
+                  f"requiredness).")
+    doc = _load_structured(ck_path)
+    entries = doc.get(doc.get("entries_key") or "keys", [])
+    by_key = {e["key"]: e for e in entries}
+    unparsed = {}
+    for field in ("in_sample_but_not_parsed", "documented_but_not_parsed"):
+        for row in doc.get(field) or []:
+            unparsed.setdefault(row["key"], (field, row))
+
+    rows = _ccf_parse_file(args.file)
+    findings, not_evaluated = [], []
+    seen = set()
+    for key, value, line_no in rows:
+        seen.add(key)
+        entry = by_key.get(key)
+        if entry is None:
+            message = (doc.get("unrecognized_key_message") or "").strip().strip("()")
+            detail = (f"line {line_no}: '<{key}>' is not a key the pinned parser recognizes"
+                      + (f" -- the parser's own note: {message}" if message else ""))
+            if key in unparsed:
+                field, row = unparsed[key]
+                detail += f" -- {row.get('consequence')} [{field}: {row['where']['file']}:{row['where']['line']}]"
+            findings.append(("UNRECOGNIZED", key, detail))
+            continue
+        f, ne = _ccf_allowed_value_findings(entry, value)
+        findings.extend(f)
+        not_evaluated.extend(ne)
+
+    constraints = doc.get("post_parse_constraints") or []
+    required_missing = sorted(k["key"] for k in entries
+                               if k.get("requiredness") == "must_be_set_in_control_file"
+                               and k["key"] not in seen)
+
+    print(f"# check-control-file: pack={args.pack} file={args.file}")
+    print(f"  {len(rows)} key line(s) read, {len(seen)} distinct keys, "
+          f"{len(findings)} finding(s), {len(not_evaluated)} value set(s) not evaluated, "
+          f"{len(constraints)} post-parse constraint(s) the catalog carries as a message "
+          f"only and this tool does not evaluate.")
+    for kind, name, detail in findings:
+        print(f"  {kind}: {name} -- {detail}")
+    for note in not_evaluated:
+        print(f"  NOT EVALUATED: {note}")
+    if required_missing:
+        print(f"  NOTE: {len(required_missing)} catalogued key(s) with no in-code default are "
+              f"not set here: {', '.join(required_missing[:12])}"
+              + (" ..." if len(required_missing) > 12 else "")
+              + ". Requiredness is read from the declaration alone, so a key needed only "
+                "under an option this file does not use is listed too -- this is a note, "
+                "not a finding.")
+    if not findings:
+        print("  QUIET: every key is recognized and every evaluable value is in its "
+              "accepted set.")
+    if args.json:
+        print(json.dumps({"pack": args.pack, "file": str(args.file), "n_keys": len(seen),
+                           "n_not_evaluated": len(not_evaluated),
+                           "n_constraints_not_evaluated": len(constraints),
+                           "required_not_set": required_missing,
+                           "findings": [{"kind": k, "name": n, "detail": d} for k, n, d in findings]},
+                          indent=2))
+    return 1 if findings else 0
+
+
 NOT_ESTABLISHED_PAIRED = (
     "Does NOT establish: causality (association only), physical correctness of the "
     "magnitude, whether the controlling variable is the right or only cause, or "
@@ -910,6 +1242,36 @@ def build_parser():
     p.add_argument("name", help="Variable name, configuration key, or file kind to look up")
     p.add_argument("--json", action="store_true", help="Also print a JSON summary")
     p.set_defaults(func=cmd_lookup)
+
+    p = sub.add_parser(
+        "check-global-file",
+        help="Validate a global-parameter-file-shaped input against a pack's catalogs/"
+             "global_parameters.yaml: unrecognized keys, removed-since-VIC-4 keys "
+             "(with their own message), and every evaluable step-count/validation "
+             "constraint.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    p.add_argument("--pack", required=True, help="Model pack name, resolved under references/models/ "
+                                                   "(needs a catalogs/global_parameters.yaml)")
+    p.add_argument("--driver", required=True, help="Driver whose key list/constraints to check against "
+                                                     "(e.g. classic or image, for vic)")
+    p.add_argument("--file", required=True, help="The global parameter file to check")
+    p.add_argument("--json", action="store_true", help="Also print a JSON summary")
+    p.set_defaults(func=cmd_check_global_file)
+
+    p = sub.add_parser(
+        "check-control-file",
+        help="Validate a tag-style control file against a pack's catalogs/"
+             "control_keys.yaml: keys the pinned parser does not recognize (including "
+             "a key only the documentation or a shipped sample uses) and values outside "
+             "a catalogued accepted set, with the parser's own message.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    p.add_argument("--pack", required=True, help="Model pack name, resolved under references/models/ "
+                                                   "(needs a catalogs/control_keys.yaml)")
+    p.add_argument("--file", required=True, help="The control file to check")
+    p.add_argument("--json", action="store_true", help="Also print a JSON summary")
+    p.set_defaults(func=cmd_check_control_file)
 
     return parser
 

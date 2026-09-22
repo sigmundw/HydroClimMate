@@ -3,14 +3,20 @@
 Pass --network to additionally verify that every cited external URL still resolves.
 That check is opt-in so the default run stays offline and deterministic.
 
-Pass --source-root ROOT (the pinned HRLDAS+noahmp checkout) to additionally, for every
-depth: reference pack (see references/models/SCHEMA.md): resolve every `path:line`
+Pass a pinned source checkout for a depth: reference pack (see
+references/models/SCHEMA.md) to additionally, for that pack: resolve every `path:line`
 citation in its prose against that source tree's actual line counts, and assert that
-regenerating its catalogs with tools/extract_pack.py from ROOT reproduces the committed
-catalogs structurally (modulo `evidence: source_read` vs `both`, which only
+regenerating its catalogs with tools/extract_pack.py from that root reproduces the
+committed catalogs structurally (modulo `evidence: source_read` vs `both`, which only
 validate_catalogs.py against real output/restart/forcing files -- not available here --
-can upgrade). Both checks are skipped cleanly, with a note, when --source-root is not
-given.
+can upgrade). These checks are skipped cleanly, with a note, for a pack whose root is
+not given. Any pack:
+
+    --source-root <pack>=<checkout>          e.g. --source-root mizuroute=/path/to/mizuRoute
+
+and the original forms still mean what they did: a bare --source-root <checkout> is the
+HRLDAS+noahmp checkout, and --<pack>-source-root <checkout> (e.g. --vic-source-root)
+names one pack too.
 """
 import json
 import re
@@ -36,6 +42,14 @@ REFERENCE_MD_FILES = {"card.md", "processes.md", "failures.md", "recipes.md", "v
 OUTLINE_MD_FILES = {"overview.md", "execution.md", "outputs.md", "pitfalls.md", "sources.md"}
 REFERENCE_SIZE_CAPS = {"card.md": 4096, "processes.md": 12288, "failures.md": 14336,
                         "recipes.md": 10240, "version.md": 3072}
+# README.md is a new, optional top-level file for a depth: reference pack (human-facing
+# entry point; see pack.yaml's own `prose` purpose for it) -- not one of the six
+# must-read-by-an-agent REFERENCE_MD_FILES, so it is not required for a pack to count as
+# "prose complete", but it IS capped and it must never be routed to from models/index.md
+# or core.md (agents are not routed to it; a person finds it by browsing the pack
+# directory). Tracked separately so a pack missing only README.md still reports as
+# pending-for-that-reason rather than silently invisible.
+README_SIZE_CAP = 5120
 
 # `path:line` citation resolution (depth: reference prose only; see check_source_citations).
 CITATION_RE = re.compile(r"\b([\w./]+):(\d+(?:-\d+)?(?:,\d+(?:-\d+)?)*)\b")
@@ -82,6 +96,22 @@ def _iter_facts(node, path=""):
     elif isinstance(node, list):
         for i, item in enumerate(node):
             yield from _iter_facts(item, f"{path}[{i}]")
+
+
+def _iter_facts_with_from(node, path=""):
+    """Yield (path, fact-dict) for every dict carrying a `from: {file, anchor}` prose
+    pointer, whichever curated citation shape the rest of the dict uses -- the same rule
+    tools/refresh_confirmed_against.py applies, so the guard and the refresh tool cover
+    exactly the same facts."""
+    if isinstance(node, dict):
+        frm = node.get("from")
+        if isinstance(frm, dict) and "anchor" in frm and "file" in frm:
+            yield path, node
+        for key, value in node.items():
+            yield from _iter_facts_with_from(value, f"{path}.{key}" if path else key)
+    elif isinstance(node, list):
+        for i, item in enumerate(node):
+            yield from _iter_facts_with_from(item, f"{path}[{i}]")
 
 
 def _pack_manifest_path(folder):
@@ -190,25 +220,39 @@ def check_index_matches_build(model, folder, committed_index):
         "tools/build_index.py <pack> --write instead of hand-editing")
 
 
-def _iter_catalog_entries(node):
-    """Yield every dict in a generated catalog document that carries a 'where' key (one
-    extracted fact), at any nesting depth -- catalogs/*.yaml can nest a record's own
-    sub-records (e.g. a parameter-table group's `parameters`, a physics option's
-    `values`)."""
+# Packs whose pinned checkout carries no model output at all, so no catalog entry of
+# theirs may ever be graded against output (each one says so in its own pack.yaml
+# known_gaps; this is the machine-checked half of that statement).
+NO_REACHABLE_OUTPUT_PACKS = {"vic", "mizuroute"}
+
+
+def _iter_catalog_entries(node, inside_fact=False):
+    """Yield (dict, inside_fact) for every dict in a generated catalog document that
+    carries a 'where' key, at any nesting depth -- catalogs/*.yaml can nest a record's
+    own sub-records (e.g. a parameter-table group's `parameters`, a physics option's
+    `values`). `inside_fact` is True when some enclosing dict already carries an
+    `evidence` grade, which makes this `where` one more citation belonging to that graded
+    fact (e.g. the line where a variable is forced off, or where a method's parameter is
+    named) rather than an ungraded fact of its own."""
     if isinstance(node, dict):
         if "where" in node:
-            yield node
+            yield node, inside_fact
+        deeper = inside_fact or "evidence" in node
         for value in node.values():
-            yield from _iter_catalog_entries(value)
+            yield from _iter_catalog_entries(value, deeper)
     elif isinstance(node, list):
         for item in node:
-            yield from _iter_catalog_entries(item)
+            yield from _iter_catalog_entries(item, inside_fact)
 
 
 def check_catalog_evidence(model, folder):
     """depth: reference (SCHEMA.md): every generated catalog entry (anything carrying a
     `where` fact-location) must also carry an `evidence` grade -- the two are meant to
-    travel together, and extract_pack.py never emits one without the other."""
+    travel together, and extract_pack.py never emits one without the other. A `where`
+    nested inside a record that is already graded is one more citation of that same fact,
+    not a second fact: it is checked for shape, and its grade is the enclosing record's.
+    An ungraded `where` at the top of a record is still a failure, which is the case this
+    check exists for."""
     catalogs_dir = folder / "catalogs"
     assert catalogs_dir.is_dir(), (model, "depth: reference but no catalogs/ directory")
     yaml_files = sorted(catalogs_dir.glob("*.yaml"))
@@ -216,37 +260,98 @@ def check_catalog_evidence(model, folder):
     n_entries = 0
     for path in yaml_files:
         doc = _miniyaml.load_file(path)
-        for entry in _iter_catalog_entries(doc):
+        for entry, inside_fact in _iter_catalog_entries(doc):
             n_entries += 1
             where = entry["where"]
             assert isinstance(where, dict) and {"file", "line", "commit"} <= where.keys(), (
                 model, path.name, "where must be {file, line, commit}", where)
-            assert entry.get("evidence") in ("source_read", "observed_in_output", "both"), (
+            if inside_fact and "evidence" not in entry:
+                continue
+            assert entry.get("evidence") in (
+                "source_read", "observed_in_output", "both", "confirmed_in_sample_input"), (
                 model, path.name, "entry with 'where' is missing a valid 'evidence'", entry.get("name"))
+            if entry.get("evidence") in ("observed_in_output", "both"):
+                assert model not in NO_REACHABLE_OUTPUT_PACKS, (
+                    model, path.name, "no model output for this pack exists anywhere reachable "
+                    "from this repository (see its pack.yaml known_gaps) -- its catalog entries "
+                    "may never claim observed_in_output/both", entry.get("name"))
     assert n_entries > 0, (model, "catalogs/*.yaml carry no where-tagged entries at all")
 
 
-def _citation_resolve(prefix, source_root):
+# Per-pack citation shorthand: each depth: reference pack's own prose states its own
+# shorthand scheme in its own words (see e.g. vic/processes.md's opening line); this
+# table only needs to match that stated scheme, not invent one.
+PACK_CITATION_SHORTHAND_DIR = {
+    "hrldas-noahmp": CITATION_SHORTHAND_DIR,
+    "vic": {
+        "run": "vic/vic_run/src", "sh": "vic/drivers/shared_all/src",
+        "cl": "vic/drivers/classic/src", "im": "vic/drivers/image/src",
+        "shim": "vic/drivers/shared_image/src",
+    },
+    "mizuroute": {"src": "route/build/src", "sa": "route/build/src/standalone"},
+}
+PACK_CITATION_SHORTHAND_FILE = {
+    "hrldas-noahmp": CITATION_SHORTHAND_FILE,
+    "vic": {},
+    "mizuroute": {"ctl": "route/settings/SAMPLE.control"},
+}
+PACK_CITATION_PREFERRED_DIR_HINT = {
+    "hrldas-noahmp": CITATION_PREFERRED_DIR_HINT,
+    "vic": "",
+    "mizuroute": "",
+}
+# A pack whose prose cites a source file by bare module stem, with no directory and no
+# extension (`read_control:100-118`), states here where such a stem lives and what it is
+# called on disk. Without it every one of those citations lands in the "unresolved
+# prefix" note, which reports the count and checks nothing -- the prose form the pack
+# uses most would be the one form the line-range check never sees.
+PACK_CITATION_BARE_STEM = {
+    "mizuroute": ("route/build/src", ".f90"),
+}
+# A bare filename (no directory) is resolved by a basename search when it carries one of
+# these extensions -- the suffixes the three packs' prose actually cites.
+CITATION_BARE_FILE_EXTS = (".F90", ".F", ".TBL", ".c", ".h", ".f90", ".rst", ".control")
+_CITATION_RGLOB_CACHE = {}
+
+
+def _citation_resolve(prefix, source_root, model="hrldas-noahmp"):
     """Resolve a citation prefix (e.g. 'drv', 'src/SurfaceAlbedoMod.F90',
     'NoahmpIOVarInitMod.F90', 'hrldas/run/README.namelist') to a path relative to
     `source_root`, or None if it cannot be resolved. A bare filename (no directory) is
     resolved by a basename search, preferring a hit under this pack's own build path
     (CITATION_PREFERRED_DIR_HINT) when more than one driver variant defines the same
     module name -- exactly the ambiguity this pack's own prose warns about
-    (version.md: "Two urban drivers exist in this tree")."""
-    if prefix in CITATION_SHORTHAND_FILE:
-        return CITATION_SHORTHAND_FILE[prefix]
-    for key, expansion in CITATION_SHORTHAND_DIR.items():
+    (version.md: "Two urban drivers exist in this tree"). The shorthand table itself is
+    per-pack (PACK_CITATION_SHORTHAND_DIR/_FILE), since each depth: reference pack's
+    prose states its own scheme."""
+    shorthand_file = PACK_CITATION_SHORTHAND_FILE.get(model, {})
+    shorthand_dir = PACK_CITATION_SHORTHAND_DIR.get(model, {})
+    preferred_hint = PACK_CITATION_PREFERRED_DIR_HINT.get(model, "")
+    bare_dir, bare_ext = PACK_CITATION_BARE_STEM.get(model, (None, None))
+    if prefix in shorthand_file:
+        return shorthand_file[prefix]
+    for key, expansion in shorthand_dir.items():
         if prefix == key:
             return None
         if prefix.startswith(key + "/"):
-            return expansion + prefix[len(key):]
+            expanded = expansion + prefix[len(key):]
+            # A shorthand directory plus a bare module stem (`sa/model_setup`) is the
+            # same citation form as the bare stem below, one directory down.
+            if bare_ext and "." not in Path(expanded).name:
+                expanded += bare_ext
+            return expanded
     if "/" in prefix:
         return prefix
-    if prefix.endswith((".F90", ".F", ".TBL")):
-        hits = [h for h in source_root.rglob(prefix) if ".git" not in h.parts]
-        if len(hits) > 1:
-            preferred = [h for h in hits if CITATION_PREFERRED_DIR_HINT in str(h)]
+    if bare_dir and "." not in prefix and (source_root / bare_dir / (prefix + bare_ext)).is_file():
+        return f"{bare_dir}/{prefix}{bare_ext}"
+    if prefix.endswith(CITATION_BARE_FILE_EXTS):
+        cache_key = (str(source_root), prefix)
+        if cache_key not in _CITATION_RGLOB_CACHE:
+            _CITATION_RGLOB_CACHE[cache_key] = [
+                h for h in source_root.rglob(prefix) if ".git" not in h.parts]
+        hits = _CITATION_RGLOB_CACHE[cache_key]
+        if len(hits) > 1 and preferred_hint:
+            preferred = [h for h in hits if preferred_hint in str(h)]
             if len(preferred) == 1:
                 hits = preferred
         if len(hits) == 1:
@@ -296,17 +401,83 @@ def check_overlay_catalogs(model, folder, source_root):
 
     options_path = curated_dir / "options_overlay.yaml"
     if options_path.is_file():
-        physics_doc = _miniyaml.load_file(catalogs_dir / "physics_options.yaml")
-        option_names = {o["internal_option_name"] for o in physics_doc["options"]}
+        # The generated catalog this overlay cross-checks against, and the field naming
+        # the option's own identity, differ per pack (hrldas-noahmp: physics_options.yaml
+        # / internal_option_name; vic: options.yaml / name) -- everything else about the
+        # check (every overlay row's subject must exist in that catalog) is pack-agnostic.
+        options_catalog_name, option_name_field = {
+            "vic": ("options.yaml", "name"),
+        }.get(model, ("physics_options.yaml", "internal_option_name"))
+        physics_doc = _miniyaml.load_file(catalogs_dir / options_catalog_name)
+        option_names = {o[option_name_field] for o in physics_doc["options"]}
         for row in _miniyaml.load_file(options_path).get("rows", []):
             n_checked += 1
-            assert row["internal_option_name"] in option_names, (
-                model, "curated/options_overlay.yaml", "internal_option_name not in "
-                "catalogs/physics_options.yaml", row["internal_option_name"])
+            # internal_option_name: null is itself a documented fact for a row whose
+            # whole point is that no corresponding option-struct field exists (e.g.
+            # vic's OUTPUT_FORCE row: a global-parameter key rejected by one driver and
+            # absent from the other's parser, at this commit) -- not an omitted value.
+            if row["internal_option_name"] is not None:
+                assert row["internal_option_name"] in option_names, (
+                    model, "curated/options_overlay.yaml", f"internal_option_name not in "
+                    f"catalogs/{options_catalog_name}", row["internal_option_name"])
+            # `applies_to` is how a row whose subject is an output variable or a forcing
+            # type -- and so has no option-struct field to be named by -- reaches
+            # tools/hcm_lookup.py. A name that matches nothing makes the row silently
+            # unreachable again, which is the exact failure this field exists to end, so
+            # every name must resolve in one of the pack's own generated catalogs.
+            for name in row.get("applies_to") or []:
+                assert name in _catalog_names(catalogs_dir), (
+                    model, "curated/options_overlay.yaml",
+                    "applies_to names nothing in catalogs/", name)
             if source_root is not None and row.get("where"):
                 _resolve_and_check_citation(model, "curated/options_overlay.yaml", source_root,
                                              row["where"], row["internal_option_name"])
+
+    # Any other curated row-shaped overlay the pack has, found by listing the directory:
+    # its rows carry the same `where` citation shape, and a citation nobody resolves is
+    # exactly the kind of quiet decay this check exists to prevent. The subject-exists
+    # check above stays specific to the two overlays whose subject field is defined by
+    # SCHEMA.md; what is generic here is the citation resolution.
+    for path in sorted(curated_dir.glob("*_overlay.yaml")) if curated_dir.is_dir() else []:
+        if path.name in ("kinds_overlay.yaml", "options_overlay.yaml"):
+            continue
+        for i, row in enumerate(_miniyaml.load_file(path).get("rows", [])):
+            n_checked += 1
+            label = row.get("subject") or f"rows[{i}]"
+            if source_root is None:
+                continue
+            for field in ("where", "code_where"):
+                if row.get(field):
+                    _resolve_and_check_citation(model, f"curated/{path.name}", source_root,
+                                                 row[field], f"{label} ({field})")
     return n_checked
+
+
+_CATALOG_NAME_KEYS = ("variables", "keys", "options", "constants", "types",
+                       "classic_soil_columns", "image_netcdf_parameters", "agg_types")
+
+
+_CATALOG_NAMES_CACHE = {}
+
+
+def _catalog_names(catalogs_dir):
+    """Every entry name in every generated catalog of a pack, across each catalog's own
+    main list key -- the set a curated row's `applies_to` must name from."""
+    key = str(catalogs_dir)
+    if key in _CATALOG_NAMES_CACHE:
+        return _CATALOG_NAMES_CACHE[key]
+    names = set()
+    for path in sorted(catalogs_dir.glob("*.yaml")):
+        doc = _miniyaml.load_file(path)
+        for key in _CATALOG_NAME_KEYS:
+            for item in doc.get(key, []) or []:
+                if isinstance(item, dict):
+                    n = item.get("name") or item.get("key") or item.get("column") \
+                        or item.get("nc_variable") or item.get("internal_option_name")
+                    if n:
+                        names.add(n)
+    _CATALOG_NAMES_CACHE[key] = names
+    return names
 
 
 def check_curated_facts_not_stale(model, folder):
@@ -315,14 +486,23 @@ def check_curated_facts_not_stale(model, folder):
     mismatch means the prose changed since a person last confirmed this fact against it.
     Re-confirm the fact against the new prose by hand, then run
     `tools/refresh_confirmed_against.py --pack <pack>` to update the hash -- never run
-    the refresh tool first as a way to silence this without reading the diff."""
+    the refresh tool first as a way to silence this without reading the diff.
+
+    Every curated/*.yaml file the pack actually has is examined, derived by listing the
+    directory rather than from a fixed stem list, so this guard and the refresh tool
+    cover exactly the same set of files: a hard-coded list on either side lets a curated
+    file added later fall outside one of them, and the two then disagree silently."""
     stale = []
-    for stem in ("interface", "switches", "checks", "workflows"):
-        path = folder / "curated" / f"{stem}.yaml"
-        if not path.is_file():
-            continue
+    curated_dir = folder / "curated"
+    curated_paths = sorted(curated_dir.glob("*.yaml")) if curated_dir.is_dir() else []
+    for path in curated_paths:
         doc = _load_layer_file(path)
-        for fact_path, fact in _iter_facts(doc):
+        # Both curated citation shapes in one walk -- the four-key structured fact
+        # ({source, scope, basis, from}) and an overlay row (where/evidence/scope plus an
+        # optional from/confirmed_against pair) -- by the same rule the refresh tool uses:
+        # a fact is any dict carrying a `from: {file, anchor}`. The two must cover exactly
+        # the same set, or a fact the refresh tool updates is one this guard never reads.
+        for fact_path, fact in _iter_facts_with_from(doc):
             frm = fact["from"]
             prose_path = folder / frm["file"]
             if not prose_path.is_file():
@@ -359,7 +539,8 @@ def check_source_identifiers_resolve(model, folder):
     evals/<pack>/lookup_allowlist.yaml with a reason. Returns (checked,
     unresolved_but_allowlisted)."""
     import hcm_lookup
-    items = hcm_lookup.collect_index(folder)
+    items = (hcm_lookup.collect_index(folder) if model == "hrldas-noahmp"
+              else hcm_lookup.collect_index_generic(folder))
     names_lower = {n.lower() for n, _k, _e in items}
 
     allowlist_path = EVALS_DIR / folder.name / "lookup_allowlist.yaml"
@@ -381,6 +562,14 @@ def check_source_identifiers_resolve(model, folder):
     assert not unresolved_unlisted, (
         model, "identifiers in card/processes/failures/recipes.md that do not resolve "
         "through hcm_lookup.py and are not in lookup_allowlist.yaml", unresolved_unlisted)
+    # An allowlist row whose identifier HAS since become resolvable is not harmless: its
+    # stated reason ("not indexed as its own lookup entry", "out of scope") is then a
+    # false claim about the pack, kept alive by a check that only ever reads the list
+    # for permission. Every row must still be needed.
+    obsolete = sorted(tok for tok in allowlist if tok.lower() in names_lower)
+    assert not obsolete, (
+        model, f"evals/{folder.name}/lookup_allowlist.yaml rows that now resolve through "
+        "hcm_lookup.py -- remove the row (its stated reason no longer holds)", obsolete)
     allowlisted_hits = sorted(tok for tok in found if tok.lower() not in names_lower)
     return len(found), allowlisted_hits
 
@@ -404,7 +593,7 @@ def check_source_citations(model, folder, source_root, prose_files):
             prefix, nums = m.group(1), m.group(2)
             if prefix.isdigit() and len(prefix) <= 2:
                 continue  # a clock time like "00:00"/"01:00", not a citation
-            relpath = _citation_resolve(prefix, source_root)
+            relpath = _citation_resolve(prefix, source_root, model=model)
             if relpath is None:
                 unresolved.append((name, prefix, nums))
                 continue
@@ -433,7 +622,10 @@ def check_catalogs_fresh_build(model, folder, source_root):
     import tempfile
     import extract_pack
     with tempfile.TemporaryDirectory() as tmp:
-        extract_pack.main(["all", "--source-root", str(source_root), "--out-dir", tmp])
+        argv = ["all", "--source-root", str(source_root), "--out-dir", tmp]
+        if model != "hrldas-noahmp":
+            argv = ["--pack", model] + argv
+        extract_pack.main(argv)
         tmp_path = Path(tmp)
         committed_dir = folder / "catalogs"
         for fresh_path in sorted(tmp_path.glob("*.yaml")):
@@ -457,7 +649,9 @@ def _diff_modulo_evidence(fresh, committed, path=""):
             return f"{path}: key sets differ: {set(fresh) ^ set(committed)}"
         for key in fresh:
             if key == "evidence":
-                if not (fresh[key] == committed[key] or (fresh[key] == "source_read" and committed[key] == "both")):
+                valid_upgrade = fresh[key] == "source_read" and committed[key] in (
+                    "both", "confirmed_in_sample_input")
+                if not (fresh[key] == committed[key] or valid_upgrade):
                     return f"{path}.evidence: {fresh[key]!r} -> {committed[key]!r} is not a valid upgrade"
                 continue
             sub = _diff_modulo_evidence(fresh[key], committed[key], f"{path}.{key}")
@@ -652,15 +846,16 @@ PROCESS_NARRATION_LINE_ALLOWLIST = (
     "superseded for every",
     "superseded by the pinned copy",
     "superseded and corrected by",
-    # mizuroute pack: an upstream repository's own URL redirect, a fact about the cited
-    # source, not this package's history.
-    "url redirects there",
-    "retrieved via the redirect from",
     # HANDOVER.md template: generic snapshot-hygiene instruction, not narration about
     # this package's own history.
     "remove completed items no longer needed",
     # _anchor_hash.py: ordinary technical description of a hash comparison.
     "the hash no longer matches",
+    # vic/catalogs/global_parameters.yaml's removed_since_vic4_message: the VIC parser's
+    # own quoted rejection text for a key it no longer accepts (a fact about the pinned
+    # VIC source's own log_err() string, mechanically extracted -- not narration about
+    # this package's history).
+    "is no longer a supported option",
 )
 
 # A short, explicit list of pre-existing files that use one of the words above in its
@@ -671,9 +866,19 @@ PROCESS_NARRATION_LINE_ALLOWLIST = (
 PRIVATE_STRING_ALLOWLIST = {
     "evals/check_knowledge.py": "this file defines the patterns/allowlist above as "
         "literal strings, and its own comments explain them using the same words",
-    "hydroclimmate/references/models/vic/sources.md": "pre-existing pack text: 'have not been audited' (ordinary sense)",
     "hydroclimmate/references/models/ctsm/sources.md": "pre-existing pack text: 'have not been audited' (ordinary sense)",
 }
+
+# The same idea one level finer, for a file where only ONE phrase uses such a word in its
+# ordinary English sense: matched against the surrounding text, so the rest of that file
+# is still scanned. Allowlisting the whole file for a single ordinary word would also
+# stop it being scanned for site paths and process bookkeeping, which is a real loss.
+PRIVATE_STRING_LINE_ALLOWLIST = (
+    # mizuroute/failures.md: "audit the mapping weights first" -- an instruction to the
+    # reader about their own remapping file, the ordinary English verb, not a reference
+    # to any review step of this project's own.
+    "audit the mapping weights",
+)
 
 
 def check_no_private_strings():
@@ -681,8 +886,9 @@ def check_no_private_strings():
     private/internal-process string patterns above, and (everywhere except
     CHANGELOG.md) for process-narration language describing this repository's own
     history. A hit is a hard failure unless the whole file is in
-    PRIVATE_STRING_ALLOWLIST, or (narration only) the matching line is covered by
-    PROCESS_NARRATION_LINE_ALLOWLIST."""
+    PRIVATE_STRING_ALLOWLIST, or the matching line is covered by
+    PRIVATE_STRING_LINE_ALLOWLIST (private-string patterns) or
+    PROCESS_NARRATION_LINE_ALLOWLIST (narration patterns)."""
     hits = []
     scanned = 0
     roots = [PACKAGE, ROOT / "evals"]
@@ -702,10 +908,13 @@ def check_no_private_strings():
             if CJK_RE.search(text):
                 hits.append((rel, "CJK characters", ""))
             for name, pat in PRIVATE_STRING_PATTERNS.items():
-                m = pat.search(text)
-                if m:
+                for m in pat.finditer(text):
+                    context = re.sub(r"\s+", " ", text[max(0, m.start() - 80):m.end() + 40]).lower()
+                    if any(allowed in context for allowed in PRIVATE_STRING_LINE_ALLOWLIST):
+                        continue
                     line_no = text.count("\n", 0, m.start()) + 1
                     hits.append((rel, name, f"line {line_no}: {m.group(0)!r}"))
+                    break
             if path.name != "CHANGELOG.md":
                 # A window of surrounding text, newlines collapsed to spaces, so the
                 # allowlist still matches a phrase that happens to be soft-wrapped across
@@ -735,11 +944,15 @@ def check_no_orphan_files(model, folder, manifest):
     check exists to catch."""
     referenced = {entry.get("file") for entry in manifest.get("prose", []) if entry.get("file")}
     referenced |= {entry.get("file") for entry in manifest.get("curated", []) if entry.get("file")}
-    known_generated = {
-        "MANIFEST.json", "index.json", "outputs.yaml", "restart.yaml", "forcing.yaml",
-        "setup.yaml", "namelist.yaml", "physics_options.yaml", "parameters.yaml",
-        "constants.yaml", "urban_path.yaml",
-    }
+    # Every catalog filename any pack's extractor module can produce, plus the two
+    # machine-only files every `depth: reference` pack has -- derived from the
+    # extractor modules themselves so a new pack's catalogs never need a hand-kept
+    # filename list here (SCHEMA.md: "pack-specific knowledge confined to the
+    # extractor module").
+    import extract_pack
+    known_generated = {"MANIFEST.json", "index.json"}
+    for mod in extract_pack.PACKS.values():
+        known_generated |= set(mod.FILENAME.values())
     known_curated = {"kinds_overlay.yaml", "options_overlay.yaml"}
     for path in sorted(folder.rglob("*")):
         if not path.is_file() or path.suffix not in (".yaml", ".json"):
@@ -805,11 +1018,37 @@ def check_freshness():
         print(f"PASS: all {len(sources)} source-pack review dates within {STALE_DAYS} days")
 
 
+DEFAULT_SOURCE_ROOT_PACK = "hrldas-noahmp"
+
+
+def _parse_source_roots(argv):
+    """{pack: source root} from the command line. `--source-root PACK=PATH` names its
+    pack (any pack, including one added later); `--source-root PATH` keeps its original
+    meaning, the pack this checker originally shipped for; `--<pack>-source-root PATH`
+    keeps every existing per-pack flag working, for any pack, so a command written
+    against an earlier version of this file still runs unchanged."""
+    roots = {}
+    for i, arg in enumerate(argv):
+        pack = None
+        if arg == "--source-root":
+            value = argv[i + 1]
+            pack, _, path = value.partition("=")
+            if not path:
+                pack, path = DEFAULT_SOURCE_ROOT_PACK, value
+        elif arg.startswith("--") and arg.endswith("-source-root"):
+            pack = arg[len("--"):-len("-source-root")]
+            path = argv[i + 1]
+        if pack is None:
+            continue
+        root = Path(path).resolve()
+        assert root.is_dir(), f"{arg} {path}: not a directory"
+        roots[pack] = root
+    return roots
+
+
 def main():
-    source_root = None
-    if "--source-root" in sys.argv:
-        source_root = Path(sys.argv[sys.argv.index("--source-root") + 1]).resolve()
-        assert source_root.is_dir(), f"--source-root {source_root} is not a directory"
+    source_roots = _parse_source_roots(sys.argv)
+    pending = []
 
     count = 0
     for path in sorted(PACKAGE.rglob("*.md")):
@@ -857,20 +1096,49 @@ def main():
             check_pitfalls(model, folder)
         else:
             n_reference += 1
-            assert {p.name for p in folder.glob("*.md")} == REFERENCE_MD_FILES, model
-            for md_name, cap in REFERENCE_SIZE_CAPS.items():
-                size = (folder / md_name).stat().st_size
-                assert size <= cap, (model, md_name, f"{size} bytes exceeds the {cap}-byte cap")
-            total_overlay_rows_checked += check_overlay_catalogs(model, folder, source_root)
+            present_md = {p.name for p in folder.glob("*.md")}
+            missing_prose = REFERENCE_MD_FILES - present_md
+            has_readme = "README.md" in present_md
+            # Anything present that is neither a required file nor the optional README
+            # is either a leftover outline file (rebuild not yet finished) or truly
+            # unexpected clutter -- both reported, not silently accepted.
+            leftover_outline = (present_md - REFERENCE_MD_FILES - {"README.md"})
+            if missing_prose or leftover_outline or not has_readme:
+                # Prose is a separate author's deliverable (this pack's own pack.yaml
+                # names who); a pack mid-rebuild carries this honestly, as a reported
+                # pending item, rather than a silent pass or an uninformative crash --
+                # every other check below (catalogs, manifest, curated overlays) still
+                # runs against whatever IS present.
+                pending.append({
+                    "model": model, "missing_prose_files": sorted(missing_prose),
+                    "leftover_outline_files": sorted(leftover_outline),
+                    "readme_missing": not has_readme,
+                })
+            if not missing_prose and not leftover_outline:
+                for md_name, cap in REFERENCE_SIZE_CAPS.items():
+                    size = (folder / md_name).stat().st_size
+                    assert size <= cap, (model, md_name, f"{size} bytes exceeds the {cap}-byte cap")
+            if has_readme:
+                size = (folder / "README.md").stat().st_size
+                assert size <= README_SIZE_CAP, (
+                    model, "README.md", f"{size} bytes exceeds the {README_SIZE_CAP}-byte cap")
+                for routing_file in (PACKAGE / "references/models/index.md", PACKAGE / "references/core.md"):
+                    if routing_file.is_file():
+                        assert f"{model}/README.md" not in routing_file.read_text(), (
+                            model, routing_file.name, "must not route an agent to README.md "
+                            "(human-facing entry point, agents are not routed to it -- see SCHEMA.md)")
+            pack_source_root = source_roots.get(model)
+            total_overlay_rows_checked += check_overlay_catalogs(model, folder, pack_source_root)
             check_curated_facts_not_stale(model, folder)
             n_ids, allowlisted = check_source_identifiers_resolve(model, folder)
             total_identifiers_checked += n_ids
             total_identifiers_allowlisted += len(allowlisted)
-            if source_root is not None:
-                total_citations_checked += check_source_citations(
-                    model, folder, source_root,
-                    ["card.md", "processes.md", "failures.md", "recipes.md", "version.md", "sources.md"])
-                check_catalogs_fresh_build(model, folder, source_root)
+            if pack_source_root is not None:
+                if not missing_prose:
+                    total_citations_checked += check_source_citations(
+                        model, folder, pack_source_root,
+                        ["card.md", "processes.md", "failures.md", "recipes.md", "version.md", "sources.md"])
+                check_catalogs_fresh_build(model, folder, pack_source_root)
 
         check_no_orphan_files(model, folder, manifest)
         valid_source_ids = set(re.findall(r"^## ([A-Za-z]\d+)$", (folder / "sources.md").read_text(), re.M))
@@ -903,21 +1171,28 @@ def main():
     assert new_mass - old_mass == -5400
     print(f"PASS: {count} package links/anchors, {len(models)} source-linked packs, shared entrypoint, fixtures")
     print(f"PASS: {total_facts} structured-layer facts validated (source ids, from-anchors, basis)")
-    print(f"PASS: {total_overlay_rows_checked} curated overlay rows resolve to a real "
-          f"catalog entry (kinds_overlay.yaml variables in outputs.yaml, options_overlay.yaml "
-          f"internal_option_names in physics_options.yaml)")
+    print(f"PASS: {total_overlay_rows_checked} curated overlay rows checked (kinds_overlay.yaml "
+          f"variables resolve in outputs.yaml, options_overlay.yaml internal_option_names in "
+          f"physics_options.yaml, and every overlay row's citations resolve where a source "
+          f"root was given)")
     print("PASS: every depth: reference curated structured-layer fact's confirmed_against hash "
           "matches its cited prose paragraph's current text (no stale re-confirmation)")
     print(f"PASS: {total_identifiers_checked} backticked model identifiers in card/processes/"
           f"failures/recipes.md resolve through hcm_lookup.py (exact or alias) or "
           f"lookup_allowlist.yaml ({total_identifiers_allowlisted} allowlisted)")
-    if source_root is not None:
-        print(f"PASS: {total_citations_checked} prose path:line citations resolved against "
-              f"--source-root, generated catalogs match a fresh build (modulo evidence upgrades), "
-              f"and every overlay citation resolved")
-    else:
-        print("Skipped source-root checks (path:line citation resolution, fresh-build catalog "
-              "equality, overlay citation resolution); pass --source-root <pinned-checkout> to run them.")
+    reference_models = [m for m in models
+                        if _load_layer_file(_pack_manifest_path(PACKAGE / "references/models" / m)).get("depth") == "reference"]
+    checked_roots = [m for m in reference_models if m in source_roots]
+    if checked_roots:
+        print(f"PASS: {total_citations_checked} prose path:line citations resolved, generated "
+              f"catalogs match a fresh build (modulo evidence upgrades), and every overlay "
+              f"citation resolved -- for {', '.join(checked_roots)} (source root given)")
+    skipped_roots = [m for m in reference_models if m not in source_roots]
+    if skipped_roots:
+        print(f"Skipped source-root checks (path:line citation resolution, fresh-build catalog "
+              f"equality, overlay citation resolution) for {', '.join(skipped_roots)}; pass "
+              f"--source-root <pack>=<checkout> for each of them to run these "
+              f"(a bare --source-root <checkout> still means {DEFAULT_SOURCE_ROOT_PACK}).")
     print("PASS: linear-triangle quadrature mean=2.5; fixed-domain mass change=-5400 kg")
     print("These are static/arithmetic checks, not model or agent-behavior validation.")
     check_no_private_strings()
@@ -928,6 +1203,18 @@ def main():
     else:
         print(f"Skipped {len(external_urls())} external URLs; pass --network to verify them.")
 
+    if pending:
+        print(f"\nPENDING ({len(pending)} depth: reference pack(s) mid-rebuild -- catalogs/"
+              f"manifest/curated checks above still ran and passed for these; only the "
+              f"prose-shape/size and prose-citation checks are withheld):")
+        for item in pending:
+            print(f"  {item['model']}: missing {item['missing_prose_files'] or '(none)'}"
+                  + (f"; leftover outline files not yet removed: {item['leftover_outline_files']}"
+                     if item["leftover_outline_files"] else "")
+                  + ("; README.md not yet written" if item.get("readme_missing") else ""))
+        return 1
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

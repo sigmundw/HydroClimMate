@@ -1,0 +1,334 @@
+# Hand-maintained. The single structured home of every verified doc-vs-code, sample-vs-code and code-vs-code disagreement found while building this pack's generated catalogs (mizuRoute 28514dea, tag v3.1.1). Never generated; not re-derived by extract_pack.py. Each row is re-verified directly at its cited source lines -- code wins on every disagreement. Where a row also corroborates a paragraph of this pack's own prose, `from`/`confirmed_against` cite that paragraph (tools/refresh_confirmed_against.py --pack mizuroute re-syncs the hash after a legitimate prose edit); a row whose finding the prose does not state carries neither.
+pack: "mizuroute"
+catalog: "disagreements_overlay"
+curated: true
+scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+count: 22
+rows:
+  - subject: "KWTinflow, IRFinflow, KWinflow, MCinflow, DWinflow"
+    kind: "sample_control_file_uses_a_tag_the_parser_rejects"
+    note: "route/settings/SAMPLE.control lines 150-154 set five per-method inflow switches as if they were control keys. read_control.f90's select on trim(cName) has no case for any of them, so its case-default arm aborts the run with the unrecognized-tag message: the shipped SAMPLE.control cannot be run as-is at this commit. The only tag that turns inflow output on is <outputInflow> (read_control.f90:262), which switches on the inflow variable for EVERY active routing method at once (read_control.f90:610-616) rather than per method. The five ixRFLX inflow variables do exist and are written when <outputInflow> is true (popMetadat.f90:261-265)."
+    where:
+      file: "route/settings/SAMPLE.control"
+      line: 150
+      commit: "mizuroute@28514dea"
+    code_where:
+      file: "route/build/src/read_control.f90"
+      line: 374
+      commit: "mizuroute@28514dea"
+    evidence: "confirmed_in_sample_input"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+    from:
+      file: "sources.md"
+      anchor: "l7"
+    confirmed_against: "f96afd64c80c3338"
+  - subject: "dt_rof"
+    kind: "documented_tag_the_parser_rejects"
+    note: "All three example control files embedded in docs/source/users_guide/Control_file.rst (lines 206, 266 and 331) use <dt_rof> for the runoff input time step. read_control.f90:170 parses <dt_ro>, and the doc's own control-key table (Control_file.rst:90) also lists <dt_ro>. A control file copied from any of the three doc examples is therefore rejected by the case-default arm. Code wins: the key is <dt_ro>."
+    where:
+      file: "docs/source/users_guide/Control_file.rst"
+      line: 206
+      commit: "mizuroute@28514dea"
+    code_where:
+      file: "route/build/src/read_control.f90"
+      line: 170
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+    from:
+      file: "sources.md"
+      anchor: "l8"
+    confirmed_against: "953d074a4dcaecad"
+  - subject: "topoNetworOption"
+    kind: "documented_tag_the_parser_rejects"
+    note: "docs/source/users_guide/Input_files.rst:126 presents <topoNetworOption> as a control key in its own control-key table. read_control.f90:210 parses <topoNetworkOption> (with the k). A one-character doc typo that aborts the run if copied."
+    where:
+      file: "docs/source/users_guide/Input_files.rst"
+      line: 126
+      commit: "mizuroute@28514dea"
+    code_where:
+      file: "route/build/src/read_control.f90"
+      line: 210
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+    from:
+      file: "sources.md"
+      anchor: "l8"
+    confirmed_against: "953d074a4dcaecad"
+  - subject: "vname_vname_hruid"
+    kind: "documented_tag_the_parser_rejects"
+    note: "docs/source/users_guide/Input_files.rst:250 presents <vname_vname_hruid> as the runoff-file HRU-id variable key. read_control.f90:163 parses <vname_hruid>. A doubled-prefix doc typo that aborts the run if copied."
+    where:
+      file: "docs/source/users_guide/Input_files.rst"
+      line: 250
+      commit: "mizuroute@28514dea"
+    code_where:
+      file: "route/build/src/read_control.f90"
+      line: 163
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+    from:
+      file: "sources.md"
+      anchor: "l8"
+    confirmed_against: "953d074a4dcaecad"
+  - subject: "routOpt"
+    kind: "documented_tag_the_parser_rejects"
+    note: "docs/source/users_guide/Riv.rst:17 tells the user to provide the control key <routOpt> to select the routing scheme(s), and names it twice more in the same paragraph. read_control.f90:130 parses <route_opt>; no case arm matches <routOpt>, so a control file written from that paragraph is rejected by the case-default arm. routOpt is the name of the public_var variable the key assigns to (public_var.f90:99), not a control tag. It does not appear in catalogs/control_keys.yaml's documented_but_not_parsed list because it occurs in doc prose rather than in a control-key table or an embedded example, which is the scan limit pack.yaml's known_gaps declares."
+    where:
+      file: "docs/source/users_guide/Riv.rst"
+      line: 17
+      commit: "mizuroute@28514dea"
+    code_where:
+      file: "route/build/src/read_control.f90"
+      line: 130
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+    from:
+      file: "sources.md"
+      anchor: "l8"
+    confirmed_against: "953d074a4dcaecad"
+  - subject: "hydGeometryOption"
+    kind: "documented_default_disagrees_with_the_declaration"
+    note: "docs/source/users_guide/Riv.rst:31 states that <hydGeometryOption> must be set to 0 to take channel parameters from the network file and that the default value is 1 (compute channel parameter internally); the key table at :58-60 repeats 1 as the default. public_var.f90:192 initialises hydGeometryOption to readFromFile, which public_var.f90:71 declares as 0. Code wins: with the key omitted, each of width, man_n, depth, sideSlope and floodplainSlope is read from the topology file when a variable of that name exists, and computed only when it does not."
+    where:
+      file: "docs/source/users_guide/Riv.rst"
+      line: 31
+      commit: "mizuroute@28514dea"
+    code_where:
+      file: "route/build/src/public_var.f90"
+      line: 192
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+    from:
+      file: "sources.md"
+      anchor: "l8"
+    confirmed_against: "953d074a4dcaecad"
+  - subject: "KWfloodVolume, MCfloodVolume, DWfloodVolume"
+    kind: "control_tag_sets_a_different_variables_switch_than_its_name"
+    note: "read_control.f90:253-255 route <KWfloodVolume>, <MCfloodVolume> and <DWfloodVolume> to meta_rflx(ixRFLX%KWheight/MCheight/DWheight)%varFile -- the WATER HEIGHT switches, not the floodplain-volume ones. The next three arms (:256-258) route <KWheight>, <MCheight> and <DWheight> to the same three flags, so each height variable has two tags and the last one in the file wins. Consequence at this commit: the five floodplain-volume variables (IRffloodVolume, KWTfloodVolume, KWfloodVolume, MCfloodVolume, DWfloodVolume) cannot be switched on from the control file at all, and setting <KWfloodVolume> silently turns on KWheight instead. Both sets are additionally forced off whenever <floodplain> is false (read_control.f90:617-624)."
+    where:
+      file: "route/build/src/read_control.f90"
+      line: 253
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+  - subject: "IRFroutedRunoff, IRFvolume"
+    kind: "generic_output_naming_overwrites_the_wrong_variable"
+    note: "With <outputNameOption> set to generic and exactly one routing method active (plus optionally accumRunoff), read_control.f90 renames that method's variables to the generic names. For every other method the pair is (RoutedRunoff, volume) applied to the discharge and the volume metadata slots; for IRF, lines 686 and 687 both assign to meta_rflx(ixRFLX%IRFroutedRunoff)%varName, first 'RoutedRunoff' and then 'volume'. The second assignment wins, so an IRF-only generic run writes its DISCHARGE under the name 'volume', and IRFvolume keeps its specific name 'IRFvolume'. The shipped SAMPLE-coupled.control uses generic with <route_opt> 5 (DW) and is therefore not affected."
+    where:
+      file: "route/build/src/read_control.f90"
+      line: 687
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+    from:
+      file: "failures.md"
+      anchor: "an-output-variable-you-asked-for-is-not-in-the-file"
+    confirmed_against: "7cfa6d21b2e0987e"
+  - subject: "IRffloodVolume"
+    kind: "netcdf_variable_name_typo_in_metadata"
+    note: "popMetadat.f90:256 declares the IRF floodplain-volume variable's NetCDF name as 'IRffloodVolume' (lower-case second f), while every sibling follows the Xxx + floodVolume pattern (KWTfloodVolume, KWfloodVolume, MCfloodVolume, DWfloodVolume). catalogs/outputs.yaml reports the name the code actually writes; a reader searching a history file for 'IRFfloodVolume' finds nothing. Unreachable from the control file in any case -- see the KWfloodVolume row above."
+    where:
+      file: "route/build/src/popMetadat.f90"
+      line: 256
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+  - subject: "localSolute"
+    kind: "output_switch_with_no_buffer_behind_it"
+    note: "<localSolute> (read_control.f90:259) sets meta_rflx(ixRFLX%localSolute)%varFile, and popMetadat.f90:266 gives the variable a name, long name (lateral mass flux of solute in water from local basin), units mg/s and seg x time dimensions. histVars_data.f90 has no localSolute buffer: the histVars type (lines 56-65) carries basRunoff, instRunoff, dlayRunoff, discharge, inflow, waterHeight, floodVolume, volume, solute_flux and solute_mass and nothing else, and neither aggregate() nor read_restart() ever touches a localSolute field. Turning the switch on therefore does not produce the variable. catalogs/outputs.yaml reports kind: undetermined for it with history_buffer null, which is exactly this situation."
+    where:
+      file: "route/build/src/histVars_data.f90"
+      line: 56
+      commit: "mizuroute@28514dea"
+    code_where:
+      file: "route/build/src/read_control.f90"
+      line: 259
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+  - subject: "volume, solute_mass"
+    kind: "deliberate_no_op_that_changes_a_variables_time_meaning"
+    note: "histVars_data.f90's aggregate() accumulates every history buffer with += except volume (line 231) and solute_mass (line 241), which are overwritten with the current step's value; finalize() then divides every buffer by the sample count nt except those same two, whose statements are the no-ops this%volume = this%volume (line 280) and this%solute_mass = this%solute_mass (line 303). The consequence is that in one history record the discharge, runoff, inflow, water-height, flood-volume and solute-flux variables are MEANS over the output interval while the volume and solute-mass variables are the value at the LAST simulation step of that interval. This is what catalogs/outputs.yaml's kind field reports (interval_mean versus instantaneous_end_of_interval); the two must not be differenced or summed alike."
+    where:
+      file: "route/build/src/histVars_data.f90"
+      line: 280
+      commit: "mizuroute@28514dea"
+    reset_where:
+      file: "route/build/src/histVars_data.f90"
+      line: 322
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+    from:
+      file: "failures.md"
+      anchor: "a-volume-series-behaves-unlike-the-discharge-series-beside-it"
+    confirmed_against: "3d959652a258fc14"
+  - subject: "H06_D_May, H06_D_Jun, H06_D_Jul, H06_D_Aug, H06_D_Sep, H06_D_Oct"
+    kind: "metadata_description_shifted_by_one_month"
+    note: "popMetadat.f90:195-200 gives the Hanasaki 2006 monthly demand variables descriptions one month behind their own names: H06_D_May reads 'Average April demand', H06_D_Jun 'Average May demand', H06_D_Jul 'Average June demand', H06_D_Aug 'Average July demand', H06_D_Sep 'Average Agust demand' (also misspelled) and H06_D_Oct 'Average September demand'. H06_D_Nov and H06_D_Dec are correct again, as is the whole H06_I_* inflow family. Only the description string is wrong; the variable name, the control tag <varname_H06_D_May> and the RCHPRP field each variable fills are all consistent, so the model reads the right column -- but catalogs/network_inputs.yaml's `description` for these six carries the code's own wrong month, as it must."
+    where:
+      file: "route/build/src/popMetadat.f90"
+      line: 195
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+  - subject: "minFlow"
+    kind: "units_string_disagrees_with_the_quantity"
+    note: "popMetadat.f90:149 declares the minimum environmental flow variable with units 'm s-1', while var_lookup.f90:160 comments the same slot as (m3/s) and dataTypes.f90's RCHPRP MINFLOW field is a flow. A discharge cannot be in m/s; catalogs/network_inputs.yaml reports the metadata string the code writes into the file, which is the wrong one."
+    where:
+      file: "route/build/src/popMetadat.f90"
+      line: 149
+      commit: "mizuroute@28514dea"
+    code_where:
+      file: "route/build/src/var_lookup.f90"
+      line: 160
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+  - subject: "endorheic"
+    kind: "same_identifier_different_value_in_different_modules"
+    note: "lake_route.f90:15 declares the module-private parameter endorheic=0, the lakeModelType value that selects the no-outflow lake branch. domain_decomposition.f90:28 and mpi_process.f90:51 each declare their own module-private parameter of the same name with the value 3. The three are independent private constants and the code is not wrong, but reading 'endorheic' out of context gives the wrong lakeModelType. The lake model type values are 0 endorheic, 1 Doll 2003, 2 Hanasaki 2006, 3 HYPE, as catalogs/routing_methods.yaml's non_route_opt_methods records from lake_route.f90's own declarations."
+    where:
+      file: "route/build/src/lake_route.f90"
+      line: 15
+      commit: "mizuroute@28514dea"
+    code_where:
+      file: "route/build/src/domain_decomposition.f90"
+      line: 28
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+  - subject: "min_length_route, hw_drain_point"
+    kind: "log_message_names_a_routing_method_by_a_second_name"
+    note: "read_control.f90:602 and :605 print that reach pass-through (<min_length_route>) and top-of-reach lateral drainage (<hw_drain_point> = 1) apply 'only for IRF, KWE, MC, DW'. KWE is the source-level name of the kinematic-wave method whose <route_opt> digit is 3 and whose module is kw_route_module in route/build/src/kwe_route.f90; the model's own user-facing name for digit 3 is KW, and KWT (digit 2, Lagrangian kinematic wave tracking) is the method the sentence excludes. Reading KWE as KWT inverts the statement."
+    where:
+      file: "route/build/src/read_control.f90"
+      line: 602
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+    from:
+      file: "processes.md"
+      anchor: "reach-routing-what-each-solves"
+    confirmed_against: "f3b95dcf6158b2fa"
+  - subject: "KWroutedRunoff, MCroutedRunoff"
+    kind: "sample_control_file_comments_swapped"
+    note: "route/settings/SAMPLE.control:142 annotates <MCroutedRunoff> as 'kinematic wave routed discharge' and :143 annotates <KWroutedRunoff> as 'muskingum-cunge routed discharge' -- the two comments are exchanged. The tags themselves are correct and popMetadat.f90:243-244 gives KWroutedRunoff the kinematic-wave long name and MCroutedRunoff the muskingum-cunge one. Comment only; no behaviour follows from it."
+    where:
+      file: "route/settings/SAMPLE.control"
+      line: 142
+      commit: "mizuroute@28514dea"
+    code_where:
+      file: "route/build/src/popMetadat.f90"
+      line: 243
+      commit: "mizuroute@28514dea"
+    evidence: "confirmed_in_sample_input"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+    from:
+      file: "sources.md"
+      anchor: "l7"
+    confirmed_against: "f96afd64c80c3338"
+  - subject: "depth, varname_depth"
+    kind: "control_flag_discards_a_variable_read_from_file"
+    note: "read_streamSeg.f90:327-328 sets meta_SEG(ixSEG%depth)%varFile true and populates each reach's bankfull depth from the topology file whenever a variable of the configured name exists. process_ntopo.f90:189-194 then overwrites every reach's depth with high_depth (globalData.f90:189, 1.0e5 m, so river water never tops out) whenever floodplain is false -- the default (public_var.f90:101). A correct, present depth variable therefore has no effect on KW, MC or DW unless <floodplain> T is set, and nothing is logged when it is discarded."
+    where:
+      file: "route/build/src/process_ntopo.f90"
+      line: 189
+      commit: "mizuroute@28514dea"
+    code_where:
+      file: "route/build/src/read_streamSeg.f90"
+      line: 327
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+    from:
+      file: "failures.md"
+      anchor: "a-network-variable-is-not-found-or-its-values-are-ignored"
+    confirmed_against: "3dd4856796c08a60"
+  - subject: "maxTimeDiff"
+    kind: "constant_whose_name_implies_the_wrong_unit"
+    note: "public_var.f90:28 declares maxTimeDiff=1/secprday; 1 is an integer literal and secprday a real, so the value is 1/86400 ~ 1.157e-5. It is compared against roTimeVar_diff, which standalone/model_setup.f90:482 has already converted to SECONDS (the per-file axis is multiplied to seconds at :353, differenced at :492, tested at :494), so the input-axis spacing tolerance is ~1.16e-5 s, not 1 s and not 1 day. catalogs/constants.yaml carries the declaration's own value_literal 1/secprday, which is what the code says; the evaluated value is here."
+    where:
+      file: "route/build/src/public_var.f90"
+      line: 28
+      commit: "mizuroute@28514dea"
+    code_where:
+      file: "route/build/src/standalone/model_setup.f90"
+      line: 494
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+    from:
+      file: "failures.md"
+      anchor: "dt_ro-in-the-control-file-has-no-effect-or-the-run-aborts-on-time-spacing"
+    confirmed_against: "9e38877f8c643b7b"
+  - subject: "route_opt"
+    kind: "error_message_contradicts_the_accepted_set"
+    note: "read_control.f90:588 accepts digit 0 (accumRunoff) as a valid <route_opt> entry, alongside 1-5. The case-default arm at :594-595 nevertheless aborts with 'routOpt may include invalid digits; expect digits 1-5 in routOpt'. A control file rejected for some other invalid digit therefore reports a range that excludes an accepted value, and the message names routOpt, the internal variable, rather than the control key <route_opt>."
+    where:
+      file: "route/build/src/read_control.f90"
+      line: 595
+      commit: "mizuroute@28514dea"
+    code_where:
+      file: "route/build/src/read_control.f90"
+      line: 588
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+    from:
+      file: "recipes.md"
+      anchor: "3-choosing-and-configuring-a-routing-method"
+    confirmed_against: "de7fb86c8354dfd2"
+  - subject: "goodBas"
+    kind: "count_used_as_an_array_bound"
+    note: "irf_route.f90:82 sets nUps = count(NETOPO_in(segIndex)%goodBas) and the loop at :92-96 then runs iUps = 1, nUps while indexing goodBas(iUps) and UREACHI(iUps) -- a count used where the array's full extent is required. With a mixed flag within one reach the loop would skip every contributing upstream reach whose slot lies beyond the count; kwe_route, mc_route, dfw_route and the tracer routine repeat the same shape. Harmless at this commit because network_topo.f90:771-775 writes one merge result, taken from the DOWNSTREAM reach's own totalArea > verySmall, into every element of that reach's goodBasin, so the flag is uniform per reach -- which is also the mechanism by which a reach with no total contributing area drops all of its upstream inflow."
+    where:
+      file: "route/build/src/irf_route.f90"
+      line: 82
+      commit: "mizuroute@28514dea"
+    code_where:
+      file: "route/build/src/network_topo.f90"
+      line: 771
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+    from:
+      file: "failures.md"
+      anchor: "a-reachs-discharge-is-zero-or-its-upstream-inflow-vanished"
+    confirmed_against: "1a7cc05dd21b003e"
+  - subject: "restart_write last"
+    kind: "option_value_skips_a_shared_adjustment"
+    note: "standalone/model_setup.f90's restart_write select subtracts one <dt_qsim> from the requested datetime to form dropDatetime under 'specified' (:672) and under the periodic 'yearly', 'monthly' and 'daily' (:677), so the restart file is written the step before the one it restarts. 'last' takes dropDatetime = endDatetime with no subtraction (:663-665), and 'never' sets it all-missing (:680-681). A workflow that compensates for the one-step shift is therefore wrong under 'last'."
+    where:
+      file: "route/build/src/standalone/model_setup.f90"
+      line: 663
+      commit: "mizuroute@28514dea"
+    code_where:
+      file: "route/build/src/standalone/model_setup.f90"
+      line: 672
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+    from:
+      file: "processes.md"
+      anchor: "restart-continuation"
+    confirmed_against: "2f14781fc70726eb"
+  - subject: "BASIN_QR(0)"
+    kind: "loop_counter_used_where_a_mapped_reach_index_is_required"
+    note: "Under <doesBasinRoute> 0, main_route.f90:224 writes RCHFLX_out(ixRchProcessed(iSeg))%BASIN_QR(0) = RCHFLX_out(iSeg)%BASIN_QR(1): the left side is indexed by the mapped reach index, the right side by the loop counter, so the 'previous step' lateral inflow would be copied from the wrong reach wherever ixRchProcessed is not the identity. The neighbouring assignments :206 and :225 are both mapped, and the <doesBasinRoute> 1 path goes through basinUH.f90:119, which is symmetric. This is latent at this commit, not a wrong discharge: both callers pass the identity (mpi_process.f90:1207 and :1292 set ixRchProcessed = arth(1,1,n)), and BASIN_QR(0) feeds only the MPI gather and scatter of previous-time-step HRU flow (mpi_process.f90:1677,1701,1715,1735), no flux and no history variable."
+    where:
+      file: "route/build/src/main_route.f90"
+      line: 224
+      commit: "mizuroute@28514dea"
+    code_where:
+      file: "route/build/src/basinUH.f90"
+      line: 119
+      commit: "mizuroute@28514dea"
+    evidence: "source_read"
+    scope: "mizuRoute 28514dea (tag v3.1.1); standalone driver route_runoff"
+note: "Covers the disagreements found while building this pack's generated catalogs, not an exhaustive line-by-line review of docs/source against every control key, variable or parameter. catalogs/control_keys.yaml's own documented_in_docs, documented_but_not_parsed and in_sample_but_not_parsed fields are the generated, mechanical half of this cross-check; this file is the curated, judgement half. A row's `where` cites the place the disagreement is visible and `code_where`, where present, cites the code that wins."

@@ -1,0 +1,32 @@
+# Curated allowlist -- identifiers that appear backticked in card.md/processes.md/
+# failures.md/recipes.md and look like a model identifier, but do not resolve through
+# hcm_lookup.py --pack mizuroute (exact or alias), each with why. Checked by
+# evals/check_knowledge.py:check_source_identifiers_resolve. Never a silent exclusion:
+# every row states the specific reason it cannot resolve.
+pack: "mizuroute"
+catalog: "lookup_allowlist"
+curated: true
+count: 11
+rows:
+  - identifier: "BASIN_QI"
+    reason: "component of the internal STRFLX reach-flux derived type (dataTypes.f90), the instantaneous lateral inflow before hillslope routing; it reaches a file only as the history variable instRunoff, which does resolve, so the internal field name is not a catalog entry."
+  - identifier: "REACH_Q"
+    reason: "component of STRFLX's per-method ROUTE element, the routed outflow; it reaches a file only under the per-method history names (IRFroutedRunoff and its four siblings), which resolve, so the internal field name is not a catalog entry."
+  - identifier: "REACH_INFLOW"
+    reason: "component of STRFLX's per-method ROUTE element, written only when <outputInflow> is on and then under the per-method history names (IRFinflow and its siblings), which resolve; the internal field name is not a catalog entry."
+  - identifier: "REACH_ELE"
+    reason: "component of STRFLX's per-method ROUTE element, the water-surface height; written only under <floodplain> and then as the per-method *height history names, which resolve."
+  - identifier: "FLOOD_VOL"
+    reason: "component of STRFLX's per-method ROUTE element, the floodplain volume; written only under <floodplain> and then as the per-method *floodVolume history names, which resolve."
+  - identifier: "FRAC_FUTURE"
+    reason: "the domain-wide hillslope unit-hydrograph array in globalData.f90, computed at run time from the &HSLOPE namelist parameters fshape and tscale (both of which resolve); it is neither an input, an output nor a control key, so it has no catalog entry."
+  - identifier: "OUT_RUNOFF"
+    reason: "a VIC output variable name, cited in recipes.md only to say what a VIC user must convert before handing it to mizuRoute; it resolves in the vic pack, not in this one."
+  - identifier: "OUT_BASEFLOW"
+    reason: "a VIC output variable name, same as OUT_RUNOFF."
+  - identifier: "SFCRNOFF"
+    reason: "an HRLDAS/Noah-MP history variable name, cited in recipes.md only to say what an HRLDAS user must convert before handing it to mizuRoute; it resolves in the hrldas-noahmp pack, not in this one."
+  - identifier: "UGDRNOFF"
+    reason: "an HRLDAS/Noah-MP history variable name, same as SFCRNOFF."
+  - identifier: "YYYY"
+    reason: "a date placeholder inside the history and restart file-name patterns, not an identifier the model defines."

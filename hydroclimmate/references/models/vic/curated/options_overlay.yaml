@@ -1,0 +1,198 @@
+# Hand-maintained. The single structured home of every verified doc-vs-code (or sample-data-vs-code) disagreement found while building this pack's generated catalogs (VIC 14a371a8, tag 5.1.0). Never generated; not re-derived by extract_pack.py. Each row is re-verified directly at its cited source lines -- code wins on every disagreement. Where a row also corroborates a failures.md finding, `from`/`confirmed_against` cite that paragraph (tools/refresh_confirmed_against.py --pack vic re-syncs the hash after a legitimate prose edit).
+pack: "vic"
+catalog: "options_overlay"
+curated: true
+scope: "VIC 14a371a8 (tag 5.1.0); drivers classic + image"
+count: 15
+rows:
+  - internal_option_name: "QUICK_FLUX"
+    global_parameter_key: "QUICK_FLUX"
+    kind: "conditional_default_not_a_static_initializer"
+    note: "initialize_options.c sets options.QUICK_FLUX = true unconditionally (a flat default, matching docs/Documentation/Drivers/Classic/GlobalParam.md's plain reading). But docs/Documentation/Drivers/Classic/GlobalParam.md actually states a CONDITIONAL default (\"Default = FALSE ... when running FROZEN_SOIL; and TRUE ... in all other cases\"), and code delivers exactly that conditional behavior as a SIDE EFFECT of parsing the FROZEN_SOIL key (classic get_global_param.c:110-116, marked with the code's own comment \"// TODO: move these steps to a option validation\"): if FROZEN_SOIL is set true in the global parameter file, QUICK_FLUX is forced back to false at that same moment, regardless of QUICK_FLUX's own static default or an earlier QUICK_FLUX line in the same file. This means QUICK_FLUX's effective default depends on FROZEN_SOIL and on which key is parsed textually last, not on a single static value -- a real trap for anyone reading only catalogs/global_parameters.yaml's own default_in_code field (which reports the static initializer value, true, not this conditional override)."
+    where:
+      file: "vic/drivers/classic/src/get_global_param.c"
+      line: 110
+      commit: "vic@14a371a8"
+    evidence: "source_read"
+    scope: "VIC 14a371a8 (tag 5.1.0); classic driver"
+    from:
+      file: "failures.md"
+      anchor: "the-run-aborts-on-you-cannot-have-implicittrue-or-exp_transtrue-or-a-thermal-switch-is-ignored"
+    confirmed_against: "67dc2105bd3ae32c"
+  - internal_option_name: "IMPLICIT"
+    global_parameter_key: "FROZEN_SOIL"
+    kind: "side_effect_of_another_keys_parsing"
+    note: "Parsing FROZEN_SOIL=FALSE also forces options.IMPLICIT = false and options.EXP_TRANS = false in the same code block as the QUICK_FLUX row above (the else-branch at classic get_global_param.c:114-117) -- these fields' effective values depend on how/whether FROZEN_SOIL is set in the file, not documented as an interaction in docs/Documentation/Drivers/Classic/GlobalParam.md's own IMPLICIT/EXP_TRANS rows. See the EXP_TRANS row below for the second field this same code block touches."
+    where:
+      file: "vic/drivers/classic/src/get_global_param.c"
+      line: 115
+      commit: "vic@14a371a8"
+    evidence: "source_read"
+    scope: "VIC 14a371a8 (tag 5.1.0); classic driver"
+    from:
+      file: "failures.md"
+      anchor: "the-run-aborts-on-you-cannot-have-implicittrue-or-exp_transtrue-or-a-thermal-switch-is-ignored"
+    confirmed_against: "67dc2105bd3ae32c"
+  - internal_option_name: "EXP_TRANS"
+    global_parameter_key: "FROZEN_SOIL"
+    kind: "side_effect_of_another_keys_parsing"
+    note: "Same code block as the IMPLICIT row above (the else-branch at classic get_global_param.c:114-117): parsing FROZEN_SOIL=FALSE also forces options.EXP_TRANS = false, regardless of an EXP_TRANS line's own position in the global parameter file."
+    where:
+      file: "vic/drivers/classic/src/get_global_param.c"
+      line: 116
+      commit: "vic@14a371a8"
+    evidence: "source_read"
+    scope: "VIC 14a371a8 (tag 5.1.0); classic driver"
+    from:
+      file: "failures.md"
+      anchor: "the-run-aborts-on-you-cannot-have-implicittrue-or-exp_transtrue-or-a-thermal-switch-is-ignored"
+    confirmed_against: "67dc2105bd3ae32c"
+  - internal_option_name: "BASEFLOW"
+    global_parameter_key: "BASEFLOW"
+    kind: "driver_asymmetric_validation"
+    note: "Image's get_global_param.c enumerates BOTH values explicitly -- NIJSSEN2001 (image get_global_param.c:394-396) and ARNO (:397-399) -- and closes with an else-branch calling log_err(\"Unknown BASEFLOW option: %s\") at :400-402, so any third spelling, including a typo of ARNO, is fatal. Classic's get_global_param.c:412-420 enumerates only NIJSSEN2001 (:414-416); its else at :417-419 assigns options.BASEFLOW = ARNO unconditionally, so every value other than case-insensitive \"NIJSSEN2001\" -- including a typo -- silently becomes ARNO, with no warning, and the four baseflow soil columns are then taken literally instead of being converted. This is a real classic-vs-image difference in how a misspelled value is handled, not merely a missing catalog fact."
+    where:
+      file: "vic/drivers/classic/src/get_global_param.c"
+      line: 412
+      commit: "vic@14a371a8"
+    evidence: "source_read"
+    scope: "VIC 14a371a8 (tag 5.1.0); drivers classic + image"
+    from:
+      file: "failures.md"
+      anchor: "baseflow-parameters-were-converted-and-do-not-match-the-file"
+    confirmed_against: "dc613ee8eaf75e32"
+  - internal_option_name: null
+    global_parameter_key: "SPATIAL_SNOW/SPATIAL_FROST"
+    kind: "documentation_column_order_reversed"
+    note: "The classic soil-file reader reads the SPATIAL_SNOW-gated column (max_snow_distrib_slope) BEFORE the SPATIAL_FROST-gated column (frost_slope) -- read_soilparam.c:542-556, in that order. docs/Documentation/Drivers/Classic/SoilParam.md's own column table lists them in the OPPOSITE order (frost_slope at its row 51, max_snow_distrib_slope at row 52). A soil file built by reading the doc's table top to bottom places these two option-gated trailing values in the wrong columns whenever both SPATIAL_SNOW and SPATIAL_FROST are enabled."
+    where:
+      file: "vic/drivers/classic/src/read_soilparam.c"
+      line: 542
+      commit: "vic@14a371a8"
+    evidence: "source_read"
+    scope: "VIC 14a371a8 (tag 5.1.0); classic driver"
+    from:
+      file: "failures.md"
+      anchor: "the-soil-parameter-file-parses-but-the-values-land-in-the-wrong-variables"
+    confirmed_against: "c6debb5d57862318"
+  - internal_option_name: "BULK_DENSITY_COMB"
+    global_parameter_key: "BULK_DENSITY_COMB"
+    kind: "undocumented_soil_file_column_block"
+    note: "When BULK_DENSITY_COMB=TRUE, read_soilparam.c reads an ADDITIONAL Nlayer columns (soil bulk density per layer, log_err message \"SOIL BULK DENSITY\") immediately after the ORGANIC_FRACT-gated block. docs/Documentation/Drivers/Classic/SoilParam.md has exactly one bulk_density row (a fixed, unconditional column at a fixed table offset) and no row at all describing a BULK_DENSITY_COMB-gated block -- the option and the extra columns it adds are not documented."
+    where:
+      file: "vic/drivers/classic/src/read_soilparam.c"
+      line: 419
+      commit: "vic@14a371a8"
+    evidence: "source_read"
+    scope: "VIC 14a371a8 (tag 5.1.0); classic driver"
+    from:
+      file: "failures.md"
+      anchor: "the-soil-parameter-file-parses-but-the-values-land-in-the-wrong-variables"
+    confirmed_against: "c6debb5d57862318"
+  - internal_option_name: null
+    global_parameter_key: null
+    kind: "documented_format_feature_not_implemented"
+    applies_to: ["SOIL"]
+    note: "docs/Documentation/Drivers/Classic/SoilParam.md (introductory paragraph): \"Header lines can be added by starting the line with a '#'.\" read_soilparam.c has no '#'-prefixed comment/header-skipping logic anywhere (checked directly: the only '#' in the file is the '#include' preprocessor line) -- a soil file with a '#'-prefixed header line is parsed as ordinary whitespace-delimited data and fails or misparses, it is not skipped."
+    where:
+      file: "vic/drivers/classic/src/read_soilparam.c"
+      line: 49
+      commit: "vic@14a371a8"
+    evidence: "source_read"
+    scope: "VIC 14a371a8 (tag 5.1.0); classic driver"
+    from:
+      file: "failures.md"
+      anchor: "the-soil-parameter-file-parses-but-the-values-land-in-the-wrong-variables"
+    confirmed_against: "c6debb5d57862318"
+  - internal_option_name: null
+    global_parameter_key: "OUT_DT"
+    kind: "removed_key_names_an_unimplemented_replacement"
+    note: "Classic's get_global_param.c rejects OUT_DT with \"OUT_DT has been replaced with OUTPUT_STEPS_PER_DAY, update your global parameter file accordingly\" (a fatal log_err). But OUTPUT_STEPS_PER_DAY is not itself a recognized key anywhere in either driver's get_global_param.c at this pinned commit (checked directly: the string OUTPUT_STEPS_PER_DAY appears nowhere else in either file) -- the named replacement does not exist, so there is no way to express the setting OUT_DT used to control via a global-parameter-file key. The string exists only in the out-of-scope cesm driver (vic/drivers/cesm/src/get_global_param.c:431), so a reader who greps the whole tree will find it and must not conclude that classic or image accepts it."
+    where:
+      file: "vic/drivers/classic/src/get_global_param.c"
+      line: 626
+      commit: "vic@14a371a8"
+    evidence: "source_read"
+    scope: "VIC 14a371a8 (tag 5.1.0); classic driver"
+    from:
+      file: "failures.md"
+      anchor: "a-global-file-key-is-ignored-or-its-replacement-is-not-recognised-either"
+    confirmed_against: "26e8e950ffb21ee8"
+  - internal_option_name: null
+    global_parameter_key: "AIR_TEMP/PREC/PRESSURE"
+    kind: "sample_data_comment_contradicts_code_units"
+    note: "The public VIC sample data's image global parameter file comments the AIR_TEMP forcing as 'K', the PREC forcing as 'kg/m2/s', and the PRESSURE forcing as 'Pa' (samples/data/image/Stehekin/parameters/Stehekin_image_test.global.txt:52-54). VIC's own declared/consumed forcing units (get_force_type.c and catalogs/forcing.yaml's mechanical unit-on-file/internal-unit chain) are air temperature in Celsius, precipitation a depth in mm over the forcing step (not a flux in kg/m2/s), and pressure/vapor pressure in kPa -- the sample file's own inline comments contradict all three; the PREC comment is the most damaging one, since it names the same physical quantity as this entry's own failures.md symptom. The shipped forcing NetCDF's own attributes (tas \"C\", prcp \"mm/step\", vp \"kPa\") are correct -- only the global file's comments are stale."
+    where:
+      file: "vic/drivers/classic/src/get_force_type.c"
+      line: 41
+      commit: "vic@14a371a8"
+    evidence: "confirmed_in_sample_input"
+    scope: "VIC 14a371a8 (tag 5.1.0); drivers classic + image; sample data 3f2dcb4"
+    from:
+      file: "failures.md"
+      anchor: "precipitation-pressure-or-temperature-is-off-by-a-constant-factor"
+    confirmed_against: "976726014f1d39cc"
+  - internal_option_name: null
+    global_parameter_key: "OUTPUT_FORCE"
+    kind: "key_rejected_by_image_but_absent_from_classic_at_this_commit"
+    note: "image's get_global_param.c explicitly rejects OUTPUT_FORCE with \"OUTPUT_FORCE is not a valid option for this driver. Update your global parameter file accordingly.\" -- implying it is a classic-driver key. But at this pinned commit, classic's own get_global_param.c has no OUTPUT_FORCE branch at all (neither an accepting nor a rejecting one): OUTPUT_FORCE is not a recognized key in either driver's parser at 5.1.0, only an explicit rejection message in image referencing a capability that does not appear to exist in classic here either. Recorded as found, not resolved further (may be a leftover message from an earlier VIC 5 release)."
+    where:
+      file: "vic/drivers/image/src/get_global_param.c"
+      line: 529
+      commit: "vic@14a371a8"
+    evidence: "source_read"
+    scope: "VIC 14a371a8 (tag 5.1.0); drivers classic + image"
+  - internal_option_name: null
+    global_parameter_key: "CATM"
+    kind: "documented_unit_contradicted_by_code"
+    note: "get_force_type.c's own comment and docs/Documentation/Drivers/Classic/ForcingData.md both say CATM is ppm. Nothing scales the value on read in either driver (cl/vic_force.c, im/vic_force.c: force.Catm is copied unchanged from the raw forcing value -- see catalogs/forcing.yaml's own read_scale=null for CATM in both drivers), and sh/put_data.c:137 divides the stored value by PPM_to_MIXRATIO (1.0e-6, vic_physical_constants.h:37) when writing OUT_CATM. VIC's own internal/consumed value is therefore a mixing ratio (fraction), not ppm -- a file built and read as ppm is wrong by a factor of 1e6, silently. Already corrected directly in catalogs/forcing.yaml's own `units` field for this entry; this row is the curated cross-check that verified it, re-opened at the cited line."
+    where:
+      file: "vic/drivers/shared_all/src/put_data.c"
+      line: 137
+      commit: "vic@14a371a8"
+    evidence: "source_read"
+    scope: "VIC 14a371a8 (tag 5.1.0); drivers classic + image"
+  - internal_option_name: null
+    global_parameter_key: "CHANNEL_IN"
+    kind: "documented_unit_contradicted_by_code"
+    note: "get_force_type.c documents CHANNEL_IN as [m3]. It is consumed unchanged as a depth in mm over the grid cell (sh/put_data.c:126, comment \"mm over grid cell\") and converted to m3 only at the point of use in the lake water balance (vic/vic_run/src/vic_run.c:418-419: lake_var->channel_in = force->channel_in[NR] * soil_con->cell_area / MM_PER_M). The file/internal-force-struct unit is mm depth, not m3 -- m3 is a derived, lake-path-only quantity. Already corrected directly in catalogs/forcing.yaml's own `units` field for this entry; this row is the curated cross-check that verified it, re-opened at the cited line."
+    where:
+      file: "vic/vic_run/src/vic_run.c"
+      line: 418
+      commit: "vic@14a371a8"
+    evidence: "source_read"
+    scope: "VIC 14a371a8 (tag 5.1.0); drivers classic + image"
+  - internal_option_name: null
+    global_parameter_key: null
+    kind: "code_comment_contradicts_arithmetic"
+    applies_to: ["OUT_RHET", "OUT_NEE", "OUT_NPP"]
+    note: "sh/put_data.c:508, under options.CARBON: 'out_data[OUT_RHET][0] *= dt_sec / SEC_PER_DAY;  // convert to gC/m2d'. The comment reads as converting TO a per-day rate, but dt_sec/SEC_PER_DAY is a fraction < 1 for any sub-daily model step, so the arithmetic actually converts OUT_RHET from a per-day rate INTO a per-model-step amount -- the opposite of what the comment says. history_metadata.c:1204 still declares OUT_RHET's units as 'g m-2 d-1' (unchanged from the pre-multiplication value's true unit), and :1212 declares the same for OUT_NEE (built at put_data.c:509 as OUT_NPP - OUT_RHET), although OUT_NPP itself is left in 'g m-2 s-1' (history_metadata.c:1188) -- OUT_NEE therefore subtracts a per-model-step amount from a per-second rate. This is the one place this pack's own prose previously repeated the code's wrong comment instead of the arithmetic; catalogs/outputs.yaml's own entries for OUT_RHET, OUT_NEE and OUT_NPP report the declared units unchanged, because those ARE the units history_metadata.c declares; this row is the curated cross-check that records what the arithmetic then does to them, and it is merged into tools/hcm_lookup.py's answer for all three names through this row's applies_to list."
+    where:
+      file: "vic/drivers/shared_all/src/put_data.c"
+      line: 508
+      commit: "vic@14a371a8"
+    evidence: "source_read"
+    scope: "VIC 14a371a8 (tag 5.1.0); drivers classic + image"
+  - internal_option_name: null
+    global_parameter_key: null
+    kind: "metadata_written_but_variable_never_populated"
+    applies_to: ["OUT_SURF_COND", "OUT_IN_LONG_BAND"]
+    note: "OUT_SURF_COND and OUT_IN_LONG_BAND are registered in the shared output metadata table (history_metadata.c:1128, :1297), so either driver accepts either name as an OUTVAR line and allocates it in out_data, but no out_data[OUT_SURF_COND] or out_data[OUT_IN_LONG_BAND] assignment (either subscript order) exists anywhere in put_data.c or the routing extensions -- both are always their zero-initialized value, in both drivers, unconditionally. Already carried directly in catalogs/outputs.yaml's own `populated`/`note` fields for both entries (mechanically detected by the same out_data[...] sweep this row's evidence cites); this row is the curated cross-check that verified it."
+    where:
+      file: "vic/drivers/shared_all/src/put_data.c"
+      line: 1
+      commit: "vic@14a371a8"
+    evidence: "source_read"
+    scope: "VIC 14a371a8 (tag 5.1.0); drivers classic + image"
+  - internal_option_name: null
+    global_parameter_key: null
+    kind: "upstream_metadata_overwrite_bug"
+    applies_to: ["OUT_TFOL_FBFLAG", "OUT_VEGT"]
+    note: "history_metadata.c writes OUT_TFOL_FBFLAG's description correctly at :812-813 ('foilage temperature fallback flag'), then OVERWRITES the same OUT_TFOL_FBFLAG.description at :820-821 with text that reads as belonging to the immediately following block ('average vegetation canopy temperature'), which is in fact OUT_VEGT's own comment (:815, 'average vegetation canopy temperature [C]') and OUT_VEGT's varname/long_name/standard_name/units ARE set at :816-819 -- but OUT_VEGT.description is never set at all (this exact strcpy target literal was never written for OUT_VEGT). The LAST write is the true runtime value (already what catalogs/outputs.yaml reports for OUT_TFOL_FBFLAG -- code wins), but it is a copy-paste that leaves OUT_VEGT with no description of its own. A re-pin against a fixed upstream VIC would flip this value with no record of why were it not for this row. Already carried directly in catalogs/outputs.yaml's own `note` field for both OUT_TFOL_FBFLAG and OUT_VEGT (mechanically detected: a field assigned twice for one entry, paired by source-line proximity with a neighbor missing that field); this row is the curated cross-check that verified it."
+    where:
+      file: "vic/drivers/shared_all/src/history_metadata.c"
+      line: 820
+      commit: "vic@14a371a8"
+    evidence: "source_read"
+    scope: "VIC 14a371a8 (tag 5.1.0); drivers classic + image"
+note: "Covers the disagreements found while building this pack's generated catalogs, not an exhaustive line-by-line review of docs/Documentation against every option or global-parameter key. catalogs/global_parameters.yaml's own documented_in_docs and documented_but_not_parsed fields are the generated, mechanical half of this cross-check; this file is the curated, judgement half, and the single structured home for every verified disagreement (a row with internal_option_name: null documents a key, output variable, or format claim with no corresponding option_struct field, rather than being omitted). Several rows here (CATM, CHANNEL_IN, the two phantom outputs, the OUT_TFOL_FBFLAG/OUT_VEGT copy-paste) are also carried directly and mechanically in the generated catalog entries themselves (catalogs/forcing.yaml's `units`/catalogs/outputs.yaml's `populated`/`note`) -- this file's row is the hand-verified cross-check confirming that mechanical fact, not a duplicate claim made independently of it."

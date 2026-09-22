@@ -5,7 +5,12 @@ restart variables, namelist keys, physics options, parameter-table entries, land
 class names, and physical constants. Where present, curated/kinds_overlay.yaml and
 curated/options_overlay.yaml (hand-verified -- never generated) are merged in: an
 overlay's `true_kind` is shown ahead of the generated `kind`, never silently replacing
-it, plus any `sampling_note`/`units_note`/`gate`.
+it, plus any `sampling_note`/`units_note`/`gate`. An options_overlay row is merged into
+every catalog entry it names -- by option name, by configuration-file key, and by each
+name in its own `applies_to` list -- so a curated statement about an output variable or
+a forcing type reaches the reader too, not only one about an option. The entry's own
+`note` and a `populated: false` flag (a variable registered in the model's output
+metadata but never written) are printed as well.
 
 Kept separate from hcm_check.py's own `lookup` subcommand (which answers from the
 generated catalogs/index.json -- see SCHEMA.md) so that tool's existing behavior is
@@ -59,13 +64,59 @@ def load_overlays(pack_dir):
         for row in kinds_doc.get("rows", []):
             kinds_by_var[row["variable"].upper()] = row
 
+    # Every other curated `*_overlay.yaml` the pack actually has is merged the same way,
+    # by listing the directory rather than from a fixed stem list: a pack whose curated
+    # judgement lives in an overlay of its own (named for what it holds, not for
+    # `options`) would otherwise be unreachable from the tool its own prose routes the
+    # reader to -- the exact failure `applies_to` exists to prevent, one level up.
     options_by_opt = {}
-    options_doc = _load_curated(pack_dir, "options_overlay")
-    if options_doc:
-        for row in options_doc.get("rows", []):
-            options_by_opt.setdefault(row["internal_option_name"], []).append(row)
+    curated_dir = pack_dir / "curated"
+    stems = ["options_overlay"]
+    if curated_dir.is_dir():
+        stems += [p.stem for p in sorted(curated_dir.glob("*_overlay.yaml"))
+                  if p.stem not in ("options_overlay", "kinds_overlay")]
+    for stem in stems:
+        doc = _load_curated(pack_dir, stem)
+        if not doc:
+            continue
+        for row in doc.get("rows", []):
+            for key in _overlay_row_keys(row):
+                options_by_opt.setdefault(key, []).append(row)
 
     return kinds_by_var, options_by_opt
+
+
+def _overlay_row_keys(row):
+    """Every catalog name an options_overlay.yaml row is about, upper-cased: its
+    `internal_option_name`, its `global_parameter_key`, and each name in its optional
+    `applies_to` list (for a row about an output variable or a forcing type, which has
+    no option field at all). Indexing by `internal_option_name` alone silently collapsed
+    every row whose subject is not an option -- more than half of vic's rows -- into one
+    `None` bucket that no lookup could ever reach, so the curated statement was invisible
+    to the reader the pack routes to this tool. A key holding a `/`-joined pair (e.g.
+    "SPATIAL_SNOW/SPATIAL_FROST") is indexed under each side as well as whole."""
+    keys = set()
+    # `subject` is the same idea under another overlay's own field name: one row about
+    # one or several catalog entries, listed by name. Split on commas as well, so a row
+    # whose subject names a family ("KWfloodVolume, MCfloodVolume, DWfloodVolume") is
+    # reachable by each member, not only by the whole string.
+    subject = row.get("subject")
+    if isinstance(subject, str) and subject:
+        keys.add(subject.upper())
+        for part in subject.split(","):
+            if part.strip():
+                keys.add(part.strip().upper())
+    for field in ("internal_option_name", "global_parameter_key"):
+        val = row.get(field)
+        if isinstance(val, str) and val:
+            keys.add(val.upper())
+            for part in val.split("/"):
+                if part.strip():
+                    keys.add(part.strip().upper())
+    for name in row.get("applies_to") or []:
+        if isinstance(name, str) and name:
+            keys.add(name.upper())
+    return keys
 
 
 _INTERNAL_NAME_RE = re.compile(r"noahmp\s*%(?:\s*\w+\s*%)+\s*(\w+)\s*(?:\(|$)", re.I)
@@ -304,7 +355,8 @@ def print_entry(name, kind, entry, lines, kinds_overlay=None, options_overlay=No
             lines.append(f"  {v} = {meaning}  ->  {branch_str}")
         if len(all_values) > 8:
             lines.append(f"  ... ({len(all_values) - 8} more values)")
-        overlay_rows = (options_overlay or {}).get(entry.get("internal_option_name"), [])
+        overlay_rows = (options_overlay or {}).get(
+            (entry.get("internal_option_name") or "").upper(), [])
         for orow in overlay_rows[:3]:
             lines.append(f"  overlay ({orow['value']}): {orow['note']}")
         mc = entry.get("mapping_chain") or {}
@@ -360,9 +412,10 @@ def main(argv=None):
                   f"Build one with tools/extract_pack.py all --source-root ROOT "
                   f"--out-dir {pack_dir}/catalogs")
 
+    generic = args.pack != "hrldas-noahmp"
     kinds_overlay, options_overlay = load_overlays(pack_dir)
-    items = collect_index(pack_dir)
-    crossref = history_restart_crossref(pack_dir)
+    items = collect_index_generic(pack_dir) if generic else collect_index(pack_dir)
+    crossref = {} if generic else history_restart_crossref(pack_dir)
     lines = []
 
     if args.list:
@@ -387,8 +440,13 @@ def main(argv=None):
     if args.process:
         kw = args.process.lower()
         hits = []
+        # Generic pack: every entry kind its own catalogs declare, minus the enum-value
+        # aliases (a value of a key, listed under its parent's entry, is not a second
+        # subject to list here).
+        processable = (("output variable", "restart variable") if not generic else
+                       tuple({k for _n, k, _e in items if "(enum value of" not in k}))
         for n, k, e in items:
-            if k not in ("output variable", "restart variable") and not k.startswith("physics option"):
+            if k not in processable and not k.startswith("physics option"):
                 continue
             haystack = " ".join(str(e.get(f, "")) for f in
                                  ("description", "namelist_key", "internal_option_name")).lower()
@@ -420,7 +478,11 @@ def main(argv=None):
 
     if exact:
         for n, k, e in exact:
-            print_entry(n, k, e, lines, kinds_overlay, options_overlay, crossref)
+            if generic:
+                print_entry_generic(n, k, e, lines, all_matches_for_name=exact,
+                                    options_overlay=options_overlay)
+            else:
+                print_entry(n, k, e, lines, kinds_overlay, options_overlay, crossref)
     else:
         names = sorted({n for n, _, _ in items})
         close = difflib.get_close_matches(args.name, names, n=5, cutoff=0.6)
@@ -437,14 +499,21 @@ def main(argv=None):
             close_kinds = {}
             for cn in close:
                 for n, k, e in items:
-                    if n == cn and k in ("output variable", "restart variable"):
+                    # Every entry kind the pack's own catalogs declare, not a fixed list:
+                    # a near-miss pair spanning a history name and a restart name matters
+                    # in exactly the same way as one spanning a control key and a
+                    # parameter, and which kinds exist is the pack's own business.
+                    if n == cn and "(enum value of" not in k:
                         close_kinds.setdefault(k, []).append(cn)
             if len(close_kinds) > 1:
                 lines.append("  NOTE: these near-misses span more than one file kind -- "
                               + "; ".join(f"{k}: {', '.join(sorted(set(v)))}"
                                           for k, v in sorted(close_kinds.items())))
             n, k, e = next((n, k, e) for n, k, e in items if n == close[0])
-            print_entry(n, k, e, lines, kinds_overlay, options_overlay, crossref)
+            if generic:
+                print_entry_generic(n, k, e, lines, options_overlay=options_overlay)
+            else:
+                print_entry(n, k, e, lines, kinds_overlay, options_overlay, crossref)
 
     for line in lines[:MAX_LINES]:
         print(line)
@@ -455,6 +524,272 @@ def main(argv=None):
         print(json.dumps({"query": args.name, "exact_matches": [
             {"name": n, "kind": k, "entry": e} for n, k, e in exact]}, indent=2, default=str))
     return 0
+
+
+# --------------------------------------------------------------------------------------
+# Generic path for a non-hrldas-noahmp `depth: reference` pack (currently: vic,
+# mizuroute). Reads whatever catalogs/*.yaml files the pack actually has -- nothing here
+# is hrldas-, noahmp-, vic- or mizuroute-specific -- taking each catalog's main list key
+# and entry-kind label from the catalog file itself where it states them, else from the
+# fallback table below. The printer shows whichever of the known descriptive fields an
+# entry carries (units/description, kind, requiredness, allowed values, the control keys
+# that switch a variable on, the routing methods that produce it, ...), plus driver
+# (classic|image|both) where a pack has drivers, plus a warning when a name's matches all
+# share one non-"both" driver.
+# --------------------------------------------------------------------------------------
+
+_GENERIC_KIND_LABEL = {
+    "outputs": "vic output variable",
+    "global_parameters": "vic global parameter key",
+    "options": "vic option",
+    "constants": "vic physical constant",
+    "model_parameters": "vic model parameter key",
+    "forcing": "vic forcing type",
+    "state": "vic state variable",
+}
+_GENERIC_LIST_KEY = {
+    "outputs": "variables", "global_parameters": "keys", "options": "options",
+    "constants": "constants", "model_parameters": "keys", "forcing": "types",
+    "state": "variables",
+}
+
+
+def _generic_catalog_keys(pack_dir):
+    """(stem -> main list key, stem -> entry-kind label) for every catalog this pack
+    actually has. A catalog may name its own two answers in the file itself
+    (`entries_key`/`entry_kind`, written by its generator); one that does not falls back
+    on the table above. Nothing here is pack-specific either way: without this, a pack
+    whose catalog stems are not in that table resolves nothing at all, and a pack that
+    happens to share a stem name with another one is labelled with that other pack's
+    vocabulary."""
+    stems = dict(_GENERIC_LIST_KEY)
+    labels = dict(_GENERIC_KIND_LABEL)
+    cat_dir = pack_dir / "catalogs"
+    if cat_dir.is_dir():
+        for path in sorted(cat_dir.glob("*.yaml")):
+            doc = _load(pack_dir, path.stem)
+            if doc and doc.get("entries_key"):
+                stems[path.stem] = doc["entries_key"]
+                labels[path.stem] = doc.get("entry_kind") or path.stem
+    return stems, labels
+
+
+def collect_index_generic(pack_dir):
+    """Every catalogs/*.yaml entry for a pack that is not hrldas-noahmp, indexed
+    generically: file stem -> its documented main list key (SCHEMA.md's
+    `<catalog-specific list key>`), one item per list entry, keyed by whichever of
+    name/key/internal_option_name/variable/column/nc_variable it carries. Also indexes
+    catalogs/parameters.yaml's several named sub-lists (it has no single list key) and
+    global_parameters.yaml/model_parameters.yaml's `constraints` (unnamed, so listed
+    under --process only, not by single-name lookup)."""
+    items = []
+    stems, labels = _generic_catalog_keys(pack_dir)
+    for stem, list_key in stems.items():
+        doc = _load(pack_dir, stem)
+        if not doc:
+            continue
+        kind_label = labels[stem]
+        for item in doc.get(list_key, []):
+            if not isinstance(item, dict):
+                continue
+            name = (item.get("name") or item.get("key") or item.get("setting")
+                    or item.get("internal_option_name"))
+            if name:
+                items.append((name, kind_label, item))
+            # A key's own enumerated allowed_values (e.g. BASEFLOW's ARNO/NIJSSEN2001)
+            # are themselves real identifiers a reader may look up by name -- alias each
+            # one to the parent key's entry rather than leaving it only reachable as a
+            # value buried inside that entry's own allowed_values list.
+            for av in (item.get("allowed_values") or []):
+                v = av.get("value")
+                # A boolean literal is a value of dozens of keys, not a name of any one
+                # of them: aliasing it would answer a lookup for TRUE with whichever
+                # boolean key happened to be collected first, which reads as an answer
+                # and is not one.
+                if v and v.upper() in ("TRUE", "FALSE"):
+                    continue
+                if v and re.match(r"^[A-Za-z_]\w*$", v):
+                    items.append((v, f"{kind_label} (enum value of {name})", item))
+
+    outputs = _load(pack_dir, "outputs")
+    if outputs:
+        # The aggregation-method constants are the vocabulary of an output entry's own
+        # `default_agg_type` and of an OUTVAR line's fourth token, so a reader meets
+        # them before any variable name; they live in their own catalog list rather
+        # than as a variable, and would otherwise resolve to nothing.
+        for item in outputs.get("agg_types", []):
+            if item.get("name"):
+                items.append((item["name"], "vic output aggregation method", item))
+
+    params = _load(pack_dir, "parameters")
+    if params:
+        for item in params.get("classic_soil_columns", []):
+            if item.get("column"):
+                items.append((item["column"], "vic classic soil-file column", item))
+        for item in params.get("image_netcdf_parameters", []):
+            if item.get("nc_variable"):
+                items.append((item["nc_variable"], "vic image NetCDF parameter variable", item))
+    return items
+
+
+def _fmt_value(v):
+    """One printable line for a catalog field: a list of scalars joined by commas, a list
+    of small records (e.g. a `forced_by_code` row: what the code forces the value to, and
+    under which condition) as `value <- condition`, anything else as itself. A raw Python
+    repr of a nested record is technically complete and practically unreadable, which is
+    how a decisive field gets skipped by the reader it was printed for."""
+    if isinstance(v, list) and v and all(not isinstance(i, (dict, list)) for i in v):
+        return ", ".join(str(i) for i in v)
+    if isinstance(v, list) and v and all(isinstance(i, dict) for i in v):
+        parts = []
+        for row in v[:3]:
+            rest = {k: val for k, val in row.items() if k not in ("where", "evidence", "scope")}
+            head = rest.pop("forced_to", None)
+            cond = rest.pop("condition", None)
+            if head is not None or cond is not None:
+                parts.append(f"{head} <- {cond}")
+            else:
+                parts.append("; ".join(f"{k}={val}" for k, val in rest.items()))
+        return " | ".join(parts) + (" ..." if len(v) > 3 else "")
+    return str(v)
+
+
+def _driver_of(entry):
+    w = entry.get("where") or {}
+    return w.get("driver")
+
+
+def print_entry_generic(name, kind, entry, lines, all_matches_for_name=None,
+                        options_overlay=None):
+    canon = (entry.get("name") or entry.get("key") or entry.get("setting")
+              or entry.get("internal_option_name") or name)
+    header = f"# {canon}  [{kind}]"
+    if canon.upper() != name.upper():
+        header += f"  (matched via alias '{name}')"
+    lines.append(header)
+
+    for key, label in (
+        ("long_name", "long_name"), ("standard_name", "standard_name"),
+        ("units", "units"), ("description", "description"),
+        ("meaning", "meaning"), ("statement", "statement"),
+        # The fields that carry a pack's own judgement about an entry: what the written
+        # value means over an output interval, whether the configuration file must set
+        # the key, which switches turn a variable on, which methods produce it, and where
+        # the code overrides the file. Printing name/units/where but not these would show
+        # the least decisive part of the entry and stop at the 25-line cap.
+        ("kind", "value over the output interval (kind)"),
+        ("requiredness", "requiredness"),
+        ("conditionally_required", "required when"),
+        ("control_keys", "switched on by control key"),
+        ("forced_by_code", "forced by code"),
+        ("produced_by_methods", "produced by routing method"),
+        ("history_buffer", "history buffer"),
+        ("belongs_to", "belongs to"),
+        ("route_opt_digit", "route_opt digit"),
+        ("implementing_module", "implementing module"),
+        ("parameter_kind", "parameter kind"), ("namelist_group", "namelist group"),
+        ("section_in_parser", "section in the parser"),
+        ("assigns_to", "assigns to"),
+        ("rename_key", "renamed by control key"),
+        ("read_by_default", "read by default"),
+        ("default_write", "written by default"),
+        ("written_by_default", "written by default"),
+        ("dimension", "dimension"), ("dimensions", "dimensions"),
+        ("netcdf_type", "NetCDF type"),
+        ("fortran_type", "Fortran type"),
+        ("default_literal", "default (in code)"),
+        ("value_literal", "value (in code)"),
+        ("shipped_value", "shipped value"),
+        ("used_in_sample_control_files", "used in sample control file(s)"),
+        ("header_comment", "header comment (enum, informal)"),
+        ("default_agg_type", "default aggregation type (kind)"),
+        ("nelem_expr", "nelem (per-band/per-layer count expression)"),
+        ("registered_in_default_stream", "default output stream"),
+        ("type", "type"), ("sscanf_format", "sscanf format"),
+        ("default_in_code", "default (in code)"),
+        ("c_type", "C type"), ("comment_first_line", "comment"),
+        ("value", "value"), ("comment", "comment"),
+        ("assigned_field", "assigned struct field"),
+        ("documented_in_docs", "documented in docs/"),
+        ("enum_const", "forcing enum constant"),
+        ("file_format", "file format (classic vs image)"),
+        ("gate", "gate"), ("per_layer", "per soil layer"),
+        ("internal_field", "internal struct field (image)"),
+        ("read_scale", "conversion applied on read"),
+        ("read_note", "read note"),
+        ("removed_since_vic4_message", "REMOVED SINCE VIC 4"),
+    ):
+        v = entry.get(key)
+        if v not in (None, "", []):
+            lines.append(f"  {label}: {_fmt_value(v)}")
+    # An entry's own `populated`/`note` are the catalog's record of a variable that is
+    # registered but never written, or of a metadata defect in the source; printing them
+    # last would risk the 25-line cap dropping exactly the line that says the number is
+    # not real, so they come immediately after the descriptive fields.
+    if entry.get("populated") is False:
+        lines.append("  NOT POPULATED: registered in the output metadata table but "
+                      "never assigned in put_data.c -- always its zero-initialized value")
+    if entry.get("note"):
+        lines.append(f"  note: {entry['note']}")
+    for row in (entry.get("allowed_values") or [])[:3]:
+        # Two catalog shapes for the same idea: one value per row (`value`, with the
+        # struct field it assigns), or one row per constrained variable holding several
+        # accepted spellings (`values`, with the parser's own rejection message). Both
+        # are printed; a row of neither shape is skipped rather than printed as "None".
+        if row.get("value") is not None:
+            vals = ", ".join(f"{a.get('value')}" + (f" ({a.get('assigns')})" if a.get("assigns") else "")
+                              for a in entry["allowed_values"][:6])
+            lines.append(f"  allowed_values: {vals}"
+                          + (" ..." if len(entry["allowed_values"]) > 6 else ""))
+            break
+        if isinstance(row.get("values"), list):
+            accepted = [v for group in row["values"] for v in (group.get("values") or [])]
+            label = row.get("variable") or canon
+            lines.append(f"  allowed values of {label}: {', '.join(accepted)}")
+            if row.get("rejection_message"):
+                lines.append(f"    else rejected: {row['rejection_message']}")
+            if row.get("note"):
+                lines.append(f"    note: {row['note']}")
+    if entry.get("registration_gate") or entry.get("nelem_gate"):
+        g = entry.get("registration_gate") or entry.get("nelem_gate")
+        lines.append(f"  gate: {g}")
+    if entry.get("vic_run_branch_count") is not None:
+        lines.append(f"  vic_run branch references: {entry['vic_run_branch_count']}"
+                      + (" (0 -- likely I/O-only or consumed indirectly, not a direct "
+                         "physics-code test; see catalogs/options.yaml's own note)"
+                         if entry["vic_run_branch_count"] == 0 else ""))
+        for c in (entry.get("vic_run_branch_citations") or [])[:3]:
+            lines.append(f"    e.g. {c['where']['file']}:{c['where']['line']}: {c.get('text', '')}")
+    where = entry.get("where")
+    driver = _driver_of(entry)
+    if where:
+        # `runmode` is this pack's fourth `where` key (standalone/coupled/both): a fact
+        # printed without it reads as unconditional when it may hold in one run mode only.
+        runmode = where.get("runmode")
+        lines.append(f"  where: {where.get('file')}:{where.get('line')} ({where.get('commit')})"
+                      + (f"  [driver: {driver}]" if driver else "")
+                      + (f"  [runmode: {runmode}]" if runmode else ""))
+    if entry.get("evidence"):
+        lines.append(f"  evidence: {entry['evidence']}")
+
+    for orow in (options_overlay or {}).get(canon.upper(), [])[:3]:
+        lines.append(f"  CURATED OVERLAY ({orow.get('kind')}): {orow['note']}")
+        lines.append(f"  overlay evidence: "
+                      f"{orow['where']['file']}:{orow['where']['line']} "
+                      f"({orow['where']['commit']}) -- {orow.get('evidence')}")
+        if orow.get("code_where"):
+            cw = orow["code_where"]
+            lines.append(f"  overlay: the code that wins: {cw['file']}:{cw['line']}")
+
+    if all_matches_for_name:
+        drivers = {_driver_of(e) for _, _, e in all_matches_for_name}
+        drivers.discard(None)
+        if drivers and drivers != {"both"} and "both" not in drivers and len(drivers) == 1:
+            only = next(iter(drivers))
+            lines.append(f"  NOTE: only found for driver={only} -- no matching entry for "
+                          f"the other driver under this exact name (may be driver-specific, "
+                          f"or spelled differently there; check catalogs/global_parameters.yaml "
+                          f"for the other driver's own key list).")
 
 
 if __name__ == "__main__":

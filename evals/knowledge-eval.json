@@ -151,7 +151,7 @@
     "prompt": "Can I turn VIC Classic input into Image input just by renaming files to .nc?",
     "expected_feature": "understand",
     "relevant_topics": [
-      "vic/overview.md"
+      "vic/card.md"
     ],
     "rubric": [
       "Different driver I/O and execution order",
@@ -163,8 +163,9 @@
     "prompt": "VIC produced surface runoff in mm. Can I compare it directly with a gauge time series in m3/s?",
     "expected_feature": "analyze",
     "relevant_topics": [
-      "vic/outputs.md",
-      "vic/pitfalls.md"
+      "vic/card.md",
+      "vic/failures.md",
+      "vic/recipes.md"
     ],
     "rubric": [
       "Units, interval, area, included runoff components",
@@ -176,7 +177,7 @@
     "prompt": "mizuRoute receives the correct number of HRUs, but their order changed. Is matching the array length enough?",
     "expected_feature": "analyze",
     "relevant_topics": [
-      "mizuroute/execution.md"
+      "mizuroute/failures.md"
     ],
     "rubric": [
       "Explicit ID and receiving reach alignment",
@@ -188,9 +189,9 @@
     "prompt": "Our preprocessing converted VIC runoff to discharge and delayed it with a hillslope kernel. Can we use a depth-based mizuRoute setup unchanged?",
     "expected_feature": "plan",
     "relevant_topics": [
-      "vic/outputs.md",
-      "mizuroute/execution.md",
-      "mizuroute/pitfalls.md"
+      "vic/recipes.md",
+      "mizuroute/recipes.md",
+      "mizuroute/failures.md"
     ],
     "rubric": [
       "Avoid duplicate area conversion and hillslope delay",
@@ -202,8 +203,8 @@
     "prompt": "Can I sum discharge across all reaches in mizuRoute to get basin outflow?",
     "expected_feature": "analyze",
     "relevant_topics": [
-      "mizuroute/outputs.md",
-      "mizuroute/pitfalls.md"
+      "mizuroute/recipes.md",
+      "mizuroute/failures.md"
     ],
     "rubric": [
       "Downstream double counting",
@@ -215,7 +216,8 @@
     "prompt": "Offline, tell me the exact control keys of our old customized mizuRoute fork; I have not supplied its revision.",
     "expected_feature": "run",
     "relevant_topics": [
-      "mizuroute/execution.md"
+      "mizuroute/card.md",
+      "mizuroute/version.md"
     ],
     "rubric": [
       "No invented keys",
@@ -277,7 +279,7 @@
     "prompt": "The local model pack was reviewed 200 days ago and there is no internet. Can you still explain the difference between VIC land runoff and downstream discharge?",
     "expected_feature": "understand",
     "relevant_topics": [
-      "vic/overview.md"
+      "vic/card.md"
     ],
     "rubric": [
       "Disclose scope/date without blanket refusal",
